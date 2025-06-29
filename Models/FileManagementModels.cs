@@ -22,15 +22,24 @@ namespace JSONAdminEditor.Models
 
     public class FileUploadViewModel
     {
+        public FileType FileType { get; set; } = FileType.None;
+        public string? CustomerName { get; set; }
+        public string? CustomerIdForFilename { get; set; }
+        
+        [Required(ErrorMessage = "Please select a JSON file.")]
+        public IFormFile? JsonFile { get; set; }
+    }
+
+    public class CustomerSettingsUploadViewModel
+    {
+        public string? CustomerName { get; set; }
+        public string? CustomerIdForFilename { get; set; }
+        
         [Required(ErrorMessage = "Please select a JSON file.")]
         public IFormFile? JsonFile { get; set; }
         
-        public FileType FileType { get; set; } = FileType.None;
-        
-        public string? CustomerName { get; set; }
-        
-        // This will be populated by JavaScript with the customer ID for filename generation
-        public string? CustomerIdForFilename { get; set; }
+        // FileType is always CustomerSettings, so no need to expose it
+        public FileType FileType => FileType.CustomerSettings;
     }
 
     public class ManagedFile

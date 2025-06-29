@@ -9,12 +9,21 @@
     "IsActive": true
   },
   {
-    "customerId": "CUST002", 
+    "customerId": "CUST002",
     "companyName": "Microsoft Corporation",
     "contactPerson": "Jane Doe",
     "email": "jane.doe@microsoft.com",
     "phone": "+1-555-0456",
     "address": "Redmond, WA",
+    "IsActive": true
+  },
+  {
+    "customerId": "BJ001",
+    "companyName": "BJ's",
+    "contactPerson": "Joe Doe",
+    "email": "bj@bjs.com",
+    "phone": "12345",
+    "address": "sdfdsfdf",
     "IsActive": true
   }
 ]

@@ -1,0 +1,371 @@
+@page
+@model JSONAdminEditor.Pages.CustomerSettingsModel
+@using JSONAdminEditor.Models
+@using System
+@{
+    ViewData["Title"] = "Customer Settings";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">Customer Settings Management</h1>
+            
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @Model.ErrorMessage
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success" role="alert">
+                    @Model.SuccessMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ConfirmationMessage))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <h5>Confirmation Required</h5>
+                    <p>@Model.ConfirmationMessage</p>
+                    <form method="post" asp-page-handler="ConfirmOverwrite" class="d-inline">
+                        <input type="hidden" asp-for="PendingUpload.CustomerName" />
+                        <input type="hidden" asp-for="PendingUpload.CustomerIdForFilename" />
+                        <button type="submit" class="btn btn-warning me-2">Yes, Overwrite</button>
+                    </form>
+                    <a href="/CustomerSettings" class="btn btn-secondary">Cancel</a>
+                </div>
+            }
+
+            <!-- File Upload Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-upload me-2"></i>Upload Customer Settings File</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Upload.CustomerName" class="form-label">Customer Name:</label>
+                                    <div class="position-relative">
+                                        <input asp-for="Upload.CustomerName" class="form-control" placeholder="Start typing customer name or ID..." 
+                                               autocomplete="off" id="customerNameInput" required />
+                                        <div id="customerSuggestions" class="position-absolute w-100 bg-white border rounded shadow-sm" 
+                                             style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
+                                        </div>
+                                    </div>
+                                    <div class="form-text">Select a customer from suggestions. Filename will be based on Customer ID (e.g., CUST001.json)</div>
+                                    <span asp-validation-for="Upload.CustomerName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Upload.JsonFile" class="form-label">Select JSON File:</label>
+                                    <input asp-for="Upload.JsonFile" class="form-control" accept=".json" required>
+                                    <span asp-validation-for="Upload.JsonFile" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i>Upload Customer Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Files List -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-list me-2"></i>Customer Settings Files</h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.PagedFiles?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>File Path</th>
+                                        <th>Customer</th>
+                                        <th>Last Modified</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var file in Model.PagedFiles)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-file-alt me-2 text-primary"></i>
+                                                <code>@file.DisplayPath</code>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(file.CustomerName))
+                                                {
+                                                    <strong>@file.CustomerName</strong>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@file.LastModified.ToString("yyyy-MM-dd HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                <a href="/Index?filePath=@Uri.EscapeDataString(file.FilePath)" class="btn btn-sm btn-outline-primary me-2">
+                                                    <i class="fas fa-edit me-1"></i>Edit
+                                                </a>
+                                                <form method="post" asp-page-handler="DeleteAsync" class="d-inline" 
+                                                      onsubmit="return confirm('Are you sure you want to delete this file? This action cannot be undone.');">
+                                                    <input type="hidden" name="filePath" value="@file.FilePath" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash me-1"></i>Delete
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        @if (Model.TotalPages > 1)
+                        {
+                            <nav aria-label="Customer Settings pagination" class="mt-3">
+                                <ul class="pagination justify-content-center">
+                                    <!-- Previous Page -->
+                                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                        <a class="page-link" href="?page=@(Model.CurrentPage - 1)" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+
+                                    @{
+                                        var startPage = Math.Max(1, Model.CurrentPage - 2);
+                                        var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+                                    }
+
+                                    <!-- Page Numbers -->
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                            <a class="page-link" href="?page=@i">@i</a>
+                                        </li>
+                                    }
+
+                                    <!-- Next Page -->
+                                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                        <a class="page-link" href="?page=@(Model.CurrentPage + 1)" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+
+                            <!-- Pagination Info -->
+                            <div class="text-center text-muted">
+                                <small>
+                                    Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalFiles)) 
+                                    of @Model.TotalFiles customer settings files
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No customer settings files uploaded yet. Start by uploading your first customer settings file above.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+</div>
+
+@section Scripts {
+    <script>
+        let searchTimeout;
+        let selectedCustomerValid = false;
+
+        function setupCustomerSearch() {
+            const customerInput = document.getElementById('customerNameInput');
+            if (!customerInput) return;
+
+            // Remove existing event listeners to avoid duplicates
+            customerInput.removeEventListener('input', handleInput);
+            customerInput.removeEventListener('focus', handleFocus);
+            customerInput.removeEventListener('blur', handleBlur);
+
+            // Add event listeners
+            customerInput.addEventListener('input', handleInput);
+            customerInput.addEventListener('focus', handleFocus);
+            customerInput.addEventListener('blur', handleBlur);
+        }
+
+        function handleInput(e) {
+            const searchTerm = e.target.value.trim();
+            selectedCustomerValid = false;
+            
+            // Remove the data-customer-id attribute when user types manually
+            e.target.removeAttribute('data-customer-id');
+            
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+
+            if (searchTerm.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                searchCustomers(searchTerm);
+            }, 300);
+        }
+
+        function handleFocus(e) {
+            const searchTerm = e.target.value.trim();
+            if (searchTerm.length >= 2) {
+                searchCustomers(searchTerm);
+            }
+        }
+
+        function handleBlur(e) {
+            // Delay hiding to allow click on suggestions
+            setTimeout(() => {
+                hideSuggestions();
+            }, 150);
+        }
+
+        function searchCustomers(searchTerm) {
+            fetch(`/CustomerSettings?handler=SearchCustomers&term=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(customers => {
+                    displaySuggestions(customers, searchTerm);
+                })
+                .catch(error => {
+                    console.error('Error searching customers:', error);
+                    hideSuggestions();
+                });
+        }
+
+        function displaySuggestions(customers, searchTerm) {
+            const suggestionsDiv = document.getElementById('customerSuggestions');
+            if (!suggestionsDiv) return;
+
+            suggestionsDiv.innerHTML = '';
+
+            if (!customers || customers.length === 0) {
+                // Show "No matches found" message
+                const noMatchDiv = document.createElement('div');
+                noMatchDiv.className = 'p-2 text-muted';
+                noMatchDiv.style.fontStyle = 'italic';
+                noMatchDiv.innerHTML = '<i class="fas fa-search me-2"></i>No matches found';
+                suggestionsDiv.appendChild(noMatchDiv);
+                suggestionsDiv.style.display = 'block';
+                return;
+            }
+            
+            customers.forEach(customer => {
+                const div = document.createElement('div');
+                div.className = 'p-2 border-bottom customer-suggestion';
+                div.style.cursor = 'pointer';
+                div.style.borderBottom = '1px solid #dee2e6';
+                
+                // Create display text in format "Company Name (Customer ID)"
+                const displayText = `${customer.companyName} (${customer.customerId})`;
+                const highlightedText = highlightMatch(displayText, searchTerm);
+                div.innerHTML = highlightedText;
+                
+                // Add hover effects
+                div.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f8f9fa';
+                });
+                
+                div.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = 'white';
+                });
+                
+                div.addEventListener('click', function() {
+                    selectCustomer(customer);
+                });
+                
+                suggestionsDiv.appendChild(div);
+            });
+
+            suggestionsDiv.style.display = 'block';
+        }
+
+        function highlightMatch(text, searchTerm) {
+            const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function selectCustomer(customer) {
+            const customerInput = document.getElementById('customerNameInput');
+            if (customerInput) {
+                // Display as "Company Name (Customer ID)" in the text box
+                customerInput.value = `${customer.companyName} (${customer.customerId})`;
+                customerInput.setAttribute('data-customer-id', customer.customerId);
+                selectedCustomerValid = true;
+            }
+            hideSuggestions();
+        }
+
+        function hideSuggestions() {
+            const suggestionsDiv = document.getElementById('customerSuggestions');
+            if (suggestionsDiv) {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+
+        function validateForm() {
+            const customerNameInput = document.getElementById('customerNameInput');
+            
+            if (customerNameInput) {
+                if (!selectedCustomerValid && customerNameInput.value.trim() !== '') {
+                    alert('Please select a valid customer from the suggestions.');
+                    return false;
+                }
+                
+                // If a customer is selected, extract the customer ID for form submission
+                if (selectedCustomerValid && customerNameInput.hasAttribute('data-customer-id')) {
+                    // Create a hidden input with the customer ID for backend processing
+                    let hiddenCustomerIdInput = document.getElementById('hiddenCustomerId');
+                    if (!hiddenCustomerIdInput) {
+                        hiddenCustomerIdInput = document.createElement('input');
+                        hiddenCustomerIdInput.type = 'hidden';
+                        hiddenCustomerIdInput.name = 'Upload.CustomerIdForFilename';
+                        hiddenCustomerIdInput.id = 'hiddenCustomerId';
+                        customerNameInput.parentNode.appendChild(hiddenCustomerIdInput);
+                    }
+                    hiddenCustomerIdInput.value = customerNameInput.getAttribute('data-customer-id');
+                }
+            }
+            return true;
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up form validation
+            const uploadForm = document.querySelector('form');
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function(e) {
+                    if (!validateForm()) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            // Initialize customer search
+            setupCustomerSearch();
+        });
+    </script>
+}
