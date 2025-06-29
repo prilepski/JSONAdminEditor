@@ -1,0 +1,20 @@
+[
+  {
+    "customerId": "CUST001",
+    "companyName": "Dell Technologies",
+    "contactPerson": "John Smith",
+    "email": "john.smith@dell.com",
+    "phone": "+1-555-0123",
+    "address": "Round Rock, TX",
+    "IsActive": true
+  },
+  {
+    "customerId": "CUST002", 
+    "companyName": "Microsoft Corporation",
+    "contactPerson": "Jane Doe",
+    "email": "jane.doe@microsoft.com",
+    "phone": "+1-555-0456",
+    "address": "Redmond, WA",
+    "IsActive": true
+  }
+]

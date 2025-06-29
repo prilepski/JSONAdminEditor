@@ -1,0 +1,18 @@
+[
+  {
+    "Event Name": "Schedule Appointment",
+    "IsActive": false
+  },
+  {
+    "Event Name": "Scheduling Reminder",
+    "IsActive": true
+  },
+  {
+    "Event Name": "Final Scheduling Appointment",
+    "IsActive": true
+  },
+  {
+    "Event Name": "Next Stop",
+    "IsActive": true
+  }
+]

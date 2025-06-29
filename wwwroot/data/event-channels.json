@@ -1,0 +1,14 @@
+[
+  {
+    "Channel Name": "Email",
+    "IsActive": true
+  },
+  {
+    "Channel Name": "SMS",
+    "IsActive": true
+  },
+  {
+    "Channel Name": "Voice",
+    "IsActive": true
+  }
+]

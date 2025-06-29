@@ -1,0 +1,200 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "JSON Admin Editor";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>JSON Editor</h1>
+        <div>
+            @if (Model.JsonData?.IsValidJson == true)
+            {
+                <span class="badge bg-success me-2">
+                    <i class="fas fa-file-alt me-1"></i>@Model.JsonData.FileName
+                </span>
+            }
+            <a href="/FileManagement" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to File Management
+            </a>
+        </div>
+    </div>
+            
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@Model.ErrorMessage
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@Model.SuccessMessage
+                </div>
+            }
+
+            <!-- No File Loaded Message -->
+            @if (Model.JsonData?.IsValidJson != true)
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-file-import fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No JSON file loaded</h4>
+                        <p class="text-muted">
+                            <a href="/FileManagement" class="fw-bold">Go to File Management</a> 
+                            to select a managed file for editing.
+                        </p>
+                    </div>
+                </div>
+            }
+
+            <!-- JSON Table Editor -->
+            @if (Model.JsonData?.IsValidJson == true && Model.JsonData.TableData?.Any() == true)
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Edit JSON Data: @Model.JsonData.FileName</h3>
+                        <div>
+                            <button type="button" class="btn btn-success me-2" onclick="addNewRow()">Add Row</button>
+                            <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped" id="jsonTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Actions</th>
+                                        @foreach (var column in Model.JsonData.ColumnNames!)
+                                        {
+                                            <th>@column</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.JsonData.TableData.Count; i++)
+                                    {
+                                        <tr data-row-index="@i">
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>
+                                            </td>
+                                            @foreach (var column in Model.JsonData.ColumnNames!)
+                                            {
+                                                <td>
+                                                    @{
+                                                        var cellValue = Model.JsonData.TableData[i].ContainsKey(column) ? Model.JsonData.TableData[i][column] : "";
+                                                        var columnType = Model.JsonData.ColumnTypes?.ContainsKey(column) == true ? Model.JsonData.ColumnTypes[column] : "text";
+                                                    }
+                                                    
+                                                    @if (columnType == "boolean")
+                                                    {
+                                                        <select class="form-control form-control-sm boolean-dropdown" 
+                                                                data-column="@column">
+                                                            <option value="true" selected="@(cellValue?.ToString()?.ToLower() == "true" ? "selected" : null)">True</option>
+                                                            <option value="false" selected="@(cellValue?.ToString()?.ToLower() == "false" ? "selected" : null)">False</option>
+                                                        </select>
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="text" 
+                                                               class="form-control form-control-sm" 
+                                                               data-column="@column" 
+                                                               value="@(cellValue?.ToString() ?? "")" />
+                                                    }
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="saveForm" method="post" asp-page-handler="Save" style="display: none;">
+                    <input type="hidden" name="filePath" value="@Model.JsonData.FilePath" />
+                    <input type="hidden" name="jsonData" id="jsonDataInput" />
+                </form>
+            }
+</div>
+
+@section Scripts {
+    <script>
+        // Get column types from the model for use in JavaScript
+        const columnTypes = @Html.Raw(Model.JsonData?.ColumnTypes != null ? 
+            System.Text.Json.JsonSerializer.Serialize(Model.JsonData.ColumnTypes) : "{}");
+        
+        function addNewRow() {
+            const table = document.getElementById('jsonTable').getElementsByTagName('tbody')[0];
+            const headerRow = document.getElementById('jsonTable').getElementsByTagName('thead')[0].rows[0];
+            const newRow = table.insertRow();
+            const rowIndex = table.rows.length - 1;
+            
+            newRow.setAttribute('data-row-index', rowIndex);
+            
+            // Add delete button cell
+            const deleteCell = newRow.insertCell(0);
+            deleteCell.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>';
+            
+            // Add input cells for each column (skip the first column which is Actions)
+            for (let i = 1; i < headerRow.cells.length; i++) {
+                const cell = newRow.insertCell(i);
+                const columnName = headerRow.cells[i].textContent;
+                const columnType = columnTypes[columnName] || 'text';
+                
+                if (columnType === 'boolean') {
+                    cell.innerHTML = `<select class="form-control form-control-sm boolean-dropdown" data-column="${columnName}">
+                                        <option value="true">True</option>
+                                        <option value="false" selected>False</option>
+                                      </select>`;
+                } else {
+                    cell.innerHTML = `<input type="text" class="form-control form-control-sm" data-column="${columnName}" value="" />`;
+                }
+            }
+        }
+        
+        function deleteRow(button) {
+            if (confirm('Are you sure you want to delete this row?')) {
+                const row = button.closest('tr');
+                row.remove();
+            }
+        }
+        
+        function saveChanges() {
+            const table = document.getElementById('jsonTable');
+            const rows = table.getElementsByTagName('tbody')[0].rows;
+            const data = [];
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const inputs = row.querySelectorAll('input[data-column], select[data-column]');
+                const rowData = {};
+                
+                inputs.forEach(input => {
+                    const column = input.getAttribute('data-column');
+                    const columnType = columnTypes[column] || 'text';
+                    let value = input.value;
+                    
+                    // Convert boolean values to actual boolean type
+                    if (columnType === 'boolean') {
+                        value = value === 'true';
+                    } else if (columnType === 'number') {
+                        // Try to parse as number, fall back to string if invalid
+                        const numValue = parseFloat(value);
+                        if (!isNaN(numValue)) {
+                            value = numValue;
+                        }
+                    }
+                    
+                    rowData[column] = value;
+                });
+                
+                data.push(rowData);
+            }
+            
+            document.getElementById('jsonDataInput').value = JSON.stringify(data);
+            document.getElementById('saveForm').submit();
+        }
+    </script>
+}
