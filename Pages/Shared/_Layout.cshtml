@@ -29,8 +29,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-page="/FileManagement">
-                                <i class="fas fa-cog me-1"></i>File Management
+                            <a class="nav-link text-light" asp-area="" asp-page="/DefaultSettings">
+                                <i class="fas fa-cog me-1"></i>Default Settings
                             </a>
                         </li>
                         <li class="nav-item">
@@ -56,9 +56,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/FileManagement" ? "active" : "")" 
-                               asp-area="" asp-page="/FileManagement">
-                                <i class="fas fa-cog me-2"></i>File Management
+                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/DefaultSettings" ? "active" : "")" 
+                               asp-area="" asp-page="/DefaultSettings">
+                                <i class="fas fa-cog me-2"></i>Default Settings
                             </a>
                         </li>
                         <li class="nav-item">
