@@ -85,11 +85,14 @@
                                                     @{
                                                         var cellValue = Model.JsonData.TableData[i].ContainsKey(column) ? Model.JsonData.TableData[i][column] : "";
                                                         var columnType = Model.JsonData.ColumnTypes?.ContainsKey(column) == true ? Model.JsonData.ColumnTypes[column] : "text";
+                                                        var hasError = Model.JsonData.ValidationErrors?.Any(e => e.RowIndex == i && e.FieldName == column) == true;
+                                                        var errorMessage = hasError ? Model.JsonData.ValidationErrors?.FirstOrDefault(e => e.RowIndex == i && e.FieldName == column)?.Message : "";
+                                                        var inputClass = hasError ? "form-control form-control-sm is-invalid" : "form-control form-control-sm";
                                                     }
                                                     
                                                     @if (columnType == "boolean")
                                                     {
-                                                        <select class="form-control form-control-sm boolean-dropdown" 
+                                                        <select class="@(hasError ? "form-control form-control-sm boolean-dropdown is-invalid" : "form-control form-control-sm boolean-dropdown")" 
                                                                 data-column="@column">
                                                             <option value="true" selected="@(cellValue?.ToString()?.ToLower() == "true" ? "selected" : null)">True</option>
                                                             <option value="false" selected="@(cellValue?.ToString()?.ToLower() == "false" ? "selected" : null)">False</option>
@@ -98,9 +101,16 @@
                                                     else
                                                     {
                                                         <input type="text" 
-                                                               class="form-control form-control-sm" 
+                                                               class="@inputClass" 
                                                                data-column="@column" 
                                                                value="@(cellValue?.ToString() ?? "")" />
+                                                    }
+                                                    
+                                                    @if (hasError)
+                                                    {
+                                                        <div class="invalid-feedback d-block">
+                                                            <small>@errorMessage</small>
+                                                        </div>
                                                     }
                                                 </td>
                                             }
@@ -196,5 +206,27 @@
             document.getElementById('jsonDataInput').value = JSON.stringify(data);
             document.getElementById('saveForm').submit();
         }
+        
+        function clearValidationErrors(input) {
+            // Remove error styling when user starts editing
+            input.classList.remove('is-invalid');
+            const feedbackDiv = input.parentNode.querySelector('.invalid-feedback');
+            if (feedbackDiv) {
+                feedbackDiv.style.display = 'none';
+            }
+        }
+        
+        // Add event listeners to all inputs for clearing validation errors
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[data-column], select[data-column]');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    clearValidationErrors(this);
+                });
+                input.addEventListener('change', function() {
+                    clearValidationErrors(this);
+                });
+            });
+        });
     </script>
 }

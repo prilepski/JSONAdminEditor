@@ -12,6 +12,10 @@ namespace JSONAdminEditor.Models
         public Dictionary<string, string>? ColumnTypes { get; set; } // New property to track column data types
         public string? ErrorMessage { get; set; }
         public bool IsValidJson { get; set; }
+        
+        // Validation properties
+        public string? UniqueField { get; set; }
+        public List<ValidationError>? ValidationErrors { get; set; } = new();
     }
 
     public class FileUploadModel
@@ -24,5 +28,12 @@ namespace JSONAdminEditor.Models
     {
         public Dictionary<string, object> Data { get; set; } = new();
         public int RowIndex { get; set; }
+    }
+
+    public class ValidationError
+    {
+        public int RowIndex { get; set; }
+        public string FieldName { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
     }
 }

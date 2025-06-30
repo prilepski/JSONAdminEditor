@@ -7,12 +7,14 @@ namespace JSONAdminEditor.Services
     public class JsonFileService
     {
         private readonly IWebHostEnvironment _environment;
+        private readonly UniqueFieldValidationService _validationService;
         private readonly string _uploadsFolder;
         private readonly string _dataFolder;
 
-        public JsonFileService(IWebHostEnvironment environment)
+        public JsonFileService(IWebHostEnvironment environment, UniqueFieldValidationService validationService)
         {
             _environment = environment;
+            _validationService = validationService;
             _uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
             _dataFolder = Path.Combine(_environment.WebRootPath, "data");
             
@@ -80,6 +82,9 @@ namespace JSONAdminEditor.Services
                     model.ColumnNames = ExtractColumnNames(jsonArray);
                     model.ColumnTypes = ExtractColumnTypes(jsonArray); // Add column type detection
                     model.IsValidJson = true;
+                    
+                    // Add uniqueness validation
+                    AddValidationInfo(model, filePath);
                 }
                 else if (jsonData is Newtonsoft.Json.Linq.JObject jsonObject)
                 {
@@ -89,6 +94,9 @@ namespace JSONAdminEditor.Services
                     model.ColumnNames = ExtractColumnNames(singleItemArray);
                     model.ColumnTypes = ExtractColumnTypes(singleItemArray); // Add column type detection
                     model.IsValidJson = true;
+                    
+                    // Add uniqueness validation
+                    AddValidationInfo(model, filePath);
                 }
                 else
                 {
@@ -230,5 +238,17 @@ namespace JSONAdminEditor.Services
         }
 
         public string GetUploadsFolderPath() => _uploadsFolder;
+        
+        private void AddValidationInfo(JsonFileViewModel model, string filePath)
+        {
+            var fileName = Path.GetFileName(filePath);
+            model.UniqueField = _validationService.GetUniqueField(fileName);
+            
+            if (model.TableData != null && !string.IsNullOrEmpty(model.UniqueField))
+            {
+                var validationResult = _validationService.ValidateUniqueness(fileName, model.TableData);
+                model.ValidationErrors = validationResult.Errors;
+            }
+        }
     }
 }

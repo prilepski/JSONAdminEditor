@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<JsonFileService>();
 builder.Services.AddScoped<FileManagementService>();
+builder.Services.AddScoped<UniqueFieldValidationService>();
 
 var app = builder.Build();
 

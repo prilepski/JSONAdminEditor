@@ -10,15 +10,17 @@ public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
     private readonly JsonFileService _jsonFileService;
+    private readonly UniqueFieldValidationService _validationService;
 
     public JsonFileViewModel? JsonData { get; set; }
     public string? ErrorMessage { get; set; }
     public string? SuccessMessage { get; set; }
 
-    public IndexModel(ILogger<IndexModel> logger, JsonFileService jsonFileService)
+    public IndexModel(ILogger<IndexModel> logger, JsonFileService jsonFileService, UniqueFieldValidationService validationService)
     {
         _logger = logger;
         _jsonFileService = jsonFileService;
+        _validationService = validationService;
     }
 
     public async Task OnGet(string? filePath = null)
@@ -66,6 +68,23 @@ public class IndexModel : PageModel
             var tableData = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonData);
             if (tableData != null)
             {
+                // Validate uniqueness before saving
+                var fileName = Path.GetFileName(filePath);
+                var validationResult = _validationService.ValidateUniqueness(fileName, tableData);
+                
+                if (!validationResult.IsValid)
+                {
+                    ErrorMessage = "Cannot save: There are validation errors. Please fix duplicate values and try again.";
+                    // Reload the data with validation errors
+                    JsonData = await _jsonFileService.LoadJsonFileAsync(filePath);
+                    if (JsonData != null)
+                    {
+                        JsonData.TableData = tableData; // Use the user's edited data
+                        JsonData.ValidationErrors = validationResult.Errors;
+                    }
+                    return Page();
+                }
+                
                 var success = await _jsonFileService.SaveJsonFileAsync(filePath, tableData);
                 
                 if (success)
