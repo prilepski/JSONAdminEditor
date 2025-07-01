@@ -1,10 +1,4 @@
 {
-  "ContentVariables": {
-    "cust_name": "$Customer.FriendlyName$",
-    "ait_tracking_num": "$ShipmentNum$",
-    "tracking_url": "www.myait.com/Tracking/$ShipmentNum$",
-    "cust_logo": "base64:DBSDIBDUIBG3209523"
-  },
   "Events": [
     {
       "Event": "Transport Booking Created",
@@ -59,5 +53,11 @@
       "Channel": "voice",
       "Priority": 3
     }
-  ]
+  ],
+  "ContentVariables": {
+    "cust_name": "$Customer.FriendlyName$",
+    "ait_tracking_num": "$ShipmentNum$",
+    "tracking_url": "www.myait.com/Tracking/$ShipmentNum$",
+    "cust_logo": "base64:DBSDIBDUIBG3209523"
+  }
 }

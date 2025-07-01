@@ -39,6 +39,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-page="/ContentVariables">
+                                <i class="fas fa-tags me-1"></i>Content Variables
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-page="/CustomerSettings">
                                 <i class="fas fa-users me-1"></i>Customer Settings
                             </a>
@@ -70,6 +75,12 @@
                             <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/PreferredCommunication" ? "active" : "")" 
                                asp-area="" asp-page="/PreferredCommunication">
                                 <i class="fas fa-comments me-2"></i>Preferred Communication
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/ContentVariables" ? "active" : "")" 
+                               asp-area="" asp-page="/ContentVariables">
+                                <i class="fas fa-tags me-2"></i>Content Variables
                             </a>
                         </li>
                         <li class="nav-item">
