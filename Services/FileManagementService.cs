@@ -50,10 +50,6 @@ namespace JSONAdminEditor.Services
                         fileName = "customers.json";
                         filePath = Path.Combine(_dataFolder, fileName);
                         break;
-                    case FileType.DefaultSettings:
-                        fileName = "default-settings.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
-                        break;
                     case FileType.EventTriggers:
                         fileName = "event-triggers.json";
                         filePath = Path.Combine(_dataFolder, fileName);
@@ -125,10 +121,6 @@ namespace JSONAdminEditor.Services
                         fileName = "customers.json";
                         filePath = Path.Combine(_dataFolder, fileName);
                         break;
-                    case FileType.DefaultSettings:
-                        fileName = "default-settings.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
-                        break;
                     case FileType.EventTriggers:
                         fileName = "event-triggers.json";
                         filePath = Path.Combine(_dataFolder, fileName);
@@ -177,7 +169,6 @@ namespace JSONAdminEditor.Services
             // Add main files
             AddFileIfExists(files, Path.Combine(_dataFolder, "templates.json"), FileType.Templates);
             AddFileIfExists(files, Path.Combine(_dataFolder, "customers.json"), FileType.Customers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "default-settings.json"), FileType.DefaultSettings);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-triggers.json"), FileType.EventTriggers);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-channels.json"), FileType.EventChannels);
 
@@ -220,7 +211,6 @@ namespace JSONAdminEditor.Services
             // Add main files
             AddFileIfExists(files, Path.Combine(_dataFolder, "templates.json"), FileType.Templates);
             AddFileIfExists(files, Path.Combine(_dataFolder, "customers.json"), FileType.Customers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "default-settings.json"), FileType.DefaultSettings);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-triggers.json"), FileType.EventTriggers);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-channels.json"), FileType.EventChannels);
 
@@ -434,7 +424,6 @@ namespace JSONAdminEditor.Services
                 FileType.None => "None",
                 FileType.Templates => "Templates",
                 FileType.Customers => "Customers",
-                FileType.DefaultSettings => "Default Settings",
                 FileType.EventTriggers => "Event Triggers",
                 FileType.EventChannels => "Event Channels",
                 FileType.CustomerSettings => "Customer Settings",

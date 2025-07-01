@@ -9,7 +9,7 @@ namespace JSONAdminEditor.Services
 
         public UniqueFieldValidationService()
         {
-            // Define the unique field for each default settings file
+            // Define the unique field for each dictionary file
             _uniqueFieldMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 { "templates.json", "templateId" },
@@ -24,7 +24,7 @@ namespace JSONAdminEditor.Services
             return _uniqueFieldMap.TryGetValue(fileName, out var field) ? field : null;
         }
 
-        public bool IsDefaultSettingsFile(string fileName)
+        public bool IsDictionaryFile(string fileName)
         {
             return _uniqueFieldMap.ContainsKey(fileName);
         }
@@ -33,9 +33,9 @@ namespace JSONAdminEditor.Services
         {
             var result = new ValidationResult();
             
-            if (!IsDefaultSettingsFile(fileName))
+            if (!IsDictionaryFile(fileName))
             {
-                return result; // No validation needed for non-default settings files
+                return result; // No validation needed for non-dictionary files
             }
 
             var uniqueField = GetUniqueField(fileName);

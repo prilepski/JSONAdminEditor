@@ -7,7 +7,6 @@ namespace JSONAdminEditor.Models
         None = 0,
         Templates = 1,
         Customers = 2,
-        DefaultSettings = 3,
         CustomerSettings = 4,
         EventTriggers = 5,
         EventChannels = 6

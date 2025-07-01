@@ -5,7 +5,7 @@ using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Pages;
 
-public class FileManagementModel : PageModel
+public class DictionariesModel : PageModel
 {
     private readonly FileManagementService _fileManagementService;
 
@@ -23,7 +23,7 @@ public class FileManagementModel : PageModel
     public string? SuccessMessage { get; set; }
     public string? ConfirmationMessage { get; set; }
 
-    public FileManagementModel(FileManagementService fileManagementService)
+    public DictionariesModel(FileManagementService fileManagementService)
     {
         _fileManagementService = fileManagementService;
     }
@@ -60,26 +60,10 @@ public class FileManagementModel : PageModel
             Upload.CustomerName = string.Empty;
         }
 
-        // Custom validation for FileType enum
-        if (Upload.FileType == FileType.None)
+        // Custom validation for FileType enum (exclude CustomerSettings)
+        if (Upload.FileType == FileType.None || Upload.FileType == FileType.CustomerSettings)
         {
-            ModelState.AddModelError("Upload.FileType", "Please select a file type.");
-        }
-
-        // Validate customer name for CustomerSettings
-        if (Upload.FileType == FileType.CustomerSettings && string.IsNullOrWhiteSpace(Upload.CustomerName))
-        {
-            ModelState.AddModelError("Upload.CustomerName", "Customer name is required for Customer Settings files.");
-        }
-
-        // Validate customer exists in customers.json for CustomerSettings
-        if (Upload.FileType == FileType.CustomerSettings && !string.IsNullOrWhiteSpace(Upload.CustomerName))
-        {
-            var customerExists = await _fileManagementService.ValidateCustomerExistsAsync(Upload.CustomerName);
-            if (!customerExists)
-            {
-                ModelState.AddModelError("Upload.CustomerName", "Customer not found. Please select a valid customer from the suggestions.");
-            }
+            ModelState.AddModelError("Upload.FileType", "Please select a valid file type.");
         }
 
         // File validation
@@ -94,13 +78,6 @@ public class FileManagementModel : PageModel
             return Page();
         }
  */
-        // Validate customer name for customer settings
-        if (Upload.FileType == FileType.CustomerSettings && string.IsNullOrWhiteSpace(Upload.CustomerName))
-        {
-            ErrorMessage = "Customer name is required for Customer Settings files.";
-            return Page();
-        }
-
         var (success, message) = await _fileManagementService.UploadFileAsync(Upload);
 
         if (success)
@@ -231,7 +208,9 @@ public class FileManagementModel : PageModel
 
     private async Task LoadFilesAsync()
     {
-        Files = await _fileManagementService.GetManagedFilesAsync();
+        // Get all managed files and exclude customer settings
+        var allFiles = await _fileManagementService.GetManagedFilesAsync();
+        Files = allFiles.Where(f => f.FileType != FileType.CustomerSettings).ToList();
     }
 
     private void CleanupTempFiles()

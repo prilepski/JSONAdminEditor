@@ -5,8 +5,8 @@ A .NET 9 web application that provides a web-based interface for editing JSON fi
 ## Features
 
 - **File Management System**: Organized management of predefined JSON files with structured file types
-- **Structured File Types**: Support for Templates, Customers, Default Settings, and Customer Settings
-- **Vertical Navigation**: Easy switching between File Management and JSON Editor pages
+- **Structured File Types**: Support for Templates, Customers, Event Triggers, Event Channels, and Customer Settings
+- **Vertical Navigation**: Easy switching between Dictionaries and JSON Editor pages
 - **Dynamic Table Generation**: Automatically converts JSON arrays and objects into editable tables
 - **In-line Editing**: Edit data directly in table cells
 - **Add/Remove Rows**: Dynamic row management with add and delete functionality
