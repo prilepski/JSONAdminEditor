@@ -1,0 +1,63 @@
+{
+  "ContentVariables": {
+    "cust_name": "$Customer.FriendlyName$",
+    "ait_tracking_num": "$ShipmentNum$",
+    "tracking_url": "www.myait.com/Tracking/$ShipmentNum$",
+    "cust_logo": "base64:DBSDIBDUIBG3209523"
+  },
+  "Events": [
+    {
+      "Event": "Transport Booking Created",
+      "OrderType": "ALL",
+      "EmailTemplateId": "TwillioID_12345",
+      "SmsTemplateId": "TwillioID_12345",
+      "VoiceTwiMLBaseUrl": "",
+      "IsSuppressed": true,
+      "ContentVariables": {
+        "SpecificVariable1": "$mapping.value$"
+      }
+    },
+    {
+      "Event": "Reminder",
+      "OrderType": "Pickup",
+      "EmailTemplateId": null,
+      "SmsTemplateId": "TwillioID_12345",
+      "VoiceTwiMLBaseUrl": null,
+      "IsSuppressed": false,
+      "PreferredCommunication": [
+        {
+          "Type": "sms",
+          "Priority": 1
+        }
+      ],
+      "ContentVariables": {
+        "SpecificVariable2": "$mapping.value$"
+      }
+    },
+    {
+      "Event": "Reminder",
+      "OrderType": "Delivery",
+      "EmailTemplateId": "TwillioID_12345",
+      "SmsTemplateId": "TwillioID_12345",
+      "VoiceTwiMLBaseUrl": "",
+      "IsSuppressed": false,
+      "ContentVariables": {
+        "SpecificVariable2": "$mapping.value$"
+      }
+    }
+  ],
+  "PreferredCommunication": [
+    {
+      "Channel": "email",
+      "Priority": 1
+    },
+    {
+      "Channel": "sms",
+      "Priority": 1
+    },
+    {
+      "Channel": "voice",
+      "Priority": 3
+    }
+  ]
+}
