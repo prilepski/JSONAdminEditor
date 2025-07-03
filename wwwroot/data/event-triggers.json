@@ -1,7 +1,7 @@
 [
   {
     "Event Name": "Schedule Appointment",
-    "IsActive": false
+    "IsActive": true
   },
   {
     "Event Name": "Scheduling Reminder",

@@ -1,0 +1,242 @@
+@page
+@model JSONAdminEditor.Pages.EventsModel
+@{
+    ViewData["Title"] = "Events";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">Events Management</h1>
+    
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Events Section:</strong> Configure event-specific notification settings including order types, template IDs, and communication preferences. Select an event from the dropdown to edit its configuration.
+    </div>
+            
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@Model.ErrorMessage
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@Model.SuccessMessage
+        </div>
+    }
+
+    <!-- Event Selection -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3><i class="fas fa-calendar-alt me-2"></i>Select Event</h3>
+        </div>
+        <div class="card-body">
+            <form method="get" id="eventSelectionForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="selectedEvent" class="form-label">Event Name:</label>
+                            <select class="form-select" name="selectedEvent" id="selectedEvent" onchange="this.form.submit()">
+                                <option value="">Select an event...</option>
+                                @if (Model.ActiveEventTriggers?.Any() == true)
+                                {
+                                    foreach (var trigger in Model.ActiveEventTriggers)
+                                    {
+                                        <option value="@trigger" selected="@(trigger == Model.SelectedEvent ? "selected" : null)">@trigger</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SelectedEvent) && Model.EventData != null)
+    {
+        <!-- Event Data Editor -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-edit me-2"></i>Edit Event: @Model.SelectedEvent</h3>
+            </div>
+            <div class="card-body">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="eventTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="event-data-tab" data-bs-toggle="tab" data-bs-target="#event-data" type="button" role="tab" aria-controls="event-data" aria-selected="true">
+                            <i class="fas fa-cog me-1"></i>Event Data
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="content-variables-tab" data-bs-toggle="tab" data-bs-target="#content-variables" type="button" role="tab" aria-controls="content-variables" aria-selected="false">
+                            <i class="fas fa-code me-1"></i>Content Variables
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="eventTabsContent">
+                    <!-- Event Data Tab -->
+                    <div class="tab-pane fade show active" id="event-data" role="tabpanel" aria-labelledby="event-data-tab">
+                        <form method="post" asp-page-handler="SaveEventData" id="eventDataForm">
+                            <input type="hidden" asp-for="SelectedEvent" />
+                            
+                            @if (Model.ValidationErrors?.Any() == true)
+                            {
+                                <div class="alert alert-danger">
+                                    <h6>Please fix the following errors:</h6>
+                                    <ul class="mb-0">
+                                        @foreach (var error in Model.ValidationErrors)
+                                        {
+                                            <li>@error.Message</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th style="width: 30%">Property</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Event Name (Read-only) -->
+                                        <tr>
+                                            <td><strong>Event</strong></td>
+                                            <td>
+                                                <input type="text" class="form-control" value="@Model.SelectedEvent" readonly />
+                                                <small class="text-muted">This field is read-only and matches the selected event.</small>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- OrderType -->
+                                        <tr>
+                                            <td><strong>OrderType</strong></td>
+                                            <td>
+                                                @{
+                                                    var orderTypeValue = Model.EventData.TryGetValue("OrderType", out var ot) ? ot?.ToString() : "";
+                                                    var hasOrderTypeError = Model.ValidationErrors?.Any(e => e.FieldName == "OrderType") == true;
+                                                    var orderTypeError = hasOrderTypeError ? Model.ValidationErrors?.FirstOrDefault(e => e.FieldName == "OrderType")?.Message : "";
+                                                }
+                                                <input type="text" name="OrderType" class="form-control @(hasOrderTypeError ? "is-invalid" : "")" value="@orderTypeValue" />
+                                                @if (hasOrderTypeError)
+                                                {
+                                                    <div class="invalid-feedback">@orderTypeError</div>
+                                                }
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- EmailTemplateId -->
+                                        <tr>
+                                            <td><strong>EmailTemplateId</strong></td>
+                                            <td>
+                                                @{
+                                                    var emailTemplateValue = Model.EventData.TryGetValue("EmailTemplateId", out var et) ? et?.ToString() : "";
+                                                }
+                                                <input type="text" name="EmailTemplateId" class="form-control" value="@emailTemplateValue" />
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- SmsTemplateId -->
+                                        <tr>
+                                            <td><strong>SmsTemplateId</strong></td>
+                                            <td>
+                                                @{
+                                                    var smsTemplateValue = Model.EventData.TryGetValue("SmsTemplateId", out var st) ? st?.ToString() : "";
+                                                }
+                                                <input type="text" name="SmsTemplateId" class="form-control" value="@smsTemplateValue" />
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- VoiceTwiMLBaseUrl -->
+                                        <tr>
+                                            <td><strong>VoiceTwiMLBaseUrl</strong></td>
+                                            <td>
+                                                @{
+                                                    var voiceUrlValue = Model.EventData.TryGetValue("VoiceTwiMLBaseUrl", out var vu) ? vu?.ToString() : "";
+                                                }
+                                                <input type="text" name="VoiceTwiMLBaseUrl" class="form-control" value="@voiceUrlValue" />
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- IsSuppressed -->
+                                        <tr>
+                                            <td><strong>IsSuppressed</strong></td>
+                                            <td>
+                                                @{
+                                                    var isSuppressedValue = Model.EventData.TryGetValue("IsSuppressed", out var isSup) ? isSup?.ToString()?.ToLower() : "false";
+                                                }
+                                                <select name="IsSuppressed" class="form-select">
+                                                    <option value="true" selected="@(isSuppressedValue == "true" ? "selected" : null)">True</option>
+                                                    <option value="false" selected="@(isSuppressedValue == "false" ? "selected" : null)">False</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Save Event Data
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Content Variables Tab -->
+                    <div class="tab-pane fade" id="content-variables" role="tabpanel" aria-labelledby="content-variables-tab">
+                        <div class="text-center py-4">
+                            <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Content Variables Editor</h5>
+                            <p class="text-muted">Content Variables editing functionality will be implemented in the next step.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Model.SelectedEvent))
+    {
+        <div class="card">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h4 class="text-muted">Event Not Found</h4>
+                <p class="text-muted">The selected event "@Model.SelectedEvent" was not found in the notifications.json file.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Select an Event</h4>
+                <p class="text-muted">Choose an event from the dropdown above to start editing its configuration.</p>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Clear validation errors when user types
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('#eventDataForm input, #eventDataForm select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                    const feedback = this.parentNode.querySelector('.invalid-feedback');
+                    if (feedback) {
+                        feedback.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

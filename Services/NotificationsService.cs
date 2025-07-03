@@ -238,5 +238,169 @@ namespace JSONAdminEditor.Services
                 return false;
             }
         }
+
+        public async Task<List<Dictionary<string, object>>?> GetEventsAsync()
+        {
+            try
+            {
+                if (!File.Exists(_notificationsFilePath))
+                {
+                    return new List<Dictionary<string, object>>();
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var document = JsonDocument.Parse(jsonContent);
+                
+                if (document.RootElement.TryGetProperty("Events", out var eventsElement))
+                {
+                    var result = new List<Dictionary<string, object>>();
+                    
+                    foreach (var item in eventsElement.EnumerateArray())
+                    {
+                        var dict = new Dictionary<string, object>();
+                        foreach (var prop in item.EnumerateObject())
+                        {
+                            dict[prop.Name] = prop.Value.ValueKind switch
+                            {
+                                JsonValueKind.String => prop.Value.GetString() ?? "",
+                                JsonValueKind.Number => prop.Value.GetInt32(),
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Null => "",
+                                _ => prop.Value.GetRawText()
+                            };
+                        }
+                        result.Add(dict);
+                    }
+                    
+                    return result;
+                }
+                
+                return new List<Dictionary<string, object>>();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<Dictionary<string, object>?> GetEventByNameAsync(string eventName)
+        {
+            var events = await GetEventsAsync();
+            if (events == null) return null;
+
+            return events.FirstOrDefault(e => 
+                e.TryGetValue("Event", out var nameObj) && 
+                nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        public async Task<bool> UpdateEventAsync(string eventName, Dictionary<string, object> eventData)
+        {
+            try
+            {
+                // Read the entire notifications.json file
+                var existingContent = new Dictionary<string, object>();
+                
+                if (File.Exists(_notificationsFilePath))
+                {
+                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var document = JsonDocument.Parse(jsonContent);
+                    
+                    // Preserve existing sections
+                    foreach (var prop in document.RootElement.EnumerateObject())
+                    {
+                        var deserializedValue = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                        if (deserializedValue != null)
+                        {
+                            existingContent[prop.Name] = deserializedValue;
+                        }
+                    }
+                }
+
+                // Update the specific event in the Events section
+                if (existingContent.TryGetValue("Events", out var eventsObj) && eventsObj is JsonElement eventsElement)
+                {
+                    var eventsList = new List<Dictionary<string, object>>();
+                    
+                    foreach (var item in eventsElement.EnumerateArray())
+                    {
+                        var eventDict = new Dictionary<string, object>();
+                        foreach (var prop in item.EnumerateObject())
+                        {
+                            eventDict[prop.Name] = prop.Value.ValueKind switch
+                            {
+                                JsonValueKind.String => prop.Value.GetString() ?? "",
+                                JsonValueKind.Number => prop.Value.GetInt32(),
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Null => "",
+                                _ => prop.Value.GetRawText()
+                            };
+                        }
+                        
+                        // Check if this is the event we want to update
+                        if (eventDict.TryGetValue("Event", out var nameObj) && 
+                            nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            // Update with new data, but preserve the Event name
+                            eventDict = new Dictionary<string, object>(eventData)
+                            {
+                                ["Event"] = eventName
+                            };
+                        }
+                        
+                        eventsList.Add(eventDict);
+                    }
+                    
+                    existingContent["Events"] = eventsList;
+                }
+                
+                // Write back to file
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = null
+                };
+                
+                var updatedJson = JsonSerializer.Serialize(existingContent, options);
+                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<List<string>> GetActiveEventTriggersAsync()
+        {
+            try
+            {
+                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "event-triggers.json");
+                
+                if (!File.Exists(eventTriggersFilePath))
+                {
+                    return new List<string>();
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(eventTriggersFilePath);
+                var triggers = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
+                
+                if (triggers == null) return new List<string>();
+                
+                return triggers
+                    .Where(t => t.ContainsKey("Event Name") && 
+                               t.ContainsKey("IsActive") && 
+                               t["IsActive"].ToString()?.ToLower() == "true")
+                    .Select(t => t["Event Name"]?.ToString() ?? "")
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .ToList();
+            }
+            catch (Exception)
+            {
+                return new List<string>();
+            }
+        }
     }
 }
