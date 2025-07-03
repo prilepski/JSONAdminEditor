@@ -58,6 +58,10 @@ namespace JSONAdminEditor.Services
                         fileName = "event-channels.json";
                         filePath = Path.Combine(_dataFolder, fileName);
                         break;
+                    case FileType.OrderTypes:
+                        fileName = "order-types.json";
+                        filePath = Path.Combine(_dataFolder, fileName);
+                        break;
                     case FileType.CustomerSettings:
                         if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
                         {
@@ -129,6 +133,10 @@ namespace JSONAdminEditor.Services
                         fileName = "event-channels.json";
                         filePath = Path.Combine(_dataFolder, fileName);
                         break;
+                    case FileType.OrderTypes:
+                        fileName = "order-types.json";
+                        filePath = Path.Combine(_dataFolder, fileName);
+                        break;
                     case FileType.CustomerSettings:
                         if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
                         {
@@ -171,6 +179,7 @@ namespace JSONAdminEditor.Services
             AddFileIfExists(files, Path.Combine(_dataFolder, "customers.json"), FileType.Customers);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-triggers.json"), FileType.EventTriggers);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-channels.json"), FileType.EventChannels);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "order-types.json"), FileType.OrderTypes);
 
             // Add customer files
             if (Directory.Exists(_customerFolder))
@@ -213,6 +222,7 @@ namespace JSONAdminEditor.Services
             AddFileIfExists(files, Path.Combine(_dataFolder, "customers.json"), FileType.Customers);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-triggers.json"), FileType.EventTriggers);
             AddFileIfExists(files, Path.Combine(_dataFolder, "event-channels.json"), FileType.EventChannels);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "order-types.json"), FileType.OrderTypes);
 
             // Add customer files (without lookup for performance)
             if (Directory.Exists(_customerFolder))
@@ -426,6 +436,7 @@ namespace JSONAdminEditor.Services
                 FileType.Customers => "Customers",
                 FileType.EventTriggers => "Event Triggers",
                 FileType.EventChannels => "Event Channels",
+                FileType.OrderTypes => "Order Types",
                 FileType.CustomerSettings => "Customer Settings",
                 _ => fileType.ToString()
             };

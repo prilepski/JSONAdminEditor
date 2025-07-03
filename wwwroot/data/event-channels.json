@@ -10,5 +10,9 @@
   {
     "Channel Name": "Voice",
     "IsActive": true
+  },
+  {
+    "Channel Name": "doves",
+    "IsActive": false
   }
 ]

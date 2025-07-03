@@ -58,6 +58,8 @@
     "cust_name": "$Customer.FriendlyName$",
     "ait_tracking_num": "$ShipmentNum$",
     "tracking_url": "www.myait.com/Tracking/$ShipmentNum$",
-    "cust_logo": "base64:DBSDIBDUIBG3209523"
+    "cust_logo": "base64:DBSDIBDUIBG3209523",
+    "var1": "",
+    "var2": ""
   }
 }

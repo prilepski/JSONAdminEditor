@@ -15,7 +15,8 @@ namespace JSONAdminEditor.Services
                 { "templates.json", "templateId" },
                 { "customers.json", "customerId" },
                 { "event-triggers.json", "Event Name" },
-                { "event-channels.json", "Channel Name" }
+                { "event-channels.json", "Channel Name" },
+                { "order-types.json", "Order Type" }
             };
         }
 

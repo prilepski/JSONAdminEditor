@@ -9,7 +9,8 @@ namespace JSONAdminEditor.Models
         Customers = 2,
         CustomerSettings = 4,
         EventTriggers = 5,
-        EventChannels = 6
+        EventChannels = 6,
+        OrderTypes = 7
     }
 
     public class FileManagementViewModel
