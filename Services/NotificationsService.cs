@@ -441,5 +441,65 @@ namespace JSONAdminEditor.Services
                 return false;
             }
         }
+
+        public async Task<List<string>> GetAvailableOrderTypesAsync()
+        {
+            try
+            {
+                var orderTypesFilePath = Path.Combine(_environment.WebRootPath, "data", "order-types.json");
+                
+                if (!File.Exists(orderTypesFilePath))
+                {
+                    return new List<string>();
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(orderTypesFilePath);
+                var orderTypes = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
+                
+                if (orderTypes == null) return new List<string>();
+                
+                return orderTypes
+                    .Where(ot => ot.ContainsKey("Order Type"))
+                    .Select(ot => ot["Order Type"]?.ToString() ?? "")
+                    .Where(orderType => !string.IsNullOrWhiteSpace(orderType))
+                    .ToList();
+            }
+            catch (Exception)
+            {
+                return new List<string>();
+            }
+        }
+
+        public async Task<List<(string TemplateId, string TemplateName)>> GetAvailableTemplatesAsync()
+        {
+            try
+            {
+                var templatesFilePath = Path.Combine(_environment.WebRootPath, "data", "templates.json");
+                
+                if (!File.Exists(templatesFilePath))
+                {
+                    return new List<(string, string)>();
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(templatesFilePath);
+                var templates = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
+                
+                if (templates == null) return new List<(string, string)>();
+                
+                return templates
+                    .Where(t => t.ContainsKey("templateId") && t.ContainsKey("templateName"))
+                    .Select(t => (
+                        TemplateId: t["templateId"]?.ToString() ?? "",
+                        TemplateName: t["templateName"]?.ToString() ?? ""
+                    ))
+                    .Where(template => !string.IsNullOrWhiteSpace(template.TemplateId) && 
+                                     !string.IsNullOrWhiteSpace(template.TemplateName))
+                    .ToList();
+            }
+            catch (Exception)
+            {
+                return new List<(string, string)>();
+            }
+        }
     }
 }

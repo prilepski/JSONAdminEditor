@@ -16,6 +16,8 @@ public class EventsModel : PageModel
     public bool IsNewEvent { get; set; }
 
     public List<string> ActiveEventTriggers { get; set; } = new();
+    public List<string> AvailableOrderTypes { get; set; } = new();
+    public List<(string TemplateId, string TemplateName)> AvailableTemplates { get; set; } = new();
     public Dictionary<string, object>? EventData { get; set; }
     public List<ValidationError> ValidationErrors { get; set; } = new();
     public string? ErrorMessage { get; set; }
@@ -29,6 +31,8 @@ public class EventsModel : PageModel
     public async Task OnGetAsync()
     {
         await LoadActiveEventTriggersAsync();
+        await LoadAvailableOrderTypesAsync();
+        await LoadAvailableTemplatesAsync();
         
         if (!string.IsNullOrEmpty(SelectedEvent))
         {
@@ -48,6 +52,8 @@ public class EventsModel : PageModel
         SelectedEvent = eventName;
         IsNewEvent = true;
         await LoadActiveEventTriggersAsync();
+        await LoadAvailableOrderTypesAsync();
+        await LoadAvailableTemplatesAsync();
         await LoadEventTemplateAsync();
         return Page();
     }
@@ -55,6 +61,8 @@ public class EventsModel : PageModel
     public async Task<IActionResult> OnPostSaveEventDataAsync()
     {
         await LoadActiveEventTriggersAsync();
+        await LoadAvailableOrderTypesAsync();
+        await LoadAvailableTemplatesAsync();
 
         if (string.IsNullOrEmpty(SelectedEvent))
         {
@@ -85,10 +93,11 @@ public class EventsModel : PageModel
         }
         else if (!IsValidOrderType(orderType))
         {
+            var availableTypes = string.Join("', '", AvailableOrderTypes);
             ValidationErrors.Add(new ValidationError 
             { 
                 FieldName = "OrderType", 
-                Message = "OrderType must be 'ALL', 'Pickup', or 'Delivery'" 
+                Message = $"OrderType must be one of: '{availableTypes}'" 
             });
         }
 
@@ -159,6 +168,11 @@ public class EventsModel : PageModel
         ActiveEventTriggers = await _notificationsService.GetActiveEventTriggersAsync();
     }
 
+    private async Task LoadAvailableOrderTypesAsync()
+    {
+        AvailableOrderTypes = await _notificationsService.GetAvailableOrderTypesAsync();
+    }
+
     private async Task LoadEventDataAsync()
     {
         if (string.IsNullOrEmpty(SelectedEvent))
@@ -200,10 +214,13 @@ public class EventsModel : PageModel
         }
     }
 
-    private static bool IsValidOrderType(string orderType)
+    private async Task LoadAvailableTemplatesAsync()
     {
-        return orderType.Equals("ALL", StringComparison.OrdinalIgnoreCase) ||
-               orderType.Equals("Pickup", StringComparison.OrdinalIgnoreCase) ||
-               orderType.Equals("Delivery", StringComparison.OrdinalIgnoreCase);
+        AvailableTemplates = await _notificationsService.GetAvailableTemplatesAsync();
+    }
+
+    private bool IsValidOrderType(string orderType)
+    {
+        return AvailableOrderTypes.Any(ot => ot.Equals(orderType, StringComparison.OrdinalIgnoreCase));
     }
 }

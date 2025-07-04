@@ -131,7 +131,16 @@
                                                     var hasOrderTypeError = Model.ValidationErrors?.Any(e => e.FieldName == "OrderType") == true;
                                                     var orderTypeError = hasOrderTypeError ? Model.ValidationErrors?.FirstOrDefault(e => e.FieldName == "OrderType")?.Message : "";
                                                 }
-                                                <input type="text" name="OrderType" class="form-control @(hasOrderTypeError ? "is-invalid" : "")" value="@orderTypeValue" />
+                                                <select name="OrderType" class="form-select @(hasOrderTypeError ? "is-invalid" : "")">
+                                                    <option value="">Select Order Type...</option>
+                                                    @if (Model.AvailableOrderTypes?.Any() == true)
+                                                    {
+                                                        foreach (var orderType in Model.AvailableOrderTypes)
+                                                        {
+                                                            <option value="@orderType" selected="@(orderType.Equals(orderTypeValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@orderType</option>
+                                                        }
+                                                    }
+                                                </select>
                                                 @if (hasOrderTypeError)
                                                 {
                                                     <div class="invalid-feedback">@orderTypeError</div>
@@ -146,7 +155,18 @@
                                                 @{
                                                     var emailTemplateValue = Model.EventData.TryGetValue("EmailTemplateId", out var et) ? et?.ToString() : "";
                                                 }
-                                                <input type="text" name="EmailTemplateId" class="form-control" value="@emailTemplateValue" />
+                                                <select name="EmailTemplateId" class="form-select">
+                                                    <option value="">Select Email Template...</option>
+                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    {
+                                                        foreach (var template in Model.AvailableTemplates)
+                                                        {
+                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(emailTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                                                @template.TemplateName (@template.TemplateId)
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
                                             </td>
                                         </tr>
                                         
@@ -157,7 +177,18 @@
                                                 @{
                                                     var smsTemplateValue = Model.EventData.TryGetValue("SmsTemplateId", out var st) ? st?.ToString() : "";
                                                 }
-                                                <input type="text" name="SmsTemplateId" class="form-control" value="@smsTemplateValue" />
+                                                <select name="SmsTemplateId" class="form-select">
+                                                    <option value="">Select SMS Template...</option>
+                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    {
+                                                        foreach (var template in Model.AvailableTemplates)
+                                                        {
+                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(smsTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                                                @template.TemplateName (@template.TemplateId)
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
                                             </td>
                                         </tr>
                                         
@@ -168,7 +199,18 @@
                                                 @{
                                                     var voiceUrlValue = Model.EventData.TryGetValue("VoiceTwiMLBaseUrl", out var vu) ? vu?.ToString() : "";
                                                 }
-                                                <input type="text" name="VoiceTwiMLBaseUrl" class="form-control" value="@voiceUrlValue" />
+                                                <select name="VoiceTwiMLBaseUrl" class="form-select">
+                                                    <option value="">Select Voice Template...</option>
+                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    {
+                                                        foreach (var template in Model.AvailableTemplates)
+                                                        {
+                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(voiceUrlValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                                                @template.TemplateName (@template.TemplateId)
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
                                             </td>
                                         </tr>
                                         
