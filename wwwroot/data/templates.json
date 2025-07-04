@@ -1,10 +1,32 @@
 [
   {
     "templateId": "123456qweqwe",
-    "templateName": "Schedule Appointment"
+    "templateName": "Schedule Appointment",
+    "channelType": "Email"
   },
   {
     "templateId": "5432qwerty",
-    "templateName": "Next Stop"
+    "templateName": "Next Stop",
+    "channelType": "Email"
+  },
+  {
+    "templateId": "123456qweqwesms",
+    "templateName": "Schedule Appointment",
+    "channelType": "SMS"
+  },
+  {
+    "templateId": "5432qwertysms",
+    "templateName": "Next Stop",
+    "channelType": "SMS"
+  },
+  {
+    "templateId": "123456qweqwevoice",
+    "templateName": "Schedule Appointment",
+    "channelType": "Voice"
+  },
+  {
+    "templateId": "5432qwertyvoice",
+    "templateName": "Next Stop",
+    "channelType": "Voice"
   }
 ]

@@ -206,6 +206,57 @@ public class DictionariesModel : PageModel
         return Page();
     }
 
+    public async Task<IActionResult> OnPostDirectUploadAsync()
+    {
+        await LoadFilesAsync();
+
+        // Get the file type from form data
+        if (Request.Form.TryGetValue("Upload.FileType", out var fileTypeStr))
+        {
+            if (int.TryParse(fileTypeStr, out var fileTypeInt) && Enum.IsDefined(typeof(FileType), fileTypeInt))
+            {
+                Upload.FileType = (FileType)fileTypeInt;
+            }
+        }
+
+        // For dictionaries, CustomerName should always be empty
+        Upload.CustomerName = string.Empty;
+
+        // Custom validation for FileType enum - all dictionary types are valid except None
+        if (Upload.FileType == FileType.None)
+        {
+            ModelState.AddModelError("Upload.FileType", "Please select a valid file type.");
+        }
+
+        // File validation
+        if (Upload.JsonFile == null || Upload.JsonFile.Length == 0)
+        {
+            ModelState.AddModelError("Upload.JsonFile", "Please select a JSON file.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            ErrorMessage = "Please correct the validation errors and try again.";
+            return Page();
+        }
+
+        // Directly call OverwriteFileAsync since user has already confirmed via overlay
+        var (success, message) = await _fileManagementService.OverwriteFileAsync(Upload);
+
+        if (success)
+        {
+            SuccessMessage = message;
+            Upload = new FileUploadViewModel(); // Reset form
+            await LoadFilesAsync(); // Refresh file list
+        }
+        else
+        {
+            ErrorMessage = message;
+        }
+
+        return Page();
+    }
+
     private async Task LoadFilesAsync()
     {
         // Get all managed files and exclude customer settings

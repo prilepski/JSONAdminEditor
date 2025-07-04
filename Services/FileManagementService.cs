@@ -432,7 +432,7 @@ namespace JSONAdminEditor.Services
             return fileType switch
             {
                 FileType.None => "None",
-                FileType.Templates => "Templates",
+                FileType.Templates => "Notification Templates",
                 FileType.Customers => "Customers",
                 FileType.EventTriggers => "Event Triggers",
                 FileType.EventChannels => "Event Channels",

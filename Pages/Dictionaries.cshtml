@@ -7,7 +7,11 @@
 }
 
 <div class="container-fluid">
-    <h1 class="mb-4">Dictionaries Management</h1>
+    <h1 class="mb-4"><i class="fas fa-book me-2"></i>Dictionary Management</h1>
+    <p class="lead text-muted mb-4">
+        Manage system dictionaries that provide reference data for notifications, events, and customer configurations. 
+        These dictionaries are used throughout the system to populate dropdowns and validate data.
+    </p>
             
             @if (!string.IsNullOrEmpty(Model.ErrorMessage))
             {
@@ -40,44 +44,48 @@
             <!-- File Upload Section -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3><i class="fas fa-upload me-2"></i>Upload JSON File</h3>
+                    <h3><i class="fas fa-cog me-2"></i>Dictionary Settings</h3>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Upload.FileType" class="form-label">File Type:</label>
-                                    <select asp-for="Upload.FileType" class="form-select" required id="fileTypeSelect">
-                                        <option value="0">Select file type...</option>
-                                        <option value="1">Templates</option>
-                                        <option value="2">Customers</option>
-                                        <option value="5">Event Triggers</option>
-                                        <option value="6">Event Channels</option>
-                                        <option value="7">Order Types</option>
-                                    </select>
-                                    <span asp-validation-for="Upload.FileType" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Upload.JsonFile" class="form-label">Select JSON File:</label>
-                                    <input asp-for="Upload.JsonFile" class="form-control" accept=".json" required>
-                                    <span asp-validation-for="Upload.JsonFile" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload me-1"></i>Upload File
-                        </button>
-                    </form>
+                    <!-- Dictionary Selection - Full Width -->
+                    <div class="mb-3">
+                        <label asp-for="Upload.FileType" class="form-label">Choose Dictionary:</label>
+                        <select asp-for="Upload.FileType" class="form-select" required id="fileTypeSelect">
+                            <option value="0">Select dictionary type...</option>
+                            <option value="1">Notification Templates</option>
+                            <option value="5">Event Triggers</option>
+                            <option value="6">Event Channels</option>
+                            <option value="7">Order Types</option>
+                            <option value="2">Customers</option>
+                        </select>
+                        <span asp-validation-for="Upload.FileType" class="text-danger"></span>
+                    </div>
                 </div>
             </div>
 
             <!-- Files List -->
             <div class="card">
                 <div class="card-header">
-                    <h3><i class="fas fa-list me-2"></i>Dictionary Files</h3>
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h3><i class="fas fa-list me-2"></i>Dictionary Files</h3>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- File Upload Control - Only shown when dictionary is selected -->
+                            <div id="fileUploadSection" style="display: none;">
+                                <form method="post" enctype="multipart/form-data" asp-page-handler="DirectUpload" id="uploadForm">
+                                    <input type="hidden" name="Upload.FileType" id="hiddenFileType" value="0" />
+                                    <input type="hidden" name="Upload.CustomerName" id="hiddenCustomerName" value="" />
+                                    <div class="input-group">
+                                        <label class="input-group-text" for="fileInput">
+                                            <i class="fas fa-upload me-1"></i>Replace Dictionary
+                                        </label>
+                                        <input type="file" class="form-control" accept=".json" id="fileInput" name="Upload.JsonFile" required>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if (Model.Files?.Any() == true)
@@ -86,8 +94,8 @@
                             <table class="table table-striped table-hover">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>File Path</th>
-                                        <th>File Type</th>
+                                        <th>Dictionary File</th>
+                                        <th>Dictionary Type</th>
                                         <th>Customer</th>
                                         <th>Last Modified</th>
                                         <th>Actions</th>
@@ -148,18 +156,110 @@
                     {
                         <div class="text-center py-4">
                             <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No files uploaded yet. Start by uploading your first JSON file above.</p>
+                            <p class="text-muted">No dictionary files uploaded yet. Start by uploading your first dictionary file above.</p>
                         </div>
                     }
                 </div>
             </div>
 </div>
 
+<!-- Confirmation Overlay -->
+<div id="confirmationOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); z-index: 1050; display: none !important;">
+    <div class="card" style="max-width: 500px; width: 90%;">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Replace Dictionary</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">
+                <strong>Warning:</strong> The <span id="dictionaryName" class="text-primary"></span> dictionary will be completely replaced with the content of the selected file.
+            </p>
+            <p class="mb-3 text-muted">
+                This action cannot be undone. All existing data in this dictionary will be lost.
+            </p>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" id="cancelUpload">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmUpload">
+                    <i class="fas fa-upload me-1"></i>Replace Dictionary
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        // Initialize on page load
+        let selectedFileType = '0';
+        let selectedFileName = '';
+        
+        // Dictionary type mappings
+        const dictionaryNames = {
+            '1': 'Notification Templates',
+            '2': 'Customers',
+            '5': 'Event Triggers',
+            '6': 'Event Channels',
+            '7': 'Order Types'
+        };
+        
         document.addEventListener('DOMContentLoaded', function() {
-            // No special functionality needed for dictionaries
+            const fileTypeSelect = document.getElementById('fileTypeSelect');
+            const fileUploadSection = document.getElementById('fileUploadSection');
+            const hiddenFileType = document.getElementById('hiddenFileType');
+            const hiddenCustomerName = document.getElementById('hiddenCustomerName');
+            const fileInput = document.getElementById('fileInput');
+            const confirmationOverlay = document.getElementById('confirmationOverlay');
+            const dictionaryNameSpan = document.getElementById('dictionaryName');
+            const cancelButton = document.getElementById('cancelUpload');
+            const confirmButton = document.getElementById('confirmUpload');
+            const uploadForm = document.getElementById('uploadForm');
+            
+            // Show/hide file upload section based on dictionary selection
+            fileTypeSelect.addEventListener('change', function() {
+                selectedFileType = this.value;
+                if (selectedFileType !== '0') {
+                    fileUploadSection.style.display = 'block';
+                    hiddenFileType.value = selectedFileType;
+                    // Set customer name to empty for non-customer dictionaries
+                    hiddenCustomerName.value = '';
+                } else {
+                    fileUploadSection.style.display = 'none';
+                    fileInput.value = '';
+                }
+            });
+            
+            // Handle file selection - show confirmation overlay
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0 && selectedFileType !== '0') {
+                    selectedFileName = this.files[0].name;
+                    dictionaryNameSpan.textContent = dictionaryNames[selectedFileType] || 'Selected Dictionary';
+                    confirmationOverlay.style.display = 'flex';
+                }
+            });
+            
+            // Cancel upload
+            cancelButton.addEventListener('click', function() {
+                fileInput.value = '';
+                confirmationOverlay.style.display = 'none';
+            });
+            
+            // Confirm upload - directly submit to DirectUpload handler
+            confirmButton.addEventListener('click', function() {
+                confirmationOverlay.style.display = 'none';
+                
+                // Ensure the hidden field has the correct value before submission
+                hiddenFileType.value = selectedFileType;
+                hiddenCustomerName.value = '';
+                
+                // The form will submit to DirectUpload handler which bypasses the "file exists" confirmation
+                uploadForm.submit();
+            });
+            
+            // Close overlay when clicking outside
+            confirmationOverlay.addEventListener('click', function(e) {
+                if (e.target === confirmationOverlay) {
+                    fileInput.value = '';
+                    confirmationOverlay.style.display = 'none';
+                }
+            });
         });
     </script>
 }
