@@ -1,28 +1,20 @@
 {
   "Events": [
     {
+      "Event": "Schedule Appointment",
       "OrderType": "ALL",
       "EmailTemplateId": "TwillioID_12345",
       "SmsTemplateId": "TwillioID_12345",
       "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": true,
-      "Event": "Schedule Appointment"
+      "IsSuppressed": true
     },
     {
+      "Event": "Scheduling Reminder",
       "OrderType": "ALL",
       "EmailTemplateId": "TwillioID_12345",
       "SmsTemplateId": "TwillioID_12345",
       "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": true,
-      "Event": "Schedule Appointment"
-    },
-    {
-      "OrderType": "ALL",
-      "EmailTemplateId": "TwillioID_12345",
-      "SmsTemplateId": "TwillioID_12345",
-      "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": true,
-      "Event": "Schedule Appointment"
+      "IsSuppressed": true
     }
   ],
   "PreferredCommunication": [
