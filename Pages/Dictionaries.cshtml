@@ -164,7 +164,7 @@
 </div>
 
 <!-- Confirmation Overlay -->
-<div id="confirmationOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); z-index: 1050; display: none !important;">
+<div id="confirmationOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center d-none" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
     <div class="card" style="max-width: 500px; width: 90%;">
         <div class="card-header bg-warning text-dark">
             <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Replace Dictionary</h5>
@@ -231,19 +231,19 @@
                 if (this.files.length > 0 && selectedFileType !== '0') {
                     selectedFileName = this.files[0].name;
                     dictionaryNameSpan.textContent = dictionaryNames[selectedFileType] || 'Selected Dictionary';
-                    confirmationOverlay.style.display = 'flex';
+                    confirmationOverlay.classList.remove('d-none');
                 }
             });
             
             // Cancel upload
             cancelButton.addEventListener('click', function() {
                 fileInput.value = '';
-                confirmationOverlay.style.display = 'none';
+                confirmationOverlay.classList.add('d-none');
             });
             
             // Confirm upload - directly submit to DirectUpload handler
             confirmButton.addEventListener('click', function() {
-                confirmationOverlay.style.display = 'none';
+                confirmationOverlay.classList.add('d-none');
                 
                 // Ensure the hidden field has the correct value before submission
                 hiddenFileType.value = selectedFileType;
@@ -257,7 +257,7 @@
             confirmationOverlay.addEventListener('click', function(e) {
                 if (e.target === confirmationOverlay) {
                     fileInput.value = '';
-                    confirmationOverlay.style.display = 'none';
+                    confirmationOverlay.classList.add('d-none');
                 }
             });
         });

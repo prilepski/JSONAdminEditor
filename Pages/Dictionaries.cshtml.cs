@@ -210,38 +210,49 @@ public class DictionariesModel : PageModel
     {
         await LoadFilesAsync();
 
+        // Manually parse form data to avoid model binding issues
+        var uploadModel = new FileUploadViewModel();
+
         // Get the file type from form data
         if (Request.Form.TryGetValue("Upload.FileType", out var fileTypeStr))
         {
             if (int.TryParse(fileTypeStr, out var fileTypeInt) && Enum.IsDefined(typeof(FileType), fileTypeInt))
             {
-                Upload.FileType = (FileType)fileTypeInt;
+                uploadModel.FileType = (FileType)fileTypeInt;
             }
         }
 
         // For dictionaries, CustomerName should always be empty
-        Upload.CustomerName = string.Empty;
+        uploadModel.CustomerName = string.Empty;
 
-        // Custom validation for FileType enum - all dictionary types are valid except None
-        if (Upload.FileType == FileType.None)
+        // Get the uploaded file
+        if (Request.Form.Files.Count > 0)
         {
-            ModelState.AddModelError("Upload.FileType", "Please select a valid file type.");
+            uploadModel.JsonFile = Request.Form.Files[0];
         }
 
-        // File validation
-        if (Upload.JsonFile == null || Upload.JsonFile.Length == 0)
+        // Validate required fields
+        if (uploadModel.FileType == FileType.None)
         {
-            ModelState.AddModelError("Upload.JsonFile", "Please select a JSON file.");
+            ErrorMessage = "Please select a valid dictionary type.";
+            return Page();
         }
 
-        if (!ModelState.IsValid)
+        if (uploadModel.JsonFile == null || uploadModel.JsonFile.Length == 0)
         {
-            ErrorMessage = "Please correct the validation errors and try again.";
+            ErrorMessage = "Please select a JSON file to upload.";
+            return Page();
+        }
+
+        // Validate file extension
+        if (!uploadModel.JsonFile.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            ErrorMessage = "Please select a valid JSON file.";
             return Page();
         }
 
         // Directly call OverwriteFileAsync since user has already confirmed via overlay
-        var (success, message) = await _fileManagementService.OverwriteFileAsync(Upload);
+        var (success, message) = await _fileManagementService.OverwriteFileAsync(uploadModel);
 
         if (success)
         {
