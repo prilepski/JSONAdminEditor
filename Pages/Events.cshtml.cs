@@ -12,6 +12,9 @@ public class EventsModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? SelectedEvent { get; set; }
 
+    [BindProperty(SupportsGet = true)]
+    public bool IsNewEvent { get; set; }
+
     public List<string> ActiveEventTriggers { get; set; } = new();
     public Dictionary<string, object>? EventData { get; set; }
     public List<ValidationError> ValidationErrors { get; set; } = new();
@@ -29,8 +32,24 @@ public class EventsModel : PageModel
         
         if (!string.IsNullOrEmpty(SelectedEvent))
         {
-            await LoadEventDataAsync();
+            if (IsNewEvent)
+            {
+                await LoadEventTemplateAsync();
+            }
+            else
+            {
+                await LoadEventDataAsync();
+            }
         }
+    }
+
+    public async Task<IActionResult> OnGetAddEventAsync(string eventName)
+    {
+        SelectedEvent = eventName;
+        IsNewEvent = true;
+        await LoadActiveEventTriggersAsync();
+        await LoadEventTemplateAsync();
+        return Page();
     }
 
     public async Task<IActionResult> OnPostSaveEventDataAsync()
@@ -95,24 +114,41 @@ public class EventsModel : PageModel
         eventData["VoiceTwiMLBaseUrl"] = string.IsNullOrEmpty(voiceTwiMLBaseUrl) ? "" : voiceTwiMLBaseUrl;
         eventData["IsSuppressed"] = isSuppressed.ToLower() == "true";
 
-        // Preserve existing ContentVariables if they exist
-        var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
-        if (existingEvent != null && existingEvent.TryGetValue("ContentVariables", out var contentVars))
+        // Preserve existing ContentVariables if they exist (only for existing events)
+        if (!IsNewEvent)
         {
-            eventData["ContentVariables"] = contentVars;
+            var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
+            if (existingEvent != null && existingEvent.TryGetValue("ContentVariables", out var contentVars))
+            {
+                eventData["ContentVariables"] = contentVars;
+            }
         }
 
-        // Save the updated event
-        var success = await _notificationsService.UpdateEventAsync(SelectedEvent, eventData);
+        bool success;
+        string successMessage;
+
+        if (IsNewEvent)
+        {
+            // Add new event
+            success = await _notificationsService.AddNewEventAsync(SelectedEvent, eventData);
+            successMessage = $"Event '{SelectedEvent}' added successfully!";
+        }
+        else
+        {
+            // Update existing event
+            success = await _notificationsService.UpdateEventAsync(SelectedEvent, eventData);
+            successMessage = $"Event '{SelectedEvent}' updated successfully!";
+        }
 
         if (success)
         {
-            SuccessMessage = $"Event '{SelectedEvent}' updated successfully!";
+            SuccessMessage = successMessage;
+            IsNewEvent = false; // Reset to normal editing mode
             await LoadEventDataAsync(); // Reload to show updated data
         }
         else
         {
-            ErrorMessage = "Failed to save event data.";
+            ErrorMessage = IsNewEvent ? "Failed to add new event." : "Failed to save event data.";
         }
 
         return Page();
@@ -133,6 +169,34 @@ public class EventsModel : PageModel
         if (EventData == null)
         {
             ErrorMessage = $"Event '{SelectedEvent}' not found in notifications.json";
+        }
+    }
+
+    private async Task LoadEventTemplateAsync()
+    {
+        if (string.IsNullOrEmpty(SelectedEvent))
+            return;
+
+        var template = await _notificationsService.GetEventTemplateAsync();
+        
+        if (template != null)
+        {
+            // Set the Event field to the selected event name
+            template["Event"] = SelectedEvent;
+            EventData = template;
+        }
+        else
+        {
+            // Fallback to default values if template is not found
+            EventData = new Dictionary<string, object>
+            {
+                ["Event"] = SelectedEvent,
+                ["OrderType"] = "ALL",
+                ["EmailTemplateId"] = "",
+                ["SmsTemplateId"] = "",
+                ["VoiceTwiMLBaseUrl"] = "",
+                ["IsSuppressed"] = false
+            };
         }
     }
 

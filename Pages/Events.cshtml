@@ -59,7 +59,14 @@
         <!-- Event Data Editor -->
         <div class="card">
             <div class="card-header">
-                <h3><i class="fas fa-edit me-2"></i>Edit Event: @Model.SelectedEvent</h3>
+                <h3>
+                    <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-edit") me-2"></i>
+                    @(Model.IsNewEvent ? "Add New Event" : "Edit Event"): @Model.SelectedEvent
+                </h3>
+                @if (Model.IsNewEvent)
+                {
+                    <small class="text-muted">Creating new event from template</small>
+                }
             </div>
             <div class="card-body">
                 <!-- Tab Navigation -->
@@ -82,6 +89,7 @@
                     <div class="tab-pane fade show active" id="event-data" role="tabpanel" aria-labelledby="event-data-tab">
                         <form method="post" asp-page-handler="SaveEventData" id="eventDataForm">
                             <input type="hidden" asp-for="SelectedEvent" />
+                            <input type="hidden" asp-for="IsNewEvent" />
                             
                             @if (Model.ValidationErrors?.Any() == true)
                             {
@@ -183,7 +191,8 @@
                             
                             <div class="d-flex justify-content-end mt-3">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>Save Event Data
+                                    <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-save") me-1"></i>
+                                    @(Model.IsNewEvent ? "Add Event" : "Save Event Data")
                                 </button>
                             </div>
                         </form>
@@ -208,6 +217,11 @@
                 <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
                 <h4 class="text-muted">Event Not Found</h4>
                 <p class="text-muted">The selected event "@Model.SelectedEvent" was not found in the notifications.json file.</p>
+                <p class="text-muted">
+                    <a href="#" onclick="addEventToNotifications('@Model.SelectedEvent')" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i>Add @Model.SelectedEvent to notifications.json
+                    </a>
+                </p>
             </div>
         </div>
     }
@@ -238,5 +252,11 @@
                 });
             });
         });
+
+        // Function to add new event to notifications.json
+        function addEventToNotifications(eventName) {
+            // Redirect to the same page with parameters to add new event
+            window.location.href = '/Events?handler=AddEvent&eventName=' + encodeURIComponent(eventName);
+        }
     </script>
 }

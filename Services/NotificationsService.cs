@@ -402,5 +402,101 @@ namespace JSONAdminEditor.Services
                 return new List<string>();
             }
         }
+
+        public async Task<Dictionary<string, object>?> GetEventTemplateAsync()
+        {
+            try
+            {
+                var templateFilePath = Path.Combine(_environment.WebRootPath, "data", "templates", "event-template.json");
+                
+                if (!File.Exists(templateFilePath))
+                {
+                    return null;
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(templateFilePath);
+                var template = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
+                
+                return template;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> AddNewEventAsync(string eventName, Dictionary<string, object> eventData)
+        {
+            try
+            {
+                // Read the entire notifications.json file
+                var existingContent = new Dictionary<string, object>();
+                
+                if (File.Exists(_notificationsFilePath))
+                {
+                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var document = JsonDocument.Parse(jsonContent);
+                    
+                    // Preserve existing sections
+                    foreach (var prop in document.RootElement.EnumerateObject())
+                    {
+                        var deserializedValue = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                        if (deserializedValue != null)
+                        {
+                            existingContent[prop.Name] = deserializedValue;
+                        }
+                    }
+                }
+
+                // Get existing Events array or create new one
+                var eventsList = new List<Dictionary<string, object>>();
+                if (existingContent.TryGetValue("Events", out var eventsObj) && eventsObj is JsonElement eventsElement)
+                {
+                    foreach (var item in eventsElement.EnumerateArray())
+                    {
+                        var eventDict = new Dictionary<string, object>();
+                        foreach (var prop in item.EnumerateObject())
+                        {
+                            eventDict[prop.Name] = prop.Value.ValueKind switch
+                            {
+                                JsonValueKind.String => prop.Value.GetString() ?? "",
+                                JsonValueKind.Number => prop.Value.GetInt32(),
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Null => "",
+                                _ => prop.Value.GetRawText()
+                            };
+                        }
+                        eventsList.Add(eventDict);
+                    }
+                }
+
+                // Add the new event with the correct Event name
+                var newEvent = new Dictionary<string, object>(eventData)
+                {
+                    ["Event"] = eventName
+                };
+                eventsList.Add(newEvent);
+
+                // Update the Events section
+                existingContent["Events"] = eventsList;
+                
+                // Write back to file
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = null
+                };
+                
+                var updatedJson = JsonSerializer.Serialize(existingContent, options);
+                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

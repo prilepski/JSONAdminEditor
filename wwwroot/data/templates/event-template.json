@@ -1,0 +1,8 @@
+{
+    "Event": "Event Name",
+    "OrderType": "ALL",
+    "EmailTemplateId": "TwillioID_12345",
+    "SmsTemplateId": "TwillioID_12345",
+    "VoiceTwiMLBaseUrl": "",
+    "IsSuppressed": true
+}
