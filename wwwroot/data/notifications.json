@@ -7,9 +7,7 @@
       "SmsTemplateId": "TwillioID_12345",
       "VoiceTwiMLBaseUrl": "",
       "IsSuppressed": true,
-      "ContentVariables": {
-        "tracking_url": "www.myait.com/Tracking/$ShipmentNum$cust"
-      }
+      "ContentVariables": "{\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$cust\"\n      }"
     },
     {
       "Event": "Schedule Appointment",
@@ -18,10 +16,15 @@
       "SmsTemplateId": "",
       "VoiceTwiMLBaseUrl": "",
       "IsSuppressed": false,
-      "ContentVariables": {
-        "eventvariable": "test",
-        "var2": "testvar2"
-      }
+      "ContentVariables": "{\n        \"eventvariable\": \"test\",\n        \"var2\": \"testvar2\"\n      }"
+    },
+    {
+      "Event": "Final Scheduling Appointment",
+      "OrderType": "ALL",
+      "EmailTemplateId": "",
+      "SmsTemplateId": "",
+      "VoiceTwiMLBaseUrl": "",
+      "IsSuppressed": true
     }
   ],
   "PreferredCommunication": [
