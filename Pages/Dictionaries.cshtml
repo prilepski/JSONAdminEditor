@@ -8,10 +8,6 @@
 
 <div class="container-fluid">
     <h1 class="mb-4"><i class="fas fa-book me-2"></i>Dictionary Management</h1>
-    <p class="lead text-muted mb-4">
-        Manage system dictionaries that provide reference data for notifications, events, and customer configurations. 
-        These dictionaries are used throughout the system to populate dropdowns and validate data.
-    </p>
     
     <form style="display: none;">
         @Html.AntiForgeryToken()
@@ -48,12 +44,12 @@
             <!-- File Upload Section -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3><i class="fas fa-cog me-2"></i>Dictionary Settings</h3>
+                    <h3><i class="fas fa-cog me-2"></i>Select a Dictionary</h3>
+                    <p class="mb-0 text-muted">Manage system dictionaries that provide reference data for notifications, events, and customer configurations. These dictionaries are used throughout the system to populate dropdowns and validate data.</p>
                 </div>
                 <div class="card-body">
                     <!-- Dictionary Selection - Full Width -->
                     <div class="mb-3">
-                        <label asp-for="Upload.FileType" class="form-label">Choose Dictionary:</label>
                         <select asp-for="Upload.FileType" class="form-select" required id="fileTypeSelect">
                             <option value="0">Select dictionary type...</option>
                             <option value="1">Notification Templates</option>
@@ -314,23 +310,23 @@
             
             let tableHtml = `
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="jsonTable">
+                    <table class="table table-striped table-hover" id="jsonTable">
                         <thead class="table-dark">
-                            <tr>
-                                <th>Actions</th>`;
+                            <tr>`;
             
-            // Add column headers
+            // Add column headers first
             jsonData.columnNames.forEach(column => {
                 tableHtml += `<th>${column}</th>`;
             });
             
-            tableHtml += `</tr></thead><tbody>`;
+            // Add Actions column last
+            tableHtml += `<th>Actions</th></tr></thead><tbody>`;
             
             // Add data rows
             jsonData.tableData.forEach((row, rowIndex) => {
                 tableHtml += `<tr data-row-index="${rowIndex}">`;
-                tableHtml += `<td><button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button></td>`;
                 
+                // Add editable columns first
                 jsonData.columnNames.forEach(column => {
                     const cellValue = row[column] || '';
                     const columnType = columnTypes[column] || 'text';
@@ -366,6 +362,9 @@
                     
                     tableHtml += `</td>`;
                 });
+                
+                // Add Actions column last with updated button style
+                tableHtml += `<td><button type="button" class="btn btn-danger btn-sm delete-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>`;
                 
                 tableHtml += `</tr>`;
             });
@@ -411,12 +410,8 @@
             
             newRow.setAttribute('data-row-index', rowIndex);
             
-            // Add delete button cell
-            const deleteCell = newRow.insertCell(0);
-            deleteCell.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>';
-            
-            // Add input cells for each column (skip the first column which is Actions)
-            for (let i = 1; i < headerRow.cells.length; i++) {
+            // Add input cells for each column (skip the last column which is Actions)
+            for (let i = 0; i < headerRow.cells.length - 1; i++) {
                 const cell = newRow.insertCell(i);
                 const columnName = headerRow.cells[i].textContent;
                 const columnType = columnTypes[columnName] || 'text';
@@ -437,6 +432,10 @@
                     input.addEventListener('change', function() { clearValidationErrors(this); });
                 }
             }
+            
+            // Add delete button cell as the last column
+            const deleteCell = newRow.insertCell(headerRow.cells.length - 1);
+            deleteCell.innerHTML = '<button type="button" class="btn btn-danger btn-sm delete-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button>';
         }
         
         function deleteRow(button) {
@@ -551,7 +550,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             
-            // Insert after the Dictionary Settings card
+            // Insert after the Select a Dictionary card
             const settingsCard = document.querySelector('.card:first-of-type');
             settingsCard.insertAdjacentElement('afterend', alertDiv);
             
