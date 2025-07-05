@@ -74,12 +74,28 @@
                 </div>
             </div>
 
-            <!-- Customer Override Management Section -->
-            <div class="card">
+
+
+            <!-- Customer Override Editing Section -->
+            <div id="editingSection" class="card" style="display: none;">
+                <div class="card-header">
+                    <h3 id="editingHeader">
+                        <i class="fas fa-edit me-2"></i>
+                        Edit Customer Overrides: <span id="editingCustomerName"></span>
+                    </h3>
+                    <small class="text-muted">Configure customer-specific overrides for events and content variables</small>
+                </div>
+                <div class="card-body" id="editingContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Default State Section -->
+            <div id="defaultSection" class="card">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-user-cog fa-3x text-muted mb-3"></i>
                     <h4 class="text-muted">Select a Customer</h4>
-                    <p class="text-muted">Choose a customer to start editing their override configuration.</p>
+                    <p class="text-muted">Choose a customer from the search box above to start editing their override configuration.</p>
                 </div>
             </div>
         </div>
@@ -89,6 +105,7 @@
     <script>
         let searchTimeout;
         let selectedCustomerValid = false;
+        let selectedCustomerData = null;
 
         function setupCustomerSearch() {
             const customerInput = document.getElementById('customerNameInput');
@@ -108,6 +125,10 @@
         function handleInput(e) {
             const searchTerm = e.target.value.trim();
             selectedCustomerValid = false;
+            selectedCustomerData = null;
+            
+            // Hide editing section when input changes
+            hideEditingSection();
             
             // Remove the data-customer-id attribute when user types manually
             e.target.removeAttribute('data-customer-id');
@@ -215,6 +236,10 @@
                 customerInput.value = `${customer.companyName} (${customer.customerId})`;
                 customerInput.setAttribute('data-customer-id', customer.customerId);
                 selectedCustomerValid = true;
+                selectedCustomerData = customer;
+                
+                // Load customer override data automatically
+                loadCustomerOverrideData(`${customer.companyName} (${customer.customerId})`);
             }
             hideSuggestions();
         }
@@ -224,6 +249,63 @@
             if (suggestionsDiv) {
                 suggestionsDiv.style.display = 'none';
             }
+        }
+
+        function loadCustomerOverrideData(customerDisplayName) {
+            fetch(`/CustomerSettings?handler=CustomerOverrideData&customerDisplayName=${encodeURIComponent(customerDisplayName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    showEditingSection(data);
+                })
+                .catch(error => {
+                    console.error('Error loading customer override data:', error);
+                    hideEditingSection();
+                });
+        }
+
+        function showEditingSection(data) {
+            const defaultSection = document.getElementById('defaultSection');
+            const editingSection = document.getElementById('editingSection');
+            const editingCustomerName = document.getElementById('editingCustomerName');
+            const editingContent = document.getElementById('editingContent');
+
+            if (defaultSection) defaultSection.style.display = 'none';
+            if (editingSection) editingSection.style.display = 'block';
+            
+            if (editingCustomerName) {
+                editingCustomerName.textContent = data.customerDisplayName || '';
+            }
+
+            if (editingContent) {
+                if (data.exists) {
+                    // Show editing interface for existing override
+                    editingContent.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-cog fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Override Editing</h5>
+                            <p class="text-muted">Override editing functionality will be implemented here.</p>
+                            <p class="text-muted"><strong>Override file exists for this customer.</strong></p>
+                        </div>
+                    `;
+                } else {
+                    // Show message for no override file
+                    editingContent.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Customer Override Found</h4>
+                            <p class="text-muted">There is no override file for this customer. You can create one by uploading a JSON file above.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function hideEditingSection() {
+            const defaultSection = document.getElementById('defaultSection');
+            const editingSection = document.getElementById('editingSection');
+
+            if (editingSection) editingSection.style.display = 'none';
+            if (defaultSection) defaultSection.style.display = 'block';
         }
 
         function validateForm(form) {

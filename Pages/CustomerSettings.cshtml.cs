@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Services;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Pages;
 
@@ -171,6 +172,21 @@ public class CustomerSettingsModel : PageModel
         return Page();
     }
 
+    private string SanitizeCustomerId(string customerId)
+    {
+        if (string.IsNullOrWhiteSpace(customerId))
+            return "";
+
+        // Remove invalid characters and replace with underscores
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(customerId.Where(c => !invalidChars.Contains(c)).ToArray());
+        
+        // Remove extra spaces and replace with underscores
+        sanitized = System.Text.RegularExpressions.Regex.Replace(sanitized, @"\s+", "_");
+        
+        return sanitized.ToUpperInvariant();
+    }
+
     private void CleanupTempFiles()
     {
         try
@@ -210,5 +226,68 @@ public class CustomerSettingsModel : PageModel
 
         var results = await _fileManagementService.SearchCustomersAsync(term);
         return new JsonResult(results);
+    }
+
+    public async Task<IActionResult> OnGetCustomerOverrideDataAsync(string customerDisplayName)
+    {
+        if (string.IsNullOrWhiteSpace(customerDisplayName))
+            return new JsonResult(new { exists = false });
+
+        try
+        {
+            // Extract customer ID from display format if needed
+            var customerId = customerDisplayName;
+            var match = System.Text.RegularExpressions.Regex.Match(customerDisplayName, @"^.+\s\(([^)]+)\)$");
+            if (match.Success)
+            {
+                customerId = match.Groups[1].Value.Trim();
+            }
+
+            // Check if customer override exists by looking for the customer file
+            var sanitizedId = SanitizeCustomerId(customerId);
+            var fileName = $"{sanitizedId}.json";
+            var customerFolder = Path.Combine(_fileManagementService.GetDataFolderPath(), "customers");
+            var filePath = Path.Combine(customerFolder, fileName);
+            
+            var exists = System.IO.File.Exists(filePath);
+            
+            if (exists)
+            {
+                try
+                {
+                    var jsonContent = await System.IO.File.ReadAllTextAsync(filePath);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent, options);
+                    
+                    return new JsonResult(new { 
+                        exists = true, 
+                        data = data,
+                        customerDisplayName = customerDisplayName
+                    });
+                }
+                catch
+                {
+                    return new JsonResult(new { 
+                        exists = true, 
+                        data = (object?)null,
+                        customerDisplayName = customerDisplayName
+                    });
+                }
+            }
+            else
+            {
+                return new JsonResult(new { 
+                    exists = false,
+                    customerDisplayName = customerDisplayName
+                });
+            }
+        }
+        catch (Exception)
+        {
+            return new JsonResult(new { exists = false });
+        }
     }
 }
