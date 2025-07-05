@@ -3,11 +3,12 @@
 @using JSONAdminEditor.Models
 @using System
 @{
-    ViewData["Title"] = "Manage Customer Overrides";
+    ViewData["Title"] = "Manage Customer Content Variables";
 }
 
 <div class="container-fluid">
-    <h1 class="mb-4">Manage Customer Overrides</h1>
+    <h1 class="mb-4">Manage Customer Content Variables</h1>
+    @Html.AntiForgeryToken()
             
             @if (!string.IsNullOrEmpty(Model.ErrorMessage))
             {
@@ -23,67 +24,37 @@
                 </div>
             }
 
-            @if (!string.IsNullOrEmpty(Model.ConfirmationMessage))
-            {
-                <div class="alert alert-warning" role="alert">
-                    <h5>Confirmation Required</h5>
-                    <p>@Model.ConfirmationMessage</p>
-                    <form method="post" asp-page-handler="ConfirmOverwrite" class="d-inline">
-                        <input type="hidden" asp-for="PendingUpload.CustomerName" />
-                        <input type="hidden" asp-for="PendingUpload.CustomerIdForFilename" />
-                        <button type="submit" class="btn btn-warning me-2">Yes, Overwrite</button>
-                    </form>
-                    <a href="/CustomerSettings" class="btn btn-secondary">Cancel</a>
-                </div>
-            }
-
-            <!-- File Upload Section -->
+            <!-- Customer Selection Section -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3><i class="fas fa-upload me-2"></i>Upload Customer Override File</h3>
+                    <h3><i class="fas fa-user-search me-2"></i>Select Customer</h3>
+                    <p class="mb-0 text-muted">Choose a customer to view and edit their specific content variable overrides.</p>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Upload.CustomerName" class="form-label">Customer Name:</label>
-                                    <div class="position-relative">
-                                        <input asp-for="Upload.CustomerName" class="form-control" placeholder="Start typing customer name or ID..." 
-                                               autocomplete="off" id="customerNameInput" required />
-                                        <div id="customerSuggestions" class="position-absolute w-100 bg-white border rounded shadow-sm" 
-                                             style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
-                                        </div>
-                                    </div>
-                                    <div class="form-text">Select a customer from suggestions. Filename will be based on Customer ID (e.g., CUST001.json)</div>
-                                    <span asp-validation-for="Upload.CustomerName" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Upload.JsonFile" class="form-label">Select JSON File:</label>
-                                    <input asp-for="Upload.JsonFile" class="form-control" accept=".json" required>
-                                    <span asp-validation-for="Upload.JsonFile" class="text-danger"></span>
-                                </div>
+                    <div class="mb-3">
+                        <label for="customerNameInput" class="form-label">Customer Name:</label>
+                        <div class="position-relative">
+                            <input class="form-control" placeholder="Start typing customer name or ID..." 
+                                   autocomplete="off" id="customerNameInput" />
+                            <div id="customerSuggestions" class="position-absolute w-100 bg-white border rounded shadow-sm" 
+                                 style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload me-1"></i>Upload Customer Override
-                        </button>
-                    </form>
+                        <div class="form-text">Select a customer from suggestions to manage their content variables</div>
+                    </div>
                 </div>
             </div>
 
 
 
-            <!-- Customer Override Editing Section -->
+            <!-- Customer Content Variables Editing Section -->
             <div id="editingSection" class="card" style="display: none;">
                 <div class="card-header">
                     <h3 id="editingHeader">
-                        <i class="fas fa-edit me-2"></i>
-                        Edit Customer Overrides: <span id="editingCustomerName"></span>
+                        <i class="fas fa-code me-2"></i>
+                        Edit Content Variables: <span id="editingCustomerName"></span>
                     </h3>
-                    <small class="text-muted">Configure customer-specific overrides for events and content variables</small>
+                    <small class="text-muted">Configure customer-specific content variable overrides</small>
                 </div>
                 <div class="card-body" id="editingContent">
                     <!-- Tab Navigation -->
@@ -127,9 +98,9 @@
             <!-- Default State Section -->
             <div id="defaultSection" class="card">
                 <div class="card-body text-center py-4">
-                    <i class="fas fa-user-cog fa-3x text-muted mb-3"></i>
+                    <i class="fas fa-code fa-3x text-muted mb-3"></i>
                     <h4 class="text-muted">Select a Customer</h4>
-                    <p class="text-muted">Choose a customer from the search box above to start editing their override configuration.</p>
+                    <p class="text-muted">Choose a customer from the search box above to start managing their content variable overrides.</p>
                 </div>
             </div>
         </div>
@@ -646,49 +617,8 @@
             }
         }
 
-        function validateForm(form) {
-            // Skip validation for ConfirmOverwrite forms (they only contain hidden fields)
-            if (form && form.getAttribute('asp-page-handler') === 'ConfirmOverwrite') {
-                return true;
-            }
-            
-            const customerNameInput = document.getElementById('customerNameInput');
-            
-            if (customerNameInput) {
-                if (!selectedCustomerValid && customerNameInput.value.trim() !== '') {
-                    alert('Please select a valid customer from the suggestions.');
-                    return false;
-                }
-                
-                // If a customer is selected, extract the customer ID for form submission
-                if (selectedCustomerValid && customerNameInput.hasAttribute('data-customer-id')) {
-                    // Create a hidden input with the customer ID for backend processing
-                    let hiddenCustomerIdInput = document.getElementById('hiddenCustomerId');
-                    if (!hiddenCustomerIdInput) {
-                        hiddenCustomerIdInput = document.createElement('input');
-                        hiddenCustomerIdInput.type = 'hidden';
-                        hiddenCustomerIdInput.name = 'Upload.CustomerIdForFilename';
-                        hiddenCustomerIdInput.id = 'hiddenCustomerId';
-                        customerNameInput.parentNode.appendChild(hiddenCustomerIdInput);
-                    }
-                    hiddenCustomerIdInput.value = customerNameInput.getAttribute('data-customer-id');
-                }
-            }
-            return true;
-        }
-        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Set up form validation for upload forms only
-            const forms = document.querySelectorAll('form');
-            forms.forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    if (!validateForm(this)) {
-                        e.preventDefault();
-                    }
-                });
-            });
-
             // Initialize customer search
             setupCustomerSearch();
             
