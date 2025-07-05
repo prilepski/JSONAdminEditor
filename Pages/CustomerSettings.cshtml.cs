@@ -214,7 +214,7 @@ public class CustomerSettingsModel : PageModel
 
     private async Task LoadFilesAsync()
     {
-        // Get all managed files and filter for customer settings only
+        // Get all managed files and filter for customer overrides only
         var allFiles = await _fileManagementService.GetManagedFilesAsync();
         Files = allFiles.Where(f => f.FileType == FileType.CustomerSettings).ToList();
         

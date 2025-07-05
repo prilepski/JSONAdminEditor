@@ -65,7 +65,7 @@ namespace JSONAdminEditor.Services
                     case FileType.CustomerSettings:
                         if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
                         {
-                            return (false, "Customer name is required for Customer Settings files.");
+                            return (false, "Customer name is required for Customer Override files.");
                         }
                         
                         // Use CustomerIdForFilename if available, otherwise fall back to CustomerName
@@ -140,7 +140,7 @@ namespace JSONAdminEditor.Services
                     case FileType.CustomerSettings:
                         if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
                         {
-                            return (false, "Customer name is required for Customer Settings files.");
+                            return (false, "Customer name is required for Customer Override files.");
                         }
                         
                         // Use CustomerIdForFilename if available, otherwise fall back to CustomerName
@@ -201,7 +201,7 @@ namespace JSONAdminEditor.Services
                         FilePath = file,
                         DisplayPath = $"customers/{Path.GetFileName(file)}",
                         FileType = FileType.CustomerSettings,
-                        FileTypeDisplay = "Customer Settings",
+                        FileTypeDisplay = "Customer Override",
                         CustomerName = displayName,
                         CanDelete = true,
                         LastModified = File.GetLastWriteTime(file)
@@ -238,7 +238,7 @@ namespace JSONAdminEditor.Services
                         FilePath = file,
                         DisplayPath = $"customers/{Path.GetFileName(file)}",
                         FileType = FileType.CustomerSettings,
-                        FileTypeDisplay = "Customer Settings",
+                        FileTypeDisplay = "Customer Override",
                         CustomerName = customerId, // Just use customer ID without lookup
                         CanDelete = true,
                         LastModified = File.GetLastWriteTime(file)
@@ -394,20 +394,54 @@ namespace JSONAdminEditor.Services
 
         public async Task<bool> ValidateCustomerExistsAsync(string customerName)
         {
+            if (string.IsNullOrWhiteSpace(customerName))
+                return false;
+
             // Extract customer ID from display format "Company Name (CustomerID)" if needed
-            var customerIdToCheck = customerName;
+            var customerIdToCheck = customerName.Trim();
             
             // Check if the input is in the display format "Company Name (CustomerID)"
             var match = System.Text.RegularExpressions.Regex.Match(customerName, @"^.+\s\(([^)]+)\)$");
             if (match.Success)
             {
-                customerIdToCheck = match.Groups[1].Value;
+                customerIdToCheck = match.Groups[1].Value.Trim();
             }
             
-            var searchResults = await SearchCustomersAsync(customerIdToCheck);
-            return searchResults.Any(r => 
-                string.Equals(r.CustomerId, customerIdToCheck, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(r.CompanyName, customerIdToCheck, StringComparison.OrdinalIgnoreCase));
+            // Get the customer directly by ID for exact validation
+            var customer = await GetCustomerByIdAsync(customerIdToCheck);
+            if (customer != null)
+            {
+                return true;
+            }
+            
+            // If not found by exact ID match, try searching by company name
+            // This handles cases where the user typed a company name directly
+            var customersFilePath = Path.Combine(_dataFolder, "customers.json");
+            if (!File.Exists(customersFilePath))
+                return false;
+
+            try
+            {
+                var jsonContent = await File.ReadAllTextAsync(customersFilePath);
+                
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                
+                var customers = System.Text.Json.JsonSerializer.Deserialize<List<Customer>>(jsonContent, options);
+                
+                if (customers == null) return false;
+
+                // Check for exact matches (case-insensitive)
+                return customers.Any(c => 
+                    string.Equals(c.CustomerId, customerIdToCheck, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(c.CompanyName, customerIdToCheck, StringComparison.OrdinalIgnoreCase));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private void AddFileIfExists(List<ManagedFile> files, string filePath, FileType fileType)
@@ -437,7 +471,7 @@ namespace JSONAdminEditor.Services
                 FileType.EventTriggers => "Event Triggers",
                 FileType.EventChannels => "Event Channels",
                 FileType.OrderTypes => "Order Types",
-                FileType.CustomerSettings => "Customer Settings",
+                FileType.CustomerSettings => "Customer Override",
                 _ => fileType.ToString()
             };
         }

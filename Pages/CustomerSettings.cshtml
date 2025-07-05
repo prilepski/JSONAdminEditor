@@ -3,11 +3,11 @@
 @using JSONAdminEditor.Models
 @using System
 @{
-    ViewData["Title"] = "Customer Settings";
+    ViewData["Title"] = "Manage Customer Overrides";
 }
 
 <div class="container-fluid">
-    <h1 class="mb-4">Customer Settings Management</h1>
+    <h1 class="mb-4">Manage Customer Overrides</h1>
             
             @if (!string.IsNullOrEmpty(Model.ErrorMessage))
             {
@@ -40,7 +40,7 @@
             <!-- File Upload Section -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3><i class="fas fa-upload me-2"></i>Upload Customer Settings File</h3>
+                    <h3><i class="fas fa-upload me-2"></i>Upload Customer Override File</h3>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
@@ -68,7 +68,7 @@
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload me-1"></i>Upload Customer Settings
+                            <i class="fas fa-upload me-1"></i>Upload Customer Override
                         </button>
                     </form>
                 </div>
@@ -77,7 +77,7 @@
             <!-- Files List -->
             <div class="card">
                 <div class="card-header">
-                    <h3><i class="fas fa-list me-2"></i>Customer Settings Files</h3>
+                    <h3><i class="fas fa-list me-2"></i>Customer Override Files</h3>
                 </div>
                 <div class="card-body">
                     @if (Model.PagedFiles?.Any() == true)
@@ -131,7 +131,7 @@
                         <!-- Pagination -->
                         @if (Model.TotalPages > 1)
                         {
-                            <nav aria-label="Customer Settings pagination" class="mt-3">
+                            <nav aria-label="Customer Override pagination" class="mt-3">
                                 <ul class="pagination justify-content-center">
                                     <!-- Previous Page -->
                                     <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
@@ -166,7 +166,7 @@
                             <div class="text-center text-muted">
                                 <small>
                                     Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalFiles)) 
-                                    of @Model.TotalFiles customer settings files
+                                    of @Model.TotalFiles customer override files
                                 </small>
                             </div>
                         }
@@ -175,7 +175,7 @@
                     {
                         <div class="text-center py-4">
                             <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No customer settings files uploaded yet. Start by uploading your first customer settings file above.</p>
+                            <p class="text-muted">No customer override files uploaded yet. Start by uploading your first customer override file above.</p>
                         </div>
                     }
                 </div>
@@ -323,7 +323,12 @@
             }
         }
 
-        function validateForm() {
+        function validateForm(form) {
+            // Skip validation for ConfirmOverwrite forms (they only contain hidden fields)
+            if (form && form.getAttribute('asp-page-handler') === 'ConfirmOverwrite') {
+                return true;
+            }
+            
             const customerNameInput = document.getElementById('customerNameInput');
             
             if (customerNameInput) {
@@ -351,15 +356,15 @@
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Set up form validation
-            const uploadForm = document.querySelector('form');
-            if (uploadForm) {
-                uploadForm.addEventListener('submit', function(e) {
-                    if (!validateForm()) {
+            // Set up form validation for upload forms only
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (!validateForm(this)) {
                         e.preventDefault();
                     }
                 });
-            }
+            });
 
             // Initialize customer search
             setupCustomerSearch();
