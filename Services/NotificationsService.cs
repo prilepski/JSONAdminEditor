@@ -501,5 +501,97 @@ namespace JSONAdminEditor.Services
                 return new List<(string, string)>();
             }
         }
+        
+        public async Task<Dictionary<string, string>> GetGlobalContentVariablesAsync()
+        {
+            try
+            {
+                if (!File.Exists(_notificationsFilePath))
+                {
+                    return new Dictionary<string, string>();
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var document = JsonDocument.Parse(jsonContent);
+                
+                if (document.RootElement.TryGetProperty("ContentVariables", out var contentVarsElement))
+                {
+                    var result = new Dictionary<string, string>();
+                    foreach (var prop in contentVarsElement.EnumerateObject())
+                    {
+                        result[prop.Name] = prop.Value.GetString() ?? "";
+                    }
+                    return result;
+                }
+                
+                return new Dictionary<string, string>();
+            }
+            catch (Exception)
+            {
+                return new Dictionary<string, string>();
+            }
+        }
+        
+        public async Task<bool> UpdateEventContentVariablesAsync(string eventName, Dictionary<string, string> contentVariables)
+        {
+            try
+            {
+                if (!File.Exists(_notificationsFilePath))
+                {
+                    return false;
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
+                
+                if (data == null) return false;
+
+                // Get or create Events array
+                if (!data.TryGetValue("Events", out var eventsObj) || eventsObj is not JsonElement eventsElement)
+                {
+                    return false;
+                }
+
+                var eventsList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(eventsElement.GetRawText());
+                if (eventsList == null) return false;
+
+                // Find the event
+                var eventData = eventsList.FirstOrDefault(e => 
+                    e.TryGetValue("Event", out var eventNameObj) && 
+                    eventNameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+
+                if (eventData == null) return false;
+
+                // Update or add ContentVariables
+                if (contentVariables.Any())
+                {
+                    eventData["ContentVariables"] = contentVariables;
+                }
+                else
+                {
+                    // Remove ContentVariables if empty
+                    eventData.Remove("ContentVariables");
+                }
+
+                // Update the Events array in the data
+                data["Events"] = eventsList;
+
+                // Save back to file
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
+                var updatedJson = JsonSerializer.Serialize(data, options);
+                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

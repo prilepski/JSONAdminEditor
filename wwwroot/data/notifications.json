@@ -6,7 +6,10 @@
       "EmailTemplateId": "TwillioID_12345",
       "SmsTemplateId": "TwillioID_12345",
       "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": true
+      "IsSuppressed": true,
+      "ContentVariables": {
+        "tracking_url": "www.myait.com/Tracking/$ShipmentNum$cust"
+      }
     },
     {
       "Event": "Schedule Appointment",
@@ -14,7 +17,11 @@
       "EmailTemplateId": "",
       "SmsTemplateId": "",
       "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": false
+      "IsSuppressed": false,
+      "ContentVariables": {
+        "eventvariable": "test",
+        "var2": "testvar2"
+      }
     }
   ],
   "PreferredCommunication": [

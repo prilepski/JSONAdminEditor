@@ -242,10 +242,25 @@
 
                     <!-- Content Variables Tab -->
                     <div class="tab-pane fade" id="content-variables" role="tabpanel" aria-labelledby="content-variables-tab">
-                        <div class="text-center py-4">
-                            <i class="fas fa-code fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">Content Variables Editor</h5>
-                            <p class="text-muted">Content Variables editing functionality will be implemented in the next step.</p>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>Content Variables Editor</h4>
+                            <div>
+                                <button type="button" class="btn btn-success me-2" id="addVariableBtn">
+                                    <i class="fas fa-plus me-1"></i>Add Variable
+                                </button>
+                                <button type="button" class="btn btn-primary" id="saveVariablesBtn">
+                                    <i class="fas fa-save me-1"></i>Save Variables
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="contentVariablesContainer">
+                            <div class="text-center py-4" id="variablesLoadingState">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Loading content variables...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -281,6 +296,10 @@
 
 @section Scripts {
     <script>
+        let eventContentVariables = {};
+        let globalContentVariables = {};
+        let currentEventName = '@(Model.SelectedEvent ?? "")';
+        
         // Clear validation errors when user types
         document.addEventListener('DOMContentLoaded', function() {
             const inputs = document.querySelectorAll('#eventDataForm input, #eventDataForm select');
@@ -293,12 +312,360 @@
                     }
                 });
             });
+            
+            // Initialize content variables tab functionality
+            const contentVariablesTab = document.getElementById('content-variables-tab');
+            const addVariableBtn = document.getElementById('addVariableBtn');
+            const saveVariablesBtn = document.getElementById('saveVariablesBtn');
+            
+            if (contentVariablesTab) {
+                contentVariablesTab.addEventListener('shown.bs.tab', function() {
+                    if (currentEventName) {
+                        loadContentVariables();
+                    }
+                });
+            }
+            
+            if (addVariableBtn) {
+                addVariableBtn.addEventListener('click', addNewVariable);
+            }
+            
+            if (saveVariablesBtn) {
+                saveVariablesBtn.addEventListener('click', saveContentVariables);
+            }
         });
 
         // Function to add new event to notifications.json
         function addEventToNotifications(eventName) {
             // Redirect to the same page with parameters to add new event
             window.location.href = '/Events?handler=AddEvent&eventName=' + encodeURIComponent(eventName);
+        }
+        
+        async function loadContentVariables() {
+            try {
+                const container = document.getElementById('contentVariablesContainer');
+                const loadingState = document.getElementById('variablesLoadingState');
+                
+                if (loadingState) {
+                    loadingState.style.display = 'block';
+                }
+                
+                const response = await fetch(`/Events?handler=ContentVariables&eventName=${encodeURIComponent(currentEventName)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        eventContentVariables = result.data.eventVariables || {};
+                        globalContentVariables = result.data.globalVariables || {};
+                        renderContentVariablesEditor();
+                    } else {
+                        throw new Error(result.error || 'Failed to load content variables');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error loading content variables:', error);
+                showEmptyVariablesEditor();
+            } finally {
+                const loadingState = document.getElementById('variablesLoadingState');
+                if (loadingState) {
+                    loadingState.style.display = 'none';
+                }
+            }
+        }
+        
+        function renderContentVariablesEditor() {
+            const container = document.getElementById('contentVariablesContainer');
+            
+            // Create combined list with event variables first, then global variables
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="contentVariablesTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 25%">Variable Name</th>
+                                <th style="width: 50%">Value</th>
+                                <th style="width: 15%">Is Redefined</th>
+                                <th style="width: 10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            // Add event-specific variables first (no checkbox, fully editable)
+            Object.entries(eventContentVariables).forEach(([key, value]) => {
+                tableHtml += `
+                    <tr data-variable-type="event" data-original-key="${key}">
+                        <td>
+                            <input type="text" class="form-control form-control-sm variable-name" value="${escapeHtml(key)}" />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm variable-value" value="${escapeHtml(value)}" />
+                        </td>
+                        <td class="text-center">
+                            <span class="text-muted">-</span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm delete-variable" onclick="deleteVariable(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Add global variables (with checkbox, name read-only when checked)
+            Object.entries(globalContentVariables).forEach(([key, value]) => {
+                const isRedefined = eventContentVariables.hasOwnProperty(key);
+                const actualValue = isRedefined ? eventContentVariables[key] : value;
+                
+                tableHtml += `
+                    <tr data-variable-type="global" data-original-key="${key}">
+                        <td>
+                            <input type="text" class="form-control form-control-sm variable-name" value="${escapeHtml(key)}" readonly />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm variable-value" value="${escapeHtml(actualValue)}" ${!isRedefined ? 'readonly' : ''} />
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check">
+                                <input class="form-check-input redefined-checkbox" type="checkbox" ${isRedefined ? 'checked' : ''} onchange="toggleVariableRedefinition(this)" />
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="text-muted">-</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+            
+            // If no variables exist, show empty state
+            if (Object.keys(eventContentVariables).length === 0 && Object.keys(globalContentVariables).length === 0) {
+                showEmptyVariablesEditor();
+            }
+        }
+        
+        function showEmptyVariablesEditor() {
+            const container = document.getElementById('contentVariablesContainer');
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Content Variables</h5>
+                    <p class="text-muted">No content variables found for this event. Click "Add Variable" to start adding variables.</p>
+                </div>
+            `;
+        }
+        
+        function addNewVariable() {
+            const table = document.getElementById('contentVariablesTable');
+            let tbody;
+            
+            if (!table) {
+                // Create new table if it doesn't exist
+                const container = document.getElementById('contentVariablesContainer');
+                container.innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="contentVariablesTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 25%">Variable Name</th>
+                                    <th style="width: 50%">Value</th>
+                                    <th style="width: 15%">Is Redefined</th>
+                                    <th style="width: 10%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                `;
+                tbody = document.querySelector('#contentVariablesTable tbody');
+            } else {
+                tbody = table.getElementsByTagName('tbody')[0];
+            }
+            
+            // Insert new row at the top
+            const newRow = tbody.insertRow(0);
+            newRow.setAttribute('data-variable-type', 'event');
+            newRow.setAttribute('data-original-key', '');
+            
+            newRow.innerHTML = `
+                <td>
+                    <input type="text" class="form-control form-control-sm variable-name" value="" placeholder="Enter variable name" />
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm variable-value" value="" placeholder="Enter variable value" />
+                </td>
+                <td class="text-center">
+                    <span class="text-muted">-</span>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm delete-variable" onclick="deleteVariable(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            // Focus on the new variable name input
+            const nameInput = newRow.querySelector('.variable-name');
+            if (nameInput) {
+                nameInput.focus();
+            }
+        }
+        
+        function deleteVariable(button) {
+            if (confirm('Are you sure you want to delete this variable?')) {
+                const row = button.closest('tr');
+                row.remove();
+                
+                // Check if table is now empty
+                const table = document.getElementById('contentVariablesTable');
+                if (table && table.getElementsByTagName('tbody')[0].rows.length === 0) {
+                    showEmptyVariablesEditor();
+                }
+            }
+        }
+        
+        function toggleVariableRedefinition(checkbox) {
+            const row = checkbox.closest('tr');
+            const valueInput = row.querySelector('.variable-value');
+            const originalKey = row.getAttribute('data-original-key');
+            
+            if (checkbox.checked) {
+                // Enable editing - use value from event variables if it exists, otherwise use global value
+                valueInput.readOnly = false;
+                valueInput.classList.remove('text-muted');
+                if (eventContentVariables[originalKey] !== undefined) {
+                    valueInput.value = eventContentVariables[originalKey];
+                }
+            } else {
+                // Disable editing - revert to global value
+                valueInput.readOnly = true;
+                valueInput.classList.add('text-muted');
+                valueInput.value = globalContentVariables[originalKey] || '';
+            }
+        }
+        
+        async function saveContentVariables() {
+            try {
+                const saveBtn = document.getElementById('saveVariablesBtn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...';
+                saveBtn.disabled = true;
+                
+                // Collect all variables to save
+                const variablesToSave = {};
+                const table = document.getElementById('contentVariablesTable');
+                
+                if (table) {
+                    const rows = table.getElementsByTagName('tbody')[0].rows;
+                    
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const variableType = row.getAttribute('data-variable-type');
+                        const nameInput = row.querySelector('.variable-name');
+                        const valueInput = row.querySelector('.variable-value');
+                        const checkbox = row.querySelector('.redefined-checkbox');
+                        
+                        const name = nameInput.value.trim();
+                        const value = valueInput.value.trim();
+                        
+                        if (name) {
+                            if (variableType === 'event') {
+                                // Always include event-specific variables
+                                variablesToSave[name] = value;
+                            } else if (variableType === 'global' && checkbox && checkbox.checked) {
+                                // Include global variables only if they are redefined (checkbox checked)
+                                variablesToSave[name] = value;
+                            }
+                        }
+                    }
+                }
+                
+                // Save to server
+                const formData = new FormData();
+                formData.append('eventName', currentEventName);
+                formData.append('contentVariables', JSON.stringify(variablesToSave));
+                
+                const response = await fetch('/Events?handler=SaveContentVariables', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update local state
+                    eventContentVariables = variablesToSave;
+                    
+                    // Show success message
+                    showMessage(result.message, 'success');
+                    
+                    // Re-render the editor to reflect saved state
+                    renderContentVariablesEditor();
+                } else {
+                    showMessage(result.error || 'Failed to save content variables.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error saving content variables:', error);
+                showMessage('An error occurred while saving. Please try again.', 'error');
+            } finally {
+                const saveBtn = document.getElementById('saveVariablesBtn');
+                saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Variables';
+                saveBtn.disabled = false;
+            }
+        }
+        
+        function showMessage(message, type) {
+            // Remove any existing alerts
+            const existingAlerts = document.querySelectorAll('.alert.alert-success, .alert.alert-danger');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas ${iconClass} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert after the event selection card
+            const eventSelectionCard = document.querySelector('.card');
+            eventSelectionCard.insertAdjacentElement('afterend', alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 }

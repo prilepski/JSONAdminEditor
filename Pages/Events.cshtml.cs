@@ -22,6 +22,10 @@ public class EventsModel : PageModel
     public List<ValidationError> ValidationErrors { get; set; } = new();
     public string? ErrorMessage { get; set; }
     public string? SuccessMessage { get; set; }
+    
+    // Content Variables properties
+    public Dictionary<string, string>? EventContentVariables { get; set; }
+    public Dictionary<string, string>? GlobalContentVariables { get; set; }
 
     public EventsModel(NotificationsService notificationsService)
     {
@@ -222,5 +226,87 @@ public class EventsModel : PageModel
     private bool IsValidOrderType(string orderType)
     {
         return AvailableOrderTypes.Any(ot => ot.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    public async Task<IActionResult> OnGetContentVariablesAsync(string eventName)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(eventName))
+            {
+                return new JsonResult(new { success = false, error = "Event name is required" });
+            }
+            
+            // Load event-specific content variables
+            var eventData = await _notificationsService.GetEventByNameAsync(eventName);
+            var eventContentVariables = new Dictionary<string, string>();
+            
+            if (eventData?.TryGetValue("ContentVariables", out var eventVars) == true)
+            {
+                if (eventVars is Dictionary<string, object> eventVarsDict)
+                {
+                    eventContentVariables = eventVarsDict.ToDictionary(
+                        kvp => kvp.Key, 
+                        kvp => kvp.Value?.ToString() ?? ""
+                    );
+                }
+            }
+            
+            // Load global content variables
+            var globalContentVariables = await _notificationsService.GetGlobalContentVariablesAsync();
+            
+            return new JsonResult(new
+            {
+                success = true,
+                data = new
+                {
+                    eventVariables = eventContentVariables,
+                    globalVariables = globalContentVariables
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, error = ex.Message });
+        }
+    }
+    
+    public async Task<IActionResult> OnPostSaveContentVariablesAsync(string eventName, string contentVariables)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(eventName))
+            {
+                return new JsonResult(new { success = false, error = "Event name is required" });
+            }
+            
+            // Parse the content variables JSON
+            var variablesData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(contentVariables);
+            
+            if (variablesData == null)
+            {
+                return new JsonResult(new { success = false, error = "Invalid content variables data" });
+            }
+            
+            // Save the content variables to the event
+            var success = await _notificationsService.UpdateEventContentVariablesAsync(eventName, variablesData);
+            
+            if (success)
+            {
+                return new JsonResult(new 
+                { 
+                    success = true, 
+                    message = $"Content variables for event '{eventName}' saved successfully!" 
+                });
+            }
+            else
+            {
+                return new JsonResult(new { success = false, error = "Failed to save content variables" });
+            }
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, error = ex.Message });
+        }
     }
 }
