@@ -18,34 +18,22 @@ public class CustomerSettingsModel : PageModel
     [TempData]
     public string? TempFilePath { get; set; }
 
-    public List<ManagedFile> Files { get; set; } = new();
     public string? ErrorMessage { get; set; }
     public string? SuccessMessage { get; set; }
     public string? ConfirmationMessage { get; set; }
-
-    // Pagination properties
-    public int CurrentPage { get; set; } = 1;
-    public int PageSize { get; set; } = 10;
-    public int TotalPages { get; set; }
-    public int TotalFiles { get; set; }
-    public List<ManagedFile> PagedFiles { get; set; } = new();
 
     public CustomerSettingsModel(FileManagementService fileManagementService)
     {
         _fileManagementService = fileManagementService;
     }
 
-    public async Task OnGetAsync(int page = 1)
+    public void OnGet()
     {
-        CurrentPage = page;
-        await LoadFilesAsync();
         CleanupTempFiles();
     }
 
     public async Task<IActionResult> OnPostUploadAsync()
     {
-        await LoadFilesAsync();
-
         // Get customer name from form data
         if (Request.Form.TryGetValue("Upload.CustomerName", out var customerNameValue))
         {
@@ -89,7 +77,6 @@ public class CustomerSettingsModel : PageModel
         {
             SuccessMessage = message;
             Upload = new CustomerSettingsUploadViewModel(); // Reset form
-            await LoadFilesAsync(); // Refresh file list
         }
         else
         {
@@ -127,8 +114,6 @@ public class CustomerSettingsModel : PageModel
 
     public async Task<IActionResult> OnPostConfirmOverwriteAsync()
     {
-        await LoadFilesAsync();
-
         if (string.IsNullOrEmpty(TempFilePath) || !System.IO.File.Exists(TempFilePath))
         {
             ErrorMessage = "Temporary file not found. Please try uploading again.";
@@ -161,7 +146,6 @@ public class CustomerSettingsModel : PageModel
             if (success)
             {
                 SuccessMessage = message;
-                await LoadFilesAsync(); // Refresh file list
             }
             else
             {
@@ -185,51 +169,6 @@ public class CustomerSettingsModel : PageModel
         TempFilePath = null;
 
         return Page();
-    }
-
-    public async Task<IActionResult> OnPostDeleteAsync(string filePath)
-    {
-        await LoadFilesAsync();
-
-        if (string.IsNullOrEmpty(filePath))
-        {
-            ErrorMessage = "Invalid file path.";
-            return Page();
-        }
-
-        var success = _fileManagementService.DeleteFile(filePath);
-
-        if (success)
-        {
-            SuccessMessage = "File deleted successfully.";
-            await LoadFilesAsync(); // Refresh file list
-        }
-        else
-        {
-            ErrorMessage = "Failed to delete file. File may not exist or cannot be deleted.";
-        }
-
-        return Page();
-    }
-
-    private async Task LoadFilesAsync()
-    {
-        // Get all managed files and filter for customer overrides only
-        var allFiles = await _fileManagementService.GetManagedFilesAsync();
-        Files = allFiles.Where(f => f.FileType == FileType.CustomerSettings).ToList();
-        
-        // Setup pagination
-        TotalFiles = Files.Count;
-        TotalPages = (int)Math.Ceiling((double)TotalFiles / PageSize);
-        
-        if (CurrentPage < 1) CurrentPage = 1;
-        if (CurrentPage > TotalPages && TotalPages > 0) CurrentPage = TotalPages;
-        
-        // Get files for current page
-        PagedFiles = Files
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize)
-            .ToList();
     }
 
     private void CleanupTempFiles()
