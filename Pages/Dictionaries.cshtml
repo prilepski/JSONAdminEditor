@@ -12,6 +12,10 @@
         Manage system dictionaries that provide reference data for notifications, events, and customer configurations. 
         These dictionaries are used throughout the system to populate dropdowns and validate data.
     </p>
+    
+    <form style="display: none;">
+        @Html.AntiForgeryToken()
+    </form>
             
             @if (!string.IsNullOrEmpty(Model.ErrorMessage))
             {
@@ -63,12 +67,12 @@
                 </div>
             </div>
 
-            <!-- Files List -->
+            <!-- Dictionary Editor and Upload -->
             <div class="card">
                 <div class="card-header">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h3><i class="fas fa-list me-2"></i>Dictionary Files</h3>
+                            <h3><i class="fas fa-edit me-2"></i>Dictionary Editor</h3>
                         </div>
                         <div class="col-md-6">
                             <!-- File Upload Control - Only shown when dictionary is selected -->
@@ -88,77 +92,32 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if (Model.Files?.Any() == true)
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Dictionary File</th>
-                                        <th>Dictionary Type</th>
-                                        <th>Customer</th>
-                                        <th>Last Modified</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var file in Model.Files)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <i class="fas fa-file-alt me-2 text-primary"></i>
-                                                <code>@file.DisplayPath</code>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info">@file.FileTypeDisplay</span>
-                                            </td>
-                                            <td>
-                                                @if (!string.IsNullOrEmpty(file.CustomerName))
-                                                {
-                                                    <strong>@file.CustomerName</strong>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">N/A</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">@file.LastModified.ToString("yyyy-MM-dd HH:mm")</small>
-                                            </td>
-                                            <td>
-                                                <a href="/Index?filePath=@Uri.EscapeDataString(file.FilePath)" class="btn btn-sm btn-outline-primary me-2">
-                                                    <i class="fas fa-edit me-1"></i>Edit
-                                                </a>
-                                                @if (file.CanDelete)
-                                                {
-                                                    <form method="post" asp-page-handler="DeleteAsync" class="d-inline" 
-                                                          onsubmit="return confirm('Are you sure you want to delete this file? This action cannot be undone.');">
-                                                        <input type="hidden" name="filePath" value="@file.FilePath" />
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                            <i class="fas fa-trash me-1"></i>Delete
-                                                        </button>
-                                                    </form>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted small">
-                                                        <i class="fas fa-lock me-1"></i>Protected
-                                                    </span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                    <!-- Dictionary Editor Section - Only shown when dictionary is selected -->
+                    <div id="dictionaryEditorSection" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 id="editorTitle">Edit Dictionary</h4>
+                            <div>
+                                <button type="button" class="btn btn-success me-2" id="addRowBtn">
+                                    <i class="fas fa-plus me-1"></i>Add Row
+                                </button>
+                                <button type="button" class="btn btn-primary" id="saveChangesBtn">
+                                    <i class="fas fa-save me-1"></i>Save Changes
+                                </button>
+                            </div>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4">
-                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No dictionary files uploaded yet. Start by uploading your first dictionary file above.</p>
-                        </div>
-                    }
+                        
+                        <!-- JSON Table Editor -->
+                        <div id="jsonEditorContainer"></div>
+                        
+                        <!-- Hidden form for saving -->
+                        <form id="saveDictionaryForm" method="post" asp-page-handler="SaveDictionary" style="display: none;">
+                            <input type="hidden" name="filePath" id="saveFilePath" />
+                            <input type="hidden" name="jsonData" id="saveJsonData" />
+                            <input type="hidden" name="fileType" id="saveFileType" />
+                        </form>
+                        
+                        <hr class="my-4">
+                    </div>
                 </div>
             </div>
 </div>
@@ -190,6 +149,8 @@
     <script>
         let selectedFileType = '0';
         let selectedFileName = '';
+        let currentJsonData = null;
+        let columnTypes = {};
         
         // Dictionary type mappings
         const dictionaryNames = {
@@ -203,6 +164,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const fileTypeSelect = document.getElementById('fileTypeSelect');
             const fileUploadSection = document.getElementById('fileUploadSection');
+            const dictionaryEditorSection = document.getElementById('dictionaryEditorSection');
             const hiddenFileType = document.getElementById('hiddenFileType');
             const hiddenCustomerName = document.getElementById('hiddenCustomerName');
             const fileInput = document.getElementById('fileInput');
@@ -211,18 +173,29 @@
             const cancelButton = document.getElementById('cancelUpload');
             const confirmButton = document.getElementById('confirmUpload');
             const uploadForm = document.getElementById('uploadForm');
+            const addRowBtn = document.getElementById('addRowBtn');
+            const saveChangesBtn = document.getElementById('saveChangesBtn');
+            const editorTitle = document.getElementById('editorTitle');
             
-            // Show/hide file upload section based on dictionary selection
+            // Show/hide file upload section and load dictionary for editing
             fileTypeSelect.addEventListener('change', function() {
                 selectedFileType = this.value;
                 if (selectedFileType !== '0') {
                     fileUploadSection.style.display = 'block';
+                    dictionaryEditorSection.style.display = 'block';
                     hiddenFileType.value = selectedFileType;
-                    // Set customer name to empty for non-customer dictionaries
                     hiddenCustomerName.value = '';
+                    
+                    // Update editor title
+                    editorTitle.textContent = `Edit ${dictionaryNames[selectedFileType]} Dictionary`;
+                    
+                    // Load dictionary data for editing via AJAX
+                    loadDictionaryForEditing(selectedFileType);
                 } else {
                     fileUploadSection.style.display = 'none';
+                    dictionaryEditorSection.style.display = 'none';
                     fileInput.value = '';
+                    document.getElementById('jsonEditorContainer').innerHTML = '';
                 }
             });
             
@@ -260,6 +233,432 @@
                     confirmationOverlay.classList.add('d-none');
                 }
             });
+            
+            // Add row button handler
+            addRowBtn.addEventListener('click', addNewRow);
+            
+            // Save changes button handler
+            saveChangesBtn.addEventListener('click', saveDictionaryChanges);
         });
+        
+        async function loadDictionaryForEditing(fileType) {
+            try {
+                // Show loading state
+                const container = document.getElementById('jsonEditorContainer');
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading dictionary data...</p>
+                    </div>
+                `;
+                
+                const response = await fetch(`/Dictionaries?handler=DictionaryData&fileType=${fileType}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success && result.data) {
+                        currentJsonData = result.data;
+                        columnTypes = result.data.columnTypes || {};
+                        renderJsonEditor(result.data);
+                    } else {
+                        throw new Error(result.error || 'Failed to load dictionary data');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error loading dictionary:', error);
+                createEmptyDictionary(fileType);
+            }
+        }
+        
+        function createEmptyDictionary(fileType) {
+            const defaultColumns = getDefaultColumnsForFileType(fileType);
+            const defaultColumnTypes = getDefaultColumnTypesForFileType(fileType);
+            
+            columnTypes = defaultColumnTypes;
+            currentJsonData = {
+                columnNames: defaultColumns,
+                columnTypes: defaultColumnTypes,
+                tableData: [],
+                isValidJson: true,
+                filePath: getDefaultFilePathForType(fileType)
+            };
+            
+            renderJsonEditor(currentJsonData);
+        }
+        
+        function renderJsonEditor(jsonData) {
+            const container = document.getElementById('jsonEditorContainer');
+            
+            if (!jsonData || !jsonData.tableData || jsonData.tableData.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-table fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No data in this dictionary yet. Click "Add Row" to start adding entries.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            columnTypes = jsonData.columnTypes || {};
+            currentJsonData = jsonData;
+            
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" id="jsonTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Actions</th>`;
+            
+            // Add column headers
+            jsonData.columnNames.forEach(column => {
+                tableHtml += `<th>${column}</th>`;
+            });
+            
+            tableHtml += `</tr></thead><tbody>`;
+            
+            // Add data rows
+            jsonData.tableData.forEach((row, rowIndex) => {
+                tableHtml += `<tr data-row-index="${rowIndex}">`;
+                tableHtml += `<td><button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button></td>`;
+                
+                jsonData.columnNames.forEach(column => {
+                    const cellValue = row[column] || '';
+                    const columnType = columnTypes[column] || 'text';
+                    const hasError = jsonData.validationErrors && jsonData.validationErrors.some(e => e.rowIndex === rowIndex && e.fieldName === column);
+                    const errorMessage = hasError ? jsonData.validationErrors.find(e => e.rowIndex === rowIndex && e.fieldName === column)?.message : '';
+                    const inputClass = hasError ? 'form-control form-control-sm is-invalid' : 'form-control form-control-sm';
+                    
+                    tableHtml += `<td>`;
+                    
+                    if (columnType === 'boolean') {
+                        tableHtml += `
+                            <select class="${inputClass} boolean-dropdown" data-column="${column}">
+                                <option value="true" ${cellValue?.toString()?.toLowerCase() === 'true' ? 'selected' : ''}>True</option>
+                                <option value="false" ${cellValue?.toString()?.toLowerCase() === 'false' ? 'selected' : ''}>False</option>
+                            </select>
+                        `;
+                    } else {
+                        tableHtml += `
+                            <input type="text" 
+                                   class="${inputClass}" 
+                                   data-column="${column}" 
+                                   value="${cellValue?.toString() || ''}" />
+                        `;
+                    }
+                    
+                    if (hasError) {
+                        tableHtml += `
+                            <div class="invalid-feedback d-block">
+                                <small>${errorMessage}</small>
+                            </div>
+                        `;
+                    }
+                    
+                    tableHtml += `</td>`;
+                });
+                
+                tableHtml += `</tr>`;
+            });
+            
+            tableHtml += `</tbody></table></div>`;
+            
+            container.innerHTML = tableHtml;
+            
+            // Add event listeners to clear validation errors
+            const inputs = container.querySelectorAll('input[data-column], select[data-column]');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    clearValidationErrors(this);
+                });
+                input.addEventListener('change', function() {
+                    clearValidationErrors(this);
+                });
+            });
+        }
+        
+        function addNewRow() {
+            const table = document.getElementById('jsonTable');
+            if (!table) {
+                // If no table exists, create one with default columns
+                const defaultColumns = getDefaultColumnsForFileType(selectedFileType);
+                const defaultColumnTypes = getDefaultColumnTypesForFileType(selectedFileType);
+                
+                columnTypes = defaultColumnTypes;
+                currentJsonData = {
+                    columnNames: defaultColumns,
+                    columnTypes: defaultColumnTypes,
+                    tableData: []
+                };
+                
+                renderJsonEditor(currentJsonData);
+                return;
+            }
+            
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const headerRow = table.getElementsByTagName('thead')[0].rows[0];
+            const newRow = tbody.insertRow();
+            const rowIndex = tbody.rows.length - 1;
+            
+            newRow.setAttribute('data-row-index', rowIndex);
+            
+            // Add delete button cell
+            const deleteCell = newRow.insertCell(0);
+            deleteCell.innerHTML = '<button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>';
+            
+            // Add input cells for each column (skip the first column which is Actions)
+            for (let i = 1; i < headerRow.cells.length; i++) {
+                const cell = newRow.insertCell(i);
+                const columnName = headerRow.cells[i].textContent;
+                const columnType = columnTypes[columnName] || 'text';
+                
+                if (columnType === 'boolean') {
+                    cell.innerHTML = `<select class="form-control form-control-sm boolean-dropdown" data-column="${columnName}">
+                                        <option value="true">True</option>
+                                        <option value="false" selected>False</option>
+                                      </select>`;
+                } else {
+                    cell.innerHTML = `<input type="text" class="form-control form-control-sm" data-column="${columnName}" value="" />`;
+                }
+                
+                // Add event listeners for validation error clearing
+                const input = cell.querySelector('input, select');
+                if (input) {
+                    input.addEventListener('input', function() { clearValidationErrors(this); });
+                    input.addEventListener('change', function() { clearValidationErrors(this); });
+                }
+            }
+        }
+        
+        function deleteRow(button) {
+            if (confirm('Are you sure you want to delete this row?')) {
+                const row = button.closest('tr');
+                row.remove();
+            }
+        }
+        
+        function saveDictionaryChanges() {
+            const table = document.getElementById('jsonTable');
+            if (!table) {
+                alert('No data to save.');
+                return;
+            }
+            
+            const rows = table.getElementsByTagName('tbody')[0].rows;
+            const data = [];
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const inputs = row.querySelectorAll('input[data-column], select[data-column]');
+                const rowData = {};
+                
+                inputs.forEach(input => {
+                    const column = input.getAttribute('data-column');
+                    const columnType = columnTypes[column] || 'text';
+                    let value = input.value;
+                    
+                    // Convert boolean values to actual boolean type
+                    if (columnType === 'boolean') {
+                        value = value === 'true';
+                    } else if (columnType === 'number') {
+                        // Try to parse as number, fall back to string if invalid
+                        const numValue = parseFloat(value);
+                        if (!isNaN(numValue)) {
+                            value = numValue;
+                        }
+                    }
+                    
+                    rowData[column] = value;
+                });
+                
+                data.push(rowData);
+            }
+            
+            // Show saving state
+            const saveBtn = document.getElementById('saveChangesBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...';
+            saveBtn.disabled = true;
+            
+            // Make AJAX call to save
+            const formData = new FormData();
+            formData.append('filePath', currentJsonData?.filePath || getDefaultFilePathForType(selectedFileType));
+            formData.append('jsonData', JSON.stringify(data));
+            formData.append('fileType', selectedFileType);
+            
+            fetch('/Dictionaries?handler=SaveDictionary', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Show success message
+                    showMessage(result.message, 'success');
+                    
+                    // Update the editor with the saved data
+                    if (result.data) {
+                        currentJsonData = result.data;
+                        columnTypes = result.data.columnTypes || {};
+                        renderJsonEditor(result.data);
+                    }
+                } else {
+                    // Show error message
+                    showMessage(result.error || 'Failed to save changes.', 'error');
+                    
+                    // If there are validation errors, display them in the table
+                    if (result.validationErrors) {
+                        displayValidationErrors(result.validationErrors);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error saving dictionary:', error);
+                showMessage('An error occurred while saving. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Restore button state
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
+        }
+        
+        function showMessage(message, type) {
+            // Remove any existing alerts
+            const existingAlerts = document.querySelectorAll('.alert.alert-success, .alert.alert-danger');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas ${iconClass} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert after the Dictionary Settings card
+            const settingsCard = document.querySelector('.card:first-of-type');
+            settingsCard.insertAdjacentElement('afterend', alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        function displayValidationErrors(validationErrors) {
+            // Clear existing validation errors
+            document.querySelectorAll('.is-invalid').forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.invalid-feedback').forEach(feedback => {
+                feedback.remove();
+            });
+            
+            // Apply validation errors
+            validationErrors.forEach(error => {
+                const table = document.getElementById('jsonTable');
+                if (table) {
+                    const row = table.querySelector(`tr[data-row-index="${error.rowIndex}"]`);
+                    if (row) {
+                        const input = row.querySelector(`[data-column="${error.fieldName}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            
+                            const feedback = document.createElement('div');
+                            feedback.className = 'invalid-feedback d-block';
+                            feedback.innerHTML = `<small>${error.message}</small>`;
+                            input.parentNode.appendChild(feedback);
+                        }
+                    }
+                }
+            });
+        }
+        
+        function clearValidationErrors(input) {
+            input.classList.remove('is-invalid');
+            const feedbackDiv = input.parentNode.querySelector('.invalid-feedback');
+            if (feedbackDiv) {
+                feedbackDiv.style.display = 'none';
+            }
+        }
+        
+        function getDefaultColumnsForFileType(fileType) {
+            switch(fileType) {
+                case '1': return ['templateId', 'templateName', 'channelType']; // Templates
+                case '5': return ['Event Name', 'IsActive']; // Event Triggers
+                case '6': return ['Channel Name', 'IsActive']; // Event Channels
+                case '7': return ['Order Type']; // Order Types
+                case '2': return ['customerId', 'companyName', 'contactPerson', 'email', 'phone', 'address', 'IsActive']; // Customers
+                default: return ['id', 'name'];
+            }
+        }
+        
+        function getDefaultColumnTypesForFileType(fileType) {
+            switch(fileType) {
+                case '1': return { 'templateId': 'text', 'templateName': 'text', 'channelType': 'text' };
+                case '5': return { 'Event Name': 'text', 'IsActive': 'boolean' };
+                case '6': return { 'Channel Name': 'text', 'IsActive': 'boolean' };
+                case '7': return { 'Order Type': 'text' };
+                case '2': return { 'customerId': 'text', 'companyName': 'text', 'contactPerson': 'text', 'email': 'text', 'phone': 'text', 'address': 'text', 'IsActive': 'boolean' };
+                default: return { 'id': 'text', 'name': 'text' };
+            }
+        }
+        
+        function getDefaultFilePathForType(fileType) {
+            switch(fileType) {
+                case '1': return 'wwwroot/data/templates.json';
+                case '5': return 'wwwroot/data/event-triggers.json';
+                case '6': return 'wwwroot/data/event-channels.json';
+                case '7': return 'wwwroot/data/order-types.json';
+                case '2': return 'wwwroot/data/customers.json';
+                default: return 'wwwroot/data/unknown.json';
+            }
+        }
+        
+        // Initialize editor if JSON data is available from server
+        @if (Model.JsonData != null && Model.SelectedFileType.HasValue)
+        {
+            <text>
+            // Set the selected file type from server
+            selectedFileType = '@((int)Model.SelectedFileType.Value)';
+            
+            // Update UI elements
+            document.addEventListener('DOMContentLoaded', function() {
+                const fileTypeSelect = document.getElementById('fileTypeSelect');
+                const fileUploadSection = document.getElementById('fileUploadSection');
+                const dictionaryEditorSection = document.getElementById('dictionaryEditorSection');
+                const editorTitle = document.getElementById('editorTitle');
+                
+                if (fileTypeSelect) {
+                    fileTypeSelect.value = selectedFileType;
+                    fileUploadSection.style.display = 'block';
+                    dictionaryEditorSection.style.display = 'block';
+                    editorTitle.textContent = `Edit ${dictionaryNames[selectedFileType]} Dictionary`;
+                }
+                
+                // Render the JSON editor with server data
+                const jsonData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.JsonData));
+                renderJsonEditor(jsonData);
+            });
+            </text>
+        }
     </script>
 }

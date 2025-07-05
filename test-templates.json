@@ -1,0 +1,29 @@
+[
+  {
+    "id": "test-template-1",
+    "name": "Test Template 1",
+    "description": "A test notification template",
+    "channels": ["email", "sms"],
+    "content": {
+      "email": {
+        "subject": "Test Subject",
+        "body": "This is a test template"
+      },
+      "sms": {
+        "message": "Test SMS message"
+      }
+    }
+  },
+  {
+    "id": "test-template-2", 
+    "name": "Test Template 2",
+    "description": "Another test notification template",
+    "channels": ["email"],
+    "content": {
+      "email": {
+        "subject": "Another Test Subject",
+        "body": "This is another test template"
+      }
+    }
+  }
+]

@@ -21,6 +21,13 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+// Redirect root URL to Dictionaries page since Index was removed
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/Dictionaries");
+    return Task.CompletedTask;
+});
+
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();

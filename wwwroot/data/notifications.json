@@ -11,10 +11,10 @@
     {
       "Event": "Schedule Appointment",
       "OrderType": "Delivery",
-      "EmailTemplateId": "TwillioID_12345",
-      "SmsTemplateId": "TwillioID_12345",
+      "EmailTemplateId": "",
+      "SmsTemplateId": "",
       "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": true
+      "IsSuppressed": false
     }
   ],
   "PreferredCommunication": [
