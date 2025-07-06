@@ -157,7 +157,7 @@ body {
 }
 
 .sidebar .submenu.show {
-    max-height: 200px; /* Adjust based on content */
+    max-height: 300px; /* Increased to accommodate more submenu items */
 }
 
 .sidebar .submenu .nav-item {
