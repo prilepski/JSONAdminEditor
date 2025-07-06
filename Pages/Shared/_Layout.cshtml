@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <me                        <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "active" : "")" 
-                               asp-area="" asp-page="/CustomerSettings">
-                                <i class="fas fa-users me-1"></i>Manage Customer Overrides
-                            </a>
-                        </li>e="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - JSON Admin Editor</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -45,7 +40,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-page="/CustomerSettings">
-                                <i class="fas fa-users me-1"></i>Manage Customer Overrides
+                                <i class="fas fa-users me-1"></i>Customer Overrides
                             </a>
                         </li>
                     </ul>
