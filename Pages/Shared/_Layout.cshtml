@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <me                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "active" : "")" 
+                               asp-area="" asp-page="/CustomerSettings">
+                                <i class="fas fa-users me-1"></i>Manage Customer Overrides
+                            </a>
+                        </li>e="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - JSON Admin Editor</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -79,10 +84,18 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "active" : "")" 
-                               asp-area="" asp-page="/CustomerSettings">
-                                <i class="fas fa-users me-2"></i>Manage Customer Overrides
-                            </a>
+                            <span class="nav-link nav-header @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "parent-active" : "")">
+                                <i class="fas fa-users me-2"></i>Customer Overrides
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </span>
+                            <ul class="nav flex-column submenu @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "show" : "")">
+                                <li class="nav-item">
+                                    <a class="nav-link submenu-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "active" : "")" 
+                                       asp-area="" asp-page="/CustomerSettings">
+                                        <i class="fas fa-code me-2"></i>Customer Content Variables
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>

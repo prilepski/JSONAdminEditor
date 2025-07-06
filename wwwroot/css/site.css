@@ -119,6 +119,69 @@ body {
     text-align: center;
 }
 
+/* Sidebar Hierarchical Navigation Styles */
+.sidebar .nav-header {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    color: #333;
+    font-weight: 500;
+    border-radius: 0;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-header:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.sidebar .nav-header.parent-active {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.sidebar .submenu {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-left: 2px solid #e9ecef;
+    margin-left: 1rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.sidebar .submenu.show {
+    max-height: 200px; /* Adjust based on content */
+}
+
+.sidebar .submenu .nav-item {
+    margin: 0;
+}
+
+.sidebar .submenu-link {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.9rem !important;
+    color: #666 !important;
+    margin: 0;
+}
+
+.sidebar .submenu-link:hover {
+    color: #007bff !important;
+    background-color: rgba(0, 123, 255, 0.1) !important;
+}
+
+.sidebar .submenu-link.active {
+    color: #007bff !important;
+    background-color: rgba(0, 123, 255, 0.15) !important;
+    border-right: 3px solid #007bff !important;
+}
+
 /* Main content adjustments */
 main {
     margin-top: 76px; /* Height of the navbar */
