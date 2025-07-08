@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Models;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Pages;
 
@@ -245,10 +246,30 @@ public class EventsModel : PageModel
             {
                 if (eventVars is Dictionary<string, object> eventVarsDict)
                 {
+                    // ContentVariables is already an object/dictionary
                     eventContentVariables = eventVarsDict.ToDictionary(
                         kvp => kvp.Key, 
                         kvp => kvp.Value?.ToString() ?? ""
                     );
+                }
+                else if (eventVars is string eventVarsString && !string.IsNullOrWhiteSpace(eventVarsString))
+                {
+                    // ContentVariables is a JSON string - parse it
+                    try
+                    {
+                        var parsedVars = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(eventVarsString);
+                        if (parsedVars != null)
+                        {
+                            eventContentVariables = parsedVars.ToDictionary(
+                                kvp => kvp.Key,
+                                kvp => kvp.Value?.ToString() ?? ""
+                            );
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // If JSON parsing fails, ignore and continue with empty dictionary
+                    }
                 }
             }
             

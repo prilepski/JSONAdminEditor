@@ -324,6 +324,11 @@
             if (saveVariablesBtn) {
                 saveVariablesBtn.addEventListener('click', saveContentVariables);
             }
+            
+            // Load content variables immediately if an event is already selected
+            if (currentEventName) {
+                loadContentVariables();
+            }
         });
 
         // Function to add new event to notifications.json
@@ -375,7 +380,7 @@
         function renderContentVariablesEditor() {
             const container = document.getElementById('contentVariablesContainer');
             
-            // Create combined list with proper deduplication logic
+            // Create combined list with proper ordering: custom event variables first, then global variables
             let tableHtml = `
                 <div class="table-responsive">
                     <table class="table table-striped table-hover" id="contentVariablesTable">
@@ -390,7 +395,35 @@
                         <tbody>
             `;
             
-            // First, display all global variables and check if they are redefined in event variables
+            // First, add custom event-specific variables that are NOT in global variables (purely event-specific)
+            Object.entries(eventContentVariables).forEach(([key, value]) => {
+                // Skip if this variable is a redefined global variable (will be handled below)
+                if (globalContentVariables.hasOwnProperty(key)) {
+                    return;
+                }
+                
+                // This is a purely event-specific custom variable - show at top
+                tableHtml += `
+                    <tr data-variable-type="event" data-original-key="${key}">
+                        <td>
+                            <input type="text" class="form-control form-control-sm variable-name" value="${escapeHtml(key)}" />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm variable-value" value="${escapeHtml(value)}" />
+                        </td>
+                        <td class="text-center">
+                            <span class="text-muted">-</span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm delete-variable" onclick="deleteVariable(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Then, display all global variables and check if they are redefined in event variables
             Object.entries(globalContentVariables).forEach(([key, globalValue]) => {
                 const isRedefined = eventContentVariables.hasOwnProperty(key);
                 const actualValue = isRedefined ? eventContentVariables[key] : globalValue;
@@ -410,34 +443,6 @@
                         </td>
                         <td class="text-center">
                             <span class="text-muted">-</span>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            // Then, add event-specific variables that are NOT already in global variables (purely event-specific)
-            Object.entries(eventContentVariables).forEach(([key, value]) => {
-                // Skip if this variable is already handled above (it's a redefined global variable)
-                if (globalContentVariables.hasOwnProperty(key)) {
-                    return;
-                }
-                
-                // This is a purely event-specific variable
-                tableHtml += `
-                    <tr data-variable-type="event" data-original-key="${key}">
-                        <td>
-                            <input type="text" class="form-control form-control-sm variable-name" value="${escapeHtml(key)}" />
-                        </td>
-                        <td>
-                            <input type="text" class="form-control form-control-sm variable-value" value="${escapeHtml(value)}" />
-                        </td>
-                        <td class="text-center">
-                            <span class="text-muted">-</span>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-danger btn-sm delete-variable" onclick="deleteVariable(this)">
-                                <i class="fas fa-trash"></i>
-                            </button>
                         </td>
                     </tr>
                 `;
