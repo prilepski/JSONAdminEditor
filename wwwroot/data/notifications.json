@@ -15,8 +15,7 @@
       "EmailTemplateId": "",
       "SmsTemplateId": "",
       "VoiceTwiMLBaseUrl": "",
-      "IsSuppressed": false,
-      "ContentVariables": "{\n        \"eventvariable\": \"test\",\n        \"var2\": \"testvar2\"\n      }"
+      "IsSuppressed": false
     },
     {
       "Event": "Final Scheduling Appointment",
