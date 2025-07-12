@@ -80,9 +80,9 @@ public class EventsModel : PageModel
         
         // Get form values
         var orderType = Request.Form["OrderType"].ToString().Trim();
-        var emailTemplateId = Request.Form["EmailTemplateId"].ToString().Trim();
-        var smsTemplateId = Request.Form["SmsTemplateId"].ToString().Trim();
-        var voiceTwiMLBaseUrl = Request.Form["VoiceTwiMLBaseUrl"].ToString().Trim();
+        var phone = Request.Form["Phone"].ToString().Trim();
+        var email = Request.Form["Email"].ToString().Trim();
+        var logo = Request.Form["Logo"].ToString().Trim();
         var isSuppressed = Request.Form["IsSuppressed"].ToString().Trim();
 
         // Validate required fields and values
@@ -113,29 +113,47 @@ public class EventsModel : PageModel
             EventData = new Dictionary<string, object>
             {
                 ["OrderType"] = orderType,
-                ["EmailTemplateId"] = emailTemplateId,
-                ["SmsTemplateId"] = smsTemplateId,
-                ["VoiceTwiMLBaseUrl"] = voiceTwiMLBaseUrl,
+                ["Phone"] = phone,
+                ["Email"] = email,
+                ["Logo"] = logo,
                 ["IsSuppressed"] = isSuppressed.ToLower() == "true"
             };
             return Page();
         }
 
-        // Build event data (excluding ContentVariables for now)
+        // Build event data (excluding ContentVariables and Templates for now)
         eventData["OrderType"] = orderType;
-        eventData["EmailTemplateId"] = string.IsNullOrEmpty(emailTemplateId) ? "" : emailTemplateId;
-        eventData["SmsTemplateId"] = string.IsNullOrEmpty(smsTemplateId) ? "" : smsTemplateId;
-        eventData["VoiceTwiMLBaseUrl"] = string.IsNullOrEmpty(voiceTwiMLBaseUrl) ? "" : voiceTwiMLBaseUrl;
+        eventData["Phone"] = string.IsNullOrEmpty(phone) ? "" : phone;
+        eventData["Email"] = string.IsNullOrEmpty(email) ? "" : email;
+        eventData["Logo"] = string.IsNullOrEmpty(logo) ? "" : logo;
         eventData["IsSuppressed"] = isSuppressed.ToLower() == "true";
 
-        // Preserve existing ContentVariables if they exist (only for existing events)
+        // Preserve existing ContentVariables and Templates if they exist (only for existing events)
         if (!IsNewEvent)
         {
             var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
-            if (existingEvent != null && existingEvent.TryGetValue("ContentVariables", out var contentVars))
+            if (existingEvent != null)
             {
-                eventData["ContentVariables"] = contentVars;
+                if (existingEvent.TryGetValue("ContentVariables", out var contentVars))
+                {
+                    eventData["ContentVariables"] = contentVars;
+                }
+                if (existingEvent.TryGetValue("Templates", out var templates))
+                {
+                    eventData["Templates"] = templates;
+                }
             }
+        }
+        else
+        {
+            // For new events, initialize empty ContentVariables and Templates
+            eventData["ContentVariables"] = new Dictionary<string, object>();
+            eventData["Templates"] = new Dictionary<string, object>
+            {
+                ["Email"] = "",
+                ["Sms"] = "",
+                ["Voice"] = ""
+            };
         }
 
         bool success;
@@ -163,6 +181,58 @@ public class EventsModel : PageModel
         else
         {
             ErrorMessage = IsNewEvent ? "Failed to add new event." : "Failed to save event data.";
+        }
+
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostSaveTemplatesAsync()
+    {
+        await LoadActiveEventTriggersAsync();
+        await LoadAvailableOrderTypesAsync();
+        await LoadAvailableTemplatesAsync();
+
+        if (string.IsNullOrEmpty(SelectedEvent))
+        {
+            ErrorMessage = "No event selected.";
+            return Page();
+        }
+
+        // Get the existing event data
+        var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
+        if (existingEvent == null)
+        {
+            ErrorMessage = $"Event '{SelectedEvent}' not found.";
+            return Page();
+        }
+
+        // Get form values for templates
+        var emailTemplate = Request.Form["Templates.Email"].ToString().Trim();
+        var smsTemplate = Request.Form["Templates.Sms"].ToString().Trim();
+        var voiceTemplate = Request.Form["Templates.Voice"].ToString().Trim();
+
+        // Create or update the Templates object
+        var templates = new Dictionary<string, object>
+        {
+            ["Email"] = string.IsNullOrEmpty(emailTemplate) ? "" : emailTemplate,
+            ["Sms"] = string.IsNullOrEmpty(smsTemplate) ? "" : smsTemplate,
+            ["Voice"] = string.IsNullOrEmpty(voiceTemplate) ? "" : voiceTemplate
+        };
+
+        // Update the event data with new templates
+        existingEvent["Templates"] = templates;
+
+        // Save the updated event
+        var success = await _notificationsService.UpdateEventAsync(SelectedEvent, existingEvent);
+        
+        if (success)
+        {
+            SuccessMessage = $"Templates for '{SelectedEvent}' updated successfully!";
+            await LoadEventDataAsync(); // Reload to show updated data
+        }
+        else
+        {
+            ErrorMessage = "Failed to save templates.";
         }
 
         return Page();
@@ -211,10 +281,17 @@ public class EventsModel : PageModel
             {
                 ["Event"] = SelectedEvent,
                 ["OrderType"] = "ALL",
-                ["EmailTemplateId"] = "",
-                ["SmsTemplateId"] = "",
-                ["VoiceTwiMLBaseUrl"] = "",
-                ["IsSuppressed"] = false
+                ["Phone"] = "$consigneeContact.phone$",
+                ["Email"] = "$consigneeContact.email$",
+                ["Logo"] = "base64",
+                ["IsSuppressed"] = false,
+                ["Templates"] = new Dictionary<string, object>
+                {
+                    ["Email"] = "",
+                    ["Sms"] = "",
+                    ["Voice"] = ""
+                },
+                ["ContentVariables"] = new Dictionary<string, object>()
             };
         }
     }

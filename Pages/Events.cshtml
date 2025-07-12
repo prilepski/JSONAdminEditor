@@ -68,6 +68,11 @@
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab" aria-controls="templates" aria-selected="false">
+                            <i class="fas fa-file-alt me-1"></i>Templates
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link" id="content-variables-tab" data-bs-toggle="tab" data-bs-target="#content-variables" type="button" role="tab" aria-controls="content-variables" aria-selected="false">
                             <i class="fas fa-code me-1"></i>Content Variables
                         </button>
@@ -139,69 +144,39 @@
                                             </td>
                                         </tr>
                                         
-                                        <!-- EmailTemplateId -->
+                                        <!-- Phone -->
                                         <tr>
-                                            <td><strong>EmailTemplateId</strong></td>
+                                            <td><strong>Phone</strong></td>
                                             <td>
                                                 @{
-                                                    var emailTemplateValue = Model.EventData.TryGetValue("EmailTemplateId", out var et) ? et?.ToString() : "";
+                                                    var phoneValue = Model.EventData.TryGetValue("Phone", out var phone) ? phone?.ToString() : "";
                                                 }
-                                                <select name="EmailTemplateId" class="form-select">
-                                                    <option value="">Select Email Template...</option>
-                                                    @if (Model.AvailableTemplates?.Any() == true)
-                                                    {
-                                                        foreach (var template in Model.AvailableTemplates)
-                                                        {
-                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(emailTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
-                                                                @template.TemplateName (@template.TemplateId)
-                                                            </option>
-                                                        }
-                                                    }
-                                                </select>
+                                                <input type="text" name="Phone" class="form-control" value="@phoneValue" placeholder="Enter phone variable (e.g., $consigneeContact.phone$)" />
+                                                <small class="text-muted">Variable for phone number</small>
                                             </td>
                                         </tr>
                                         
-                                        <!-- SmsTemplateId -->
+                                        <!-- Email -->
                                         <tr>
-                                            <td><strong>SmsTemplateId</strong></td>
+                                            <td><strong>Email</strong></td>
                                             <td>
                                                 @{
-                                                    var smsTemplateValue = Model.EventData.TryGetValue("SmsTemplateId", out var st) ? st?.ToString() : "";
+                                                    var emailValue = Model.EventData.TryGetValue("Email", out var email) ? email?.ToString() : "";
                                                 }
-                                                <select name="SmsTemplateId" class="form-select">
-                                                    <option value="">Select SMS Template...</option>
-                                                    @if (Model.AvailableTemplates?.Any() == true)
-                                                    {
-                                                        foreach (var template in Model.AvailableTemplates)
-                                                        {
-                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(smsTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
-                                                                @template.TemplateName (@template.TemplateId)
-                                                            </option>
-                                                        }
-                                                    }
-                                                </select>
+                                                <input type="text" name="Email" class="form-control" value="@emailValue" placeholder="Enter email variable (e.g., $consigneeContact.email$)" />
+                                                <small class="text-muted">Variable for email address</small>
                                             </td>
                                         </tr>
                                         
-                                        <!-- VoiceTwiMLBaseUrl -->
+                                        <!-- Logo -->
                                         <tr>
-                                            <td><strong>VoiceTwiMLBaseUrl</strong></td>
+                                            <td><strong>Logo</strong></td>
                                             <td>
                                                 @{
-                                                    var voiceUrlValue = Model.EventData.TryGetValue("VoiceTwiMLBaseUrl", out var vu) ? vu?.ToString() : "";
+                                                    var logoValue = Model.EventData.TryGetValue("Logo", out var logo) ? logo?.ToString() : "";
                                                 }
-                                                <select name="VoiceTwiMLBaseUrl" class="form-select">
-                                                    <option value="">Select Voice Template...</option>
-                                                    @if (Model.AvailableTemplates?.Any() == true)
-                                                    {
-                                                        foreach (var template in Model.AvailableTemplates)
-                                                        {
-                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(voiceUrlValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
-                                                                @template.TemplateName (@template.TemplateId)
-                                                            </option>
-                                                        }
-                                                    }
-                                                </select>
+                                                <input type="text" name="Logo" class="form-control" value="@logoValue" placeholder="Enter logo data (e.g., base64:...)" />
+                                                <small class="text-muted">Logo data in base64 format</small>
                                             </td>
                                         </tr>
                                         
@@ -226,6 +201,114 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-save") me-1"></i>
                                     @(Model.IsNewEvent ? "Add Event" : "Save Event Data")
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Templates Tab -->
+                    <div class="tab-pane fade" id="templates" role="tabpanel" aria-labelledby="templates-tab">
+                        <form method="post" asp-page-handler="SaveTemplates" id="templatesForm">
+                            <input type="hidden" asp-for="SelectedEvent" />
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4>Templates Configuration</h4>
+                                <small class="text-muted">Configure email, SMS, and voice templates for this event</small>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th style="width: 30%">Template Type</th>
+                                            <th>Template ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Email Template -->
+                                        <tr>
+                                            <td><strong>Email</strong></td>
+                                            <td>
+                                                @{
+                                                    var emailTemplateValue = "";
+                                                    if (Model.EventData.TryGetValue("Templates", out var templates) && templates is Dictionary<string, object> templatesDict)
+                                                    {
+                                                        emailTemplateValue = templatesDict.TryGetValue("Email", out var et) ? et?.ToString() : "";
+                                                    }
+                                                }
+                                                <select name="Templates.Email" class="form-select">
+                                                    <option value="">Select Email Template...</option>
+                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    {
+                                                        foreach (var template in Model.AvailableTemplates)
+                                                        {
+                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(emailTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                                                @template.TemplateName (@template.TemplateId)
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- SMS Template -->
+                                        <tr>
+                                            <td><strong>SMS</strong></td>
+                                            <td>
+                                                @{
+                                                    var smsTemplateValue = "";
+                                                    if (Model.EventData.TryGetValue("Templates", out var smsTemplates) && smsTemplates is Dictionary<string, object> smsTemplatesDict)
+                                                    {
+                                                        smsTemplateValue = smsTemplatesDict.TryGetValue("Sms", out var st) ? st?.ToString() : "";
+                                                    }
+                                                }
+                                                <select name="Templates.Sms" class="form-select">
+                                                    <option value="">Select SMS Template...</option>
+                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    {
+                                                        foreach (var template in Model.AvailableTemplates)
+                                                        {
+                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(smsTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                                                @template.TemplateName (@template.TemplateId)
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Voice Template -->
+                                        <tr>
+                                            <td><strong>Voice</strong></td>
+                                            <td>
+                                                @{
+                                                    var voiceTemplateValue = "";
+                                                    if (Model.EventData.TryGetValue("Templates", out var voiceTemplates) && voiceTemplates is Dictionary<string, object> voiceTemplatesDict)
+                                                    {
+                                                        voiceTemplateValue = voiceTemplatesDict.TryGetValue("Voice", out var vt) ? vt?.ToString() : "";
+                                                    }
+                                                }
+                                                <select name="Templates.Voice" class="form-select">
+                                                    <option value="">Select Voice Template...</option>
+                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    {
+                                                        foreach (var template in Model.AvailableTemplates)
+                                                        {
+                                                            <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(voiceTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                                                @template.TemplateName (@template.TemplateId)
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Save Templates
                                 </button>
                             </div>
                         </form>
