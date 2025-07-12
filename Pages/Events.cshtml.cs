@@ -19,6 +19,10 @@ public class EventsModel : PageModel
     [BindProperty]
     public string? ActiveTab { get; set; }
 
+    [BindProperty(SupportsGet = true)]
+    public string? SelectedOrderType { get; set; } = "Delivery"; // Default to Delivery
+
+    public bool EventSupportsByOrderType { get; set; } = false;
     public List<string> ActiveEventTriggers { get; set; } = new();
     public List<string> AvailableOrderTypes { get; set; } = new();
     public List<(string TemplateId, string TemplateName)> AvailableTemplates { get; set; } = new();
@@ -47,6 +51,9 @@ public class EventsModel : PageModel
         
         if (!string.IsNullOrEmpty(SelectedEvent))
         {
+            // Load event trigger data to check ByOrderType
+            await LoadEventTriggerDataAsync();
+            
             if (IsNewEvent)
             {
                 await LoadEventTemplateAsync();
@@ -420,6 +427,45 @@ public class EventsModel : PageModel
         catch (Exception ex)
         {
             return new JsonResult(new { success = false, error = ex.Message });
+        }
+    }
+
+    private async Task LoadEventTriggerDataAsync()
+    {
+        try
+        {
+            // Use the existing method from NotificationsService but load the full data
+            var triggers = await _notificationsService.GetActiveEventTriggersAsync();
+            
+            // We need to check the actual event-triggers.json file for ByOrderType
+            // Let's add a method to NotificationsService for this
+            EventSupportsByOrderType = CheckEventSupportsByOrderType(SelectedEvent);
+        }
+        catch (Exception)
+        {
+            EventSupportsByOrderType = false;
+        }
+    }
+
+    private bool CheckEventSupportsByOrderType(string? eventName)
+    {
+        if (string.IsNullOrEmpty(eventName))
+            return false;
+
+        try
+        {
+            // For now, let's use a simple approach - we'll improve this with a proper service method later
+            // We can assume all events support order type splitting for this implementation
+            // In a real scenario, we'd add a method to NotificationsService to check this
+            
+            // Temporary: check if event name contains certain keywords or just return true for now
+            // This should be replaced with actual service method
+            var supportedEvents = new[] { "Schedule Appointment", "Scheduling Reminder", "Final Scheduling Appointment" };
+            return supportedEvents.Contains(eventName, StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
         }
     }
 }

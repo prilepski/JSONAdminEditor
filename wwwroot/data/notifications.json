@@ -27,14 +27,21 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": false,
+      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }",
+      "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$asdadascasdad\",\n        \"var1\": \"asdada\"\n      }"
+    },
+    {
+      "Event": "Next Stop",
+      "OrderType": "ALL",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "ContentVariables": {},
       "Templates": {
-        "Email": "123456qweqwe",
-        "Sms": "123456qweqwesms",
-        "Voice": "123456qweqwevoice"
-      },
-      "ContentVariables": {
-        "cust_name": "$Customer.FriendlyName$asdadascasdad",
-        "var1": "asdada"
+        "Email": "",
+        "Sms": "",
+        "Voice": ""
       }
     }
   ],

@@ -50,14 +50,31 @@
         <!-- Event Data Editor -->
         <div class="card">
             <div class="card-header">
-                <h3>
-                    <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-edit") me-2"></i>
-                    @(Model.IsNewEvent ? "Add New Event" : "Edit Event"): @Model.SelectedEvent
-                </h3>
-                @if (Model.IsNewEvent)
-                {
-                    <small class="text-muted">Creating new event from template</small>
-                }
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">
+                            <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-edit") me-2"></i>
+                            @(Model.IsNewEvent ? "Add New Event" : "Edit Event"): @Model.SelectedEvent
+                        </h3>
+                        @if (Model.IsNewEvent)
+                        {
+                            <small class="text-muted">Creating new event from template</small>
+                        }
+                    </div>
+                    @if (Model.EventSupportsByOrderType)
+                    {
+                        <div class="order-type-switch ms-3">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2 text-muted">Delivery</span>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="orderTypeSwitch" 
+                                           @(Model.SelectedOrderType == "Pickup" ? "checked" : "") />
+                                </div>
+                                <span class="ms-2 text-muted">Pickup</span>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
             <div class="card-body">
                 <!-- Tab Navigation -->

@@ -1,0 +1,234 @@
+@model dynamic
+
+@{
+    var eventData = ViewData["EventData"] as Dictionary<string, object>;
+    var orderType = ViewData["OrderType"] as string ?? "ALL";
+    var eventName = ViewData["EventName"] as string ?? "";
+    var suffix = orderType == "ALL" ? "" : "-" + orderType.ToLower();
+}
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-3" id="eventTabs@(suffix)" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="event-data@(suffix)-tab" data-bs-toggle="tab" data-bs-target="#event-data@(suffix)" type="button" role="tab" aria-controls="event-data@(suffix)" aria-selected="true">
+            <i class="fas fa-cog me-1"></i>Event Data@(orderType != "ALL" ? " - " + orderType : "")
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="templates@(suffix)-tab" data-bs-toggle="tab" data-bs-target="#templates@(suffix)" type="button" role="tab" aria-controls="templates@(suffix)" aria-selected="false">
+            <i class="fas fa-file-alt me-1"></i>Templates@(orderType != "ALL" ? " - " + orderType : "")
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="content-variables@(suffix)-tab" data-bs-toggle="tab" data-bs-target="#content-variables@(suffix)" type="button" role="tab" aria-controls="content-variables@(suffix)" aria-selected="false">
+            <i class="fas fa-code me-1"></i>Content Variables@(orderType != "ALL" ? " - " + orderType : "")
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="eventTabsContent@(suffix)">
+    <!-- Event Data Tab -->
+    <div class="tab-pane fade show active" id="event-data@(suffix)" role="tabpanel" aria-labelledby="event-data@(suffix)-tab">
+        <form method="post" asp-page-handler="SaveEventData" id="eventDataForm@(suffix)">
+            <input type="hidden" name="SelectedEvent" value="@eventName" />
+            <input type="hidden" name="OrderType" value="@orderType" />
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 30%">Property</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Event Name (Read-only) -->
+                        <tr>
+                            <td><strong>Event</strong></td>
+                            <td>
+                                <input type="text" class="form-control" value="@eventName" readonly />
+                                <small class="text-muted">This field is read-only and matches the selected event.</small>
+                            </td>
+                        </tr>
+                        
+                        <!-- OrderType (Read-only for split events) -->
+                        <tr>
+                            <td><strong>OrderType</strong></td>
+                            <td>
+                                <input type="text" class="form-control" value="@orderType" readonly />
+                                <small class="text-muted">Order type for this event configuration.</small>
+                            </td>
+                        </tr>
+                        
+                        <!-- Phone -->
+                        <tr>
+                            <td><strong>Phone</strong></td>
+                            <td>
+                                @{
+                                    var phoneValue = eventData?.TryGetValue("Phone", out var phone) == true ? phone?.ToString() : "";
+                                }
+                                <input type="text" name="Phone" class="form-control" value="@phoneValue" placeholder="Enter phone variable (e.g., $consigneeContact.phone$)" />
+                                <small class="text-muted">Variable for phone number</small>
+                            </td>
+                        </tr>
+                        
+                        <!-- Email -->
+                        <tr>
+                            <td><strong>Email</strong></td>
+                            <td>
+                                @{
+                                    var emailValue = eventData?.TryGetValue("Email", out var email) == true ? email?.ToString() : "";
+                                }
+                                <input type="text" name="Email" class="form-control" value="@emailValue" placeholder="Enter email variable (e.g., $consigneeContact.email$)" />
+                                <small class="text-muted">Variable for email address</small>
+                            </td>
+                        </tr>
+                        
+                        <!-- Logo -->
+                        <tr>
+                            <td><strong>Logo</strong></td>
+                            <td>
+                                @{
+                                    var logoValue = eventData?.TryGetValue("Logo", out var logo) == true ? logo?.ToString() : "";
+                                }
+                                <input type="text" name="Logo" class="form-control" value="@logoValue" placeholder="Enter logo data (e.g., base64:...)" />
+                                <small class="text-muted">Logo data in base64 format</small>
+                            </td>
+                        </tr>
+                        
+                        <!-- IsSuppressed -->
+                        <tr>
+                            <td><strong>IsSuppressed</strong></td>
+                            <td>
+                                @{
+                                    var isSuppressedValue = eventData?.TryGetValue("IsSuppressed", out var isSup) == true ? isSup?.ToString()?.ToLower() : "false";
+                                }
+                                <select name="IsSuppressed" class="form-select">
+                                    <option value="true" selected="@(isSuppressedValue == "true" ? "selected" : null)">True</option>
+                                    <option value="false" selected="@(isSuppressedValue == "false" ? "selected" : null)">False</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>Save Event Data
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Templates Tab -->
+    <div class="tab-pane fade" id="templates@(suffix)" role="tabpanel" aria-labelledby="templates@(suffix)-tab">
+        <form method="post" asp-page-handler="SaveTemplates" id="templatesForm@(suffix)">
+            <input type="hidden" name="SelectedEvent" value="@eventName" />
+            <input type="hidden" name="OrderType" value="@orderType" />
+            <input type="hidden" name="activeTab" value="templates@(suffix)" />
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Templates Configuration</h4>
+                <small class="text-muted">Configure email, SMS, and voice templates for this event</small>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 30%">Template Type</th>
+                            <th>Template ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Email Template -->
+                        <tr>
+                            <td><strong>Email</strong></td>
+                            <td>
+                                @{
+                                    var emailTemplateValue = "";
+                                    if (eventData?.TryGetValue("Templates", out var templates) == true && templates is Dictionary<string, object> templatesDict)
+                                    {
+                                        emailTemplateValue = templatesDict.TryGetValue("Email", out var et) ? et?.ToString() : "";
+                                    }
+                                }
+                                <select name="Templates.Email" class="form-select">
+                                    <option value="">Select Email Template...</option>
+                                    <!-- TODO: Add available email templates -->
+                                </select>
+                            </td>
+                        </tr>
+                        
+                        <!-- SMS Template -->
+                        <tr>
+                            <td><strong>SMS</strong></td>
+                            <td>
+                                @{
+                                    var smsTemplateValue = "";
+                                    if (eventData?.TryGetValue("Templates", out var smsTemplates) == true && smsTemplates is Dictionary<string, object> smsTemplatesDict)
+                                    {
+                                        smsTemplateValue = smsTemplatesDict.TryGetValue("Sms", out var st) ? st?.ToString() : "";
+                                    }
+                                }
+                                <select name="Templates.Sms" class="form-select">
+                                    <option value="">Select SMS Template...</option>
+                                    <!-- TODO: Add available SMS templates -->
+                                </select>
+                            </td>
+                        </tr>
+                        
+                        <!-- Voice Template -->
+                        <tr>
+                            <td><strong>Voice</strong></td>
+                            <td>
+                                @{
+                                    var voiceTemplateValue = "";
+                                    if (eventData?.TryGetValue("Templates", out var voiceTemplates) == true && voiceTemplates is Dictionary<string, object> voiceTemplatesDict)
+                                    {
+                                        voiceTemplateValue = voiceTemplatesDict.TryGetValue("Voice", out var vt) ? vt?.ToString() : "";
+                                    }
+                                }
+                                <select name="Templates.Voice" class="form-select">
+                                    <option value="">Select Voice Template...</option>
+                                    <!-- TODO: Add available Voice templates -->
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>Save Templates
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Content Variables Tab -->
+    <div class="tab-pane fade" id="content-variables@(suffix)" role="tabpanel" aria-labelledby="content-variables@(suffix)-tab">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Content Variables Editor</h4>
+            <div>
+                <button type="button" class="btn btn-success me-2" id="addVariableBtn@(suffix)">
+                    <i class="fas fa-plus me-1"></i>Add Variable
+                </button>
+                <button type="button" class="btn btn-primary" id="saveVariablesBtn@(suffix)">
+                    <i class="fas fa-save me-1"></i>Save Variables
+                </button>
+            </div>
+        </div>
+        
+        <div id="contentVariablesContainer@(suffix)">
+            <div class="text-center py-4" id="variablesLoadingState@(suffix)">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading content variables...</p>
+            </div>
+        </div>
+    </div>
+</div>
