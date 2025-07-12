@@ -38,7 +38,7 @@
       "Logo": "base64",
       "IsSuppressed": true,
       "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$\",\n        \"ait_tracking_num\": \"$ShipmentNum$\",\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$\"\n      }",
-      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }"
+      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }"
     },
     {
       "Event": "Schedule Appointment",
@@ -48,15 +48,56 @@
       "Logo": "base64",
       "IsSuppressed": true,
       "ContentVariables": {
+        "dcsdasda": "2234234",
         "cust_name": "$Customer.FriendlyName$",
         "ait_tracking_num": "$ShipmentNum$",
         "var2": ""
       },
       "Templates": {
         "Email": "123456qweqwe",
-        "Sms": "",
-        "Voice": ""
+        "Sms": "5432qwertysms",
+        "Voice": "5432qwertyvoice"
       }
+    },
+    {
+      "Event": "Scheduling Reminder",
+      "OrderType": "Delivery",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
+      "ContentVariables": "{}"
+    },
+    {
+      "Event": "Scheduling Reminder",
+      "OrderType": "Pickup",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
+      "ContentVariables": "{}"
+    },
+    {
+      "Event": "Final Scheduling Appointment",
+      "OrderType": "Delivery",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
+      "ContentVariables": "{}"
+    },
+    {
+      "Event": "Final Scheduling Appointment",
+      "OrderType": "Pickup",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
+      "ContentVariables": "{}"
     }
   ],
   "PreferredCommunication": [

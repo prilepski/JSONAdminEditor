@@ -148,6 +148,11 @@
                             <input type="hidden" asp-for="IsNewEvent" />
                             <input type="hidden" asp-for="SelectedOrderType" />
                             
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4>Event Configuration</h4>
+                                <small class="text-muted">Configure event-specific properties including order type, contact information, and notification settings</small>
+                            </div>
+                            
                             @if (Model.ValidationErrors?.Any() == true)
                             {
                                 <div class="alert alert-danger">
