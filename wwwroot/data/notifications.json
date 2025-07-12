@@ -1,16 +1,6 @@
 {
   "Events": [
     {
-      "Event": "Scheduling Reminder",
-      "OrderType": "ALL",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Logo": "base64:DBSDIBDUIBG3209523",
-      "IsSuppressed": true,
-      "Templates": "{\n        \"Email\": \"TwillioID_12345\",\n        \"Sms\": \"TwillioID_12345\",\n        \"Voice\": \"\"\n      }",
-      "ContentVariables": "{\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$cust\"\n      }"
-    },
-    {
       "Event": "Final Scheduling Appointment",
       "OrderType": "ALL",
       "Phone": "$consigneeContact.phone$",
@@ -19,6 +9,16 @@
       "IsSuppressed": true,
       "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
       "ContentVariables": "{}"
+    },
+    {
+      "Event": "Scheduling Reminder",
+      "OrderType": "ALL",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64:DBSDIBDUIBG3209523",
+      "IsSuppressed": true,
+      "ContentVariables": "{\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$cust\"\n      }",
+      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }"
     },
     {
       "Event": "Schedule Appointment",
@@ -33,7 +33,6 @@
         "Voice": "123456qweqwevoice"
       },
       "ContentVariables": {
-        "test": "test",
         "cust_name": "$Customer.FriendlyName$",
         "var1": ""
       }

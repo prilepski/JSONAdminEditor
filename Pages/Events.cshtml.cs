@@ -19,6 +19,9 @@ public class EventsModel : PageModel
     public List<string> ActiveEventTriggers { get; set; } = new();
     public List<string> AvailableOrderTypes { get; set; } = new();
     public List<(string TemplateId, string TemplateName)> AvailableTemplates { get; set; } = new();
+    public List<(string TemplateId, string TemplateName)> AvailableEmailTemplates { get; set; } = new();
+    public List<(string TemplateId, string TemplateName)> AvailableSmsTemplates { get; set; } = new();
+    public List<(string TemplateId, string TemplateName)> AvailableVoiceTemplates { get; set; } = new();
     public Dictionary<string, object>? EventData { get; set; }
     public List<ValidationError> ValidationErrors { get; set; } = new();
     public string? ErrorMessage { get; set; }
@@ -298,7 +301,13 @@ public class EventsModel : PageModel
 
     private async Task LoadAvailableTemplatesAsync()
     {
-        AvailableTemplates = await _notificationsService.GetAvailableTemplatesAsync();
+        var allTemplates = await _notificationsService.GetAvailableTemplatesAsync();
+        AvailableTemplates = allTemplates.Select(t => (t.TemplateId, t.TemplateName)).ToList();
+        
+        // Load channel-specific templates
+        AvailableEmailTemplates = await _notificationsService.GetEmailTemplatesAsync();
+        AvailableSmsTemplates = await _notificationsService.GetSmsTemplatesAsync();
+        AvailableVoiceTemplates = await _notificationsService.GetVoiceTemplatesAsync();
     }
 
     private bool IsValidOrderType(string orderType)

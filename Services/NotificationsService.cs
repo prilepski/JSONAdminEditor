@@ -91,7 +91,8 @@ namespace JSONAdminEditor.Services
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true,
-                    PropertyNamingPolicy = null
+                    PropertyNamingPolicy = null,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
@@ -225,7 +226,8 @@ namespace JSONAdminEditor.Services
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true,
-                    PropertyNamingPolicy = null
+                    PropertyNamingPolicy = null,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
@@ -267,6 +269,8 @@ namespace JSONAdminEditor.Services
                                 JsonValueKind.True => true,
                                 JsonValueKind.False => false,
                                 JsonValueKind.Null => "",
+                                JsonValueKind.Object => JsonSerializer.Deserialize<Dictionary<string, object>>(prop.Value.GetRawText()) ?? new Dictionary<string, object>(),
+                                JsonValueKind.Array => JsonSerializer.Deserialize<List<object>>(prop.Value.GetRawText()) ?? new List<object>(),
                                 _ => prop.Value.GetRawText()
                             };
                         }
@@ -428,7 +432,8 @@ namespace JSONAdminEditor.Services
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true,
-                    PropertyNamingPolicy = null
+                    PropertyNamingPolicy = null,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
@@ -470,7 +475,7 @@ namespace JSONAdminEditor.Services
             }
         }
 
-        public async Task<List<(string TemplateId, string TemplateName)>> GetAvailableTemplatesAsync()
+        public async Task<List<(string TemplateId, string TemplateName, string ChannelType)>> GetAvailableTemplatesAsync()
         {
             try
             {
@@ -478,27 +483,29 @@ namespace JSONAdminEditor.Services
                 
                 if (!File.Exists(templatesFilePath))
                 {
-                    return new List<(string, string)>();
+                    return new List<(string, string, string)>();
                 }
 
                 var jsonContent = await File.ReadAllTextAsync(templatesFilePath);
                 var templates = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
                 
-                if (templates == null) return new List<(string, string)>();
+                if (templates == null) return new List<(string, string, string)>();
                 
                 return templates
-                    .Where(t => t.ContainsKey("templateId") && t.ContainsKey("templateName"))
+                    .Where(t => t.ContainsKey("templateId") && t.ContainsKey("templateName") && t.ContainsKey("channelType"))
                     .Select(t => (
                         TemplateId: t["templateId"]?.ToString() ?? "",
-                        TemplateName: t["templateName"]?.ToString() ?? ""
+                        TemplateName: t["templateName"]?.ToString() ?? "",
+                        ChannelType: t["channelType"]?.ToString() ?? ""
                     ))
                     .Where(template => !string.IsNullOrWhiteSpace(template.TemplateId) && 
-                                     !string.IsNullOrWhiteSpace(template.TemplateName))
+                                     !string.IsNullOrWhiteSpace(template.TemplateName) &&
+                                     !string.IsNullOrWhiteSpace(template.ChannelType))
                     .ToList();
             }
             catch (Exception)
             {
-                return new List<(string, string)>();
+                return new List<(string, string, string)>();
             }
         }
         
@@ -592,6 +599,31 @@ namespace JSONAdminEditor.Services
             {
                 return false;
             }
+        }
+
+        public async Task<List<(string TemplateId, string TemplateName)>> GetAvailableTemplatesByChannelAsync(string channelType)
+        {
+            var allTemplates = await GetAvailableTemplatesAsync();
+            
+            return allTemplates
+                .Where(template => template.ChannelType.Equals(channelType, StringComparison.OrdinalIgnoreCase))
+                .Select(template => (template.TemplateId, template.TemplateName))
+                .ToList();
+        }
+
+        public async Task<List<(string TemplateId, string TemplateName)>> GetEmailTemplatesAsync()
+        {
+            return await GetAvailableTemplatesByChannelAsync("Email");
+        }
+
+        public async Task<List<(string TemplateId, string TemplateName)>> GetSmsTemplatesAsync()
+        {
+            return await GetAvailableTemplatesByChannelAsync("SMS");
+        }
+
+        public async Task<List<(string TemplateId, string TemplateName)>> GetVoiceTemplatesAsync()
+        {
+            return await GetAvailableTemplatesByChannelAsync("Voice");
         }
     }
 }

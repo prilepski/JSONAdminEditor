@@ -238,9 +238,9 @@
                                                 }
                                                 <select name="Templates.Email" class="form-select">
                                                     <option value="">Select Email Template...</option>
-                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    @if (Model.AvailableEmailTemplates?.Any() == true)
                                                     {
-                                                        foreach (var template in Model.AvailableTemplates)
+                                                        foreach (var template in Model.AvailableEmailTemplates)
                                                         {
                                                             <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(emailTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
                                                                 @template.TemplateName (@template.TemplateId)
@@ -264,9 +264,9 @@
                                                 }
                                                 <select name="Templates.Sms" class="form-select">
                                                     <option value="">Select SMS Template...</option>
-                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    @if (Model.AvailableSmsTemplates?.Any() == true)
                                                     {
-                                                        foreach (var template in Model.AvailableTemplates)
+                                                        foreach (var template in Model.AvailableSmsTemplates)
                                                         {
                                                             <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(smsTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
                                                                 @template.TemplateName (@template.TemplateId)
@@ -290,9 +290,9 @@
                                                 }
                                                 <select name="Templates.Voice" class="form-select">
                                                     <option value="">Select Voice Template...</option>
-                                                    @if (Model.AvailableTemplates?.Any() == true)
+                                                    @if (Model.AvailableVoiceTemplates?.Any() == true)
                                                     {
-                                                        foreach (var template in Model.AvailableTemplates)
+                                                        foreach (var template in Model.AvailableVoiceTemplates)
                                                         {
                                                             <option value="@template.TemplateId" selected="@(template.TemplateId.Equals(voiceTemplateValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
                                                                 @template.TemplateName (@template.TemplateId)
