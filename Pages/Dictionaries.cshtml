@@ -337,10 +337,11 @@
                     tableHtml += `<td>`;
                     
                     if (columnType === 'boolean') {
+                        const boolValue = cellValue === true || cellValue === 'true' || cellValue?.toString()?.toLowerCase() === 'true';
                         tableHtml += `
                             <select class="${inputClass} boolean-dropdown" data-column="${column}">
-                                <option value="true" ${cellValue?.toString()?.toLowerCase() === 'true' ? 'selected' : ''}>True</option>
-                                <option value="false" ${cellValue?.toString()?.toLowerCase() === 'false' ? 'selected' : ''}>False</option>
+                                <option value="true" ${boolValue ? 'selected' : ''}>True</option>
+                                <option value="false" ${!boolValue ? 'selected' : ''}>False</option>
                             </select>
                         `;
                     } else {
