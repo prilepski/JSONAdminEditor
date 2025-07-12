@@ -16,7 +16,7 @@ public class EventsModel : PageModel
     [BindProperty(SupportsGet = true)]
     public bool IsNewEvent { get; set; }
 
-    [BindProperty]
+    [BindProperty(SupportsGet = true)]
     public string? ActiveTab { get; set; }
 
     [BindProperty(SupportsGet = true)]
@@ -520,6 +520,120 @@ public class EventsModel : PageModel
             else
             {
                 return new JsonResult(new { success = false, error = "Failed to save content variables" });
+            }
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, error = ex.Message });
+        }
+    }
+
+    public async Task<IActionResult> OnPostSaveAllAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(SelectedEvent))
+            {
+                return new JsonResult(new { success = false, error = "No event selected" });
+            }
+
+            // Capture the active tab from the request
+            ActiveTab = Request.Form["ActiveTab"].ToString();
+            if (string.IsNullOrEmpty(ActiveTab))
+            {
+                ActiveTab = "event-data"; // Default fallback
+            }
+
+            // Step 1: Save Event Data
+            await LoadActiveEventTriggersAsync();
+            await LoadAvailableOrderTypesAsync();
+            await LoadAvailableTemplatesAsync();
+
+            // Collect and validate event data
+            var eventData = new Dictionary<string, object>();
+            var orderType = Request.Form["OrderType"].ToString().Trim();
+            var phone = Request.Form["Phone"].ToString().Trim();
+            var email = Request.Form["Email"].ToString().Trim();
+            var logo = Request.Form["Logo"].ToString().Trim();
+            var isSuppressed = Request.Form["IsSuppressed"].ToString().Trim();
+
+            // Validate required fields
+            ValidationErrors.Clear();
+            if (string.IsNullOrEmpty(orderType))
+            {
+                ValidationErrors.Add(new ValidationError 
+                { 
+                    FieldName = "OrderType", 
+                    Message = "OrderType is required" 
+                });
+            }
+
+            if (ValidationErrors.Any())
+            {
+                return new JsonResult(new { success = false, error = "Validation errors: " + string.Join(", ", ValidationErrors.Select(e => e.Message)) });
+            }
+
+            // Build event data
+            eventData["OrderType"] = orderType;
+            eventData["Phone"] = string.IsNullOrEmpty(phone) ? "" : phone;
+            eventData["Email"] = string.IsNullOrEmpty(email) ? "" : email;
+            eventData["Logo"] = string.IsNullOrEmpty(logo) ? "" : logo;
+            eventData["IsSuppressed"] = isSuppressed.ToLower() == "true";
+
+            // Step 2: Handle Templates
+            var emailTemplate = Request.Form["Templates.Email"].ToString().Trim();
+            var smsTemplate = Request.Form["Templates.Sms"].ToString().Trim();
+            var voiceTemplate = Request.Form["Templates.Voice"].ToString().Trim();
+
+            var templates = new Dictionary<string, object>
+            {
+                ["Email"] = string.IsNullOrEmpty(emailTemplate) ? "" : emailTemplate,
+                ["Sms"] = string.IsNullOrEmpty(smsTemplate) ? "" : smsTemplate,
+                ["Voice"] = string.IsNullOrEmpty(voiceTemplate) ? "" : voiceTemplate
+            };
+            eventData["Templates"] = templates;
+
+            // Step 3: Handle Content Variables
+            var contentVariablesJson = Request.Form["contentVariables"].ToString();
+            if (!string.IsNullOrEmpty(contentVariablesJson))
+            {
+                var contentVariables = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(contentVariablesJson);
+                if (contentVariables != null)
+                {
+                    eventData["ContentVariables"] = contentVariables;
+                }
+            }
+            else
+            {
+                // Initialize empty ContentVariables if none provided
+                eventData["ContentVariables"] = new Dictionary<string, object>();
+            }
+
+            // Save all data
+            bool success;
+            if (IsNewEvent)
+            {
+                success = await _notificationsService.AddNewEventAsync(SelectedEvent, eventData);
+            }
+            else
+            {
+                success = await _notificationsService.UpdateEventByOrderTypeAsync(SelectedEvent, SelectedOrderType, eventData);
+            }
+
+            if (success)
+            {
+                var orderTypePart = !string.IsNullOrEmpty(SelectedOrderType) ? $" ({SelectedOrderType})" : "";
+                var action = IsNewEvent ? "added" : "updated";
+                return new JsonResult(new 
+                { 
+                    success = true, 
+                    message = $"Event '{SelectedEvent}'{orderTypePart} {action} successfully!",
+                    activeTab = ActiveTab
+                });
+            }
+            else
+            {
+                return new JsonResult(new { success = false, error = "Failed to save event data" });
             }
         }
         catch (Exception ex)

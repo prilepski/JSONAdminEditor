@@ -16,8 +16,9 @@
     
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
-        <div class="alert alert-success" role="alert">
+        <div class="alert alert-success alert-dismissible fade show" role="alert" id="serverSuccessMessage">
             <i class="fas fa-check-circle me-2"></i>@Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
@@ -96,29 +97,52 @@
                 </div>
             </div>
             <div class="card-body">
-                <!-- Tab Navigation -->
-                <ul class="nav nav-tabs mb-3" id="eventTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="event-data-tab" data-bs-toggle="tab" data-bs-target="#event-data" type="button" role="tab" aria-controls="event-data" aria-selected="true">
-                            <i class="fas fa-cog me-1"></i>Event Data
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab" aria-controls="templates" aria-selected="false">
-                            <i class="fas fa-file-alt me-1"></i>Templates
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="content-variables-tab" data-bs-toggle="tab" data-bs-target="#content-variables" type="button" role="tab" aria-controls="content-variables" aria-selected="false">
-                            <i class="fas fa-code me-1"></i>Content Variables
-                        </button>
-                    </li>
-                </ul>
+                <!-- Tab Navigation with Unified Save Button -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <ul class="nav nav-tabs" id="eventTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(string.IsNullOrEmpty(Model.ActiveTab) || Model.ActiveTab == "event-data" ? "active" : "")" id="event-data-tab" data-bs-toggle="tab" data-bs-target="#event-data" type="button" role="tab" aria-controls="event-data" aria-selected="@(string.IsNullOrEmpty(Model.ActiveTab) || Model.ActiveTab == "event-data" ? "true" : "false")">
+                                <i class="fas fa-cog me-1"></i>Event Data
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(Model.ActiveTab == "templates" ? "active" : "")" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab" aria-controls="templates" aria-selected="@(Model.ActiveTab == "templates" ? "true" : "false")">
+                                <i class="fas fa-file-alt me-1"></i>Templates
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(Model.ActiveTab == "content-variables" ? "active" : "")" id="content-variables-tab" data-bs-toggle="tab" data-bs-target="#content-variables" type="button" role="tab" aria-controls="content-variables" aria-selected="@(Model.ActiveTab == "content-variables" ? "true" : "false")">
+                                <i class="fas fa-code me-1"></i>Content Variables
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Unified Save Button -->
+                    <button type="button" class="btn btn-primary" id="unifiedSaveBtn" onclick="saveAllTabs()">
+                        <i class="fas fa-save me-1"></i>
+                        @if (Model.IsNewEvent && Model.EventSupportsByOrderType)
+                        {
+                            <text>Add @Model.SelectedOrderType Event</text>
+                        }
+                        else if (Model.IsNewEvent)
+                        {
+                            <text>Add Event</text>
+                        }
+                        else if (Model.EventSupportsByOrderType)
+                        {
+                            <text>Save @Model.SelectedOrderType Event</text>
+                        }
+                        else
+                        {
+                            <text>Save All Changes</text>
+                        }
+                    </button>
+                </div>
 
                 <!-- Tab Content -->
                 <div class="tab-content" id="eventTabsContent">
                     <!-- Event Data Tab -->
-                    <div class="tab-pane fade show active" id="event-data" role="tabpanel" aria-labelledby="event-data-tab">
+                    <div class="tab-pane fade @(string.IsNullOrEmpty(Model.ActiveTab) || Model.ActiveTab == "event-data" ? "show active" : "")" id="event-data" role="tabpanel" aria-labelledby="event-data-tab">
                         <form method="post" asp-page-handler="SaveEventData" id="eventDataForm">
                             <input type="hidden" asp-for="SelectedEvent" />
                             <input type="hidden" asp-for="IsNewEvent" />
@@ -233,33 +257,11 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <div class="d-flex justify-content-end mt-3">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-save") me-1"></i>
-                                    @if (Model.IsNewEvent && Model.EventSupportsByOrderType)
-                                    {
-                                        <text>Add @Model.SelectedOrderType Event</text>
-                                    }
-                                    else if (Model.IsNewEvent)
-                                    {
-                                        <text>Add Event</text>
-                                    }
-                                    else if (Model.EventSupportsByOrderType)
-                                    {
-                                        <text>Save @Model.SelectedOrderType Event</text>
-                                    }
-                                    else
-                                    {
-                                        <text>Save Event Data</text>
-                                    }
-                                </button>
-                            </div>
                         </form>
                     </div>
 
                     <!-- Templates Tab -->
-                    <div class="tab-pane fade" id="templates" role="tabpanel" aria-labelledby="templates-tab">
+                    <div class="tab-pane fade @(Model.ActiveTab == "templates" ? "show active" : "")" id="templates" role="tabpanel" aria-labelledby="templates-tab">
                         <form method="post" asp-page-handler="SaveTemplates" id="templatesForm">
                             <input type="hidden" asp-for="SelectedEvent" />
                             <input type="hidden" asp-for="SelectedOrderType" />
@@ -359,25 +361,16 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <div class="d-flex justify-content-end mt-3">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>Save Templates
-                                </button>
-                            </div>
                         </form>
                     </div>
 
                     <!-- Content Variables Tab -->
-                    <div class="tab-pane fade" id="content-variables" role="tabpanel" aria-labelledby="content-variables-tab">
+                    <div class="tab-pane fade @(Model.ActiveTab == "content-variables" ? "show active" : "")" id="content-variables" role="tabpanel" aria-labelledby="content-variables-tab">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4>Content Variables Editor</h4>
                             <div>
-                                <button type="button" class="btn btn-success me-2" id="addVariableBtn">
+                                <button type="button" class="btn btn-success" id="addVariableBtn">
                                     <i class="fas fa-plus me-1"></i>Add Variable
-                                </button>
-                                <button type="button" class="btn btn-primary" id="saveVariablesBtn">
-                                    <i class="fas fa-save me-1"></i>Save Variables
                                 </button>
                             </div>
                         </div>
@@ -429,8 +422,131 @@
         let currentEventName = '@(Model.SelectedEvent ?? "")';
         let activeTab = '@(Model.ActiveTab ?? "")';
         
+        // Unified Save Function for All Tabs
+        async function saveAllTabs() {
+            const saveBtn = document.getElementById('unifiedSaveBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...';
+            saveBtn.disabled = true;
+            
+            try {
+                // Capture the currently active tab
+                const activeTabElement = document.querySelector('.nav-link.active');
+                const activeTabId = activeTabElement ? activeTabElement.id.replace('-tab', '') : 'event-data';
+                
+                // Collect data from all tabs
+                const formData = new FormData();
+                
+                // Add hidden fields
+                formData.append('SelectedEvent', currentEventName);
+                formData.append('SelectedOrderType', getSelectedOrderType());
+                formData.append('IsNewEvent', '@Model.IsNewEvent');
+                formData.append('ActiveTab', activeTabId); // Add active tab info
+                
+                // Collect Event Data
+                const eventForm = document.getElementById('eventDataForm');
+                if (eventForm) {
+                    const eventFormData = new FormData(eventForm);
+                    for (let [key, value] of eventFormData.entries()) {
+                        formData.append(key, value);
+                    }
+                }
+                
+                // Collect Templates Data
+                const templatesForm = document.getElementById('templatesForm');
+                if (templatesForm) {
+                    const templatesFormData = new FormData(templatesForm);
+                    for (let [key, value] of templatesFormData.entries()) {
+                        if (key.startsWith('Templates.')) {
+                            formData.append(key, value);
+                        }
+                    }
+                }
+                
+                // Collect Content Variables Data
+                const variablesToSave = {};
+                const table = document.getElementById('contentVariablesTable');
+                if (table) {
+                    const rows = table.getElementsByTagName('tbody')[0].rows;
+                    
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const variableType = row.getAttribute('data-variable-type');
+                        const nameInput = row.querySelector('.variable-name');
+                        const valueInput = row.querySelector('.variable-value');
+                        const checkbox = row.querySelector('.redefined-checkbox');
+                        
+                        const name = nameInput.value.trim();
+                        const value = valueInput.value.trim();
+                        
+                        if (name) {
+                            if (variableType === 'event') {
+                                variablesToSave[name] = value;
+                            } else if (variableType === 'global' && checkbox && checkbox.checked) {
+                                variablesToSave[name] = value;
+                            }
+                        }
+                    }
+                }
+                formData.append('contentVariables', JSON.stringify(variablesToSave));
+                
+                // Save all data
+                const response = await fetch('/Events?handler=SaveAll', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showMessage(result.message, 'success');
+                        
+                        // Reload page after a short delay, preserving the active tab
+                        setTimeout(() => {
+                            const currentUrl = new URL(window.location);
+                            currentUrl.searchParams.set('SelectedEvent', currentEventName);
+                            currentUrl.searchParams.set('SelectedOrderType', getSelectedOrderType());
+                            // Use the activeTab returned from the server, or fall back to local capture
+                            const tabToActivate = result.activeTab || activeTabId;
+                            currentUrl.searchParams.set('ActiveTab', tabToActivate);
+                            window.location.href = currentUrl.toString();
+                        }, 1500);
+                    } else {
+                        throw new Error(result.error || 'Failed to save all data');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('Error saving all tabs:', error);
+                showMessage(error.message || 'Failed to save all data. Please try again.', 'error');
+            } finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+        
+        // Helper function to get selected OrderType
+        function getSelectedOrderType() {
+            const orderTypeSwitch = document.getElementById('orderTypeSwitch');
+            return orderTypeSwitch && orderTypeSwitch.checked ? 'Pickup' : 'Delivery';
+        }
+        
         // Clear validation errors when user types
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss server-side success message after 3 seconds
+            const serverSuccessMessage = document.getElementById('serverSuccessMessage');
+            if (serverSuccessMessage) {
+                setTimeout(() => {
+                    const alert = bootstrap.Alert.getOrCreateInstance(serverSuccessMessage);
+                    alert.close();
+                }, 3000);
+            }
+            
             const inputs = document.querySelectorAll('#eventDataForm input, #eventDataForm select');
             inputs.forEach(input => {
                 input.addEventListener('input', function() {
@@ -442,27 +558,8 @@
                 });
             });
             
-            // Restore active tab if specified
-            if (activeTab) {
-                const tabButton = document.getElementById(activeTab + '-tab');
-                const tabPane = document.getElementById(activeTab);
-                
-                if (tabButton && tabPane) {
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.nav-link').forEach(link => {
-                        link.classList.remove('active');
-                        link.setAttribute('aria-selected', 'false');
-                    });
-                    document.querySelectorAll('.tab-pane').forEach(pane => {
-                        pane.classList.remove('show', 'active');
-                    });
-                    
-                    // Activate the specified tab
-                    tabButton.classList.add('active');
-                    tabButton.setAttribute('aria-selected', 'true');
-                    tabPane.classList.add('show', 'active');
-                }
-            }
+            // Restore active tab if specified - now handled by server-side rendering
+            // No additional JavaScript needed as the correct tab is already active from the server
             
             // Handle order type rocker switch changes
             const orderTypeSwitch = document.getElementById('orderTypeSwitch');
@@ -487,7 +584,6 @@
             // Initialize content variables tab functionality
             const contentVariablesTab = document.getElementById('content-variables-tab');
             const addVariableBtn = document.getElementById('addVariableBtn');
-            const saveVariablesBtn = document.getElementById('saveVariablesBtn');
             
             if (contentVariablesTab) {
                 contentVariablesTab.addEventListener('shown.bs.tab', function() {
@@ -499,10 +595,6 @@
             
             if (addVariableBtn) {
                 addVariableBtn.addEventListener('click', addNewVariable);
-            }
-            
-            if (saveVariablesBtn) {
-                saveVariablesBtn.addEventListener('click', saveContentVariables);
             }
             
             // Load content variables immediately if an event is already selected
@@ -748,11 +840,6 @@
         
         async function saveContentVariables() {
             try {
-                const saveBtn = document.getElementById('saveVariablesBtn');
-                const originalText = saveBtn.innerHTML;
-                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...';
-                saveBtn.disabled = true;
-                
                 // Collect all variables to save
                 const variablesToSave = {};
                 const table = document.getElementById('contentVariablesTable');
@@ -800,28 +887,19 @@
                     }
                 });
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Update local state
-                    eventContentVariables = variablesToSave;
-                    
-                    // Show success message
-                    showMessage(result.message, 'success');
-                    
-                    // Re-render the editor to reflect saved state
-                    renderContentVariablesEditor();
-                } else {
-                    showMessage(result.error || 'Failed to save content variables.', 'error');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // Update local state
+                        eventContentVariables = variablesToSave;
+                        return true;
+                    }
                 }
+                return false;
                 
             } catch (error) {
                 console.error('Error saving content variables:', error);
-                showMessage('An error occurred while saving. Please try again.', 'error');
-            } finally {
-                const saveBtn = document.getElementById('saveVariablesBtn');
-                saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save Variables';
-                saveBtn.disabled = false;
+                return false;
             }
         }
         

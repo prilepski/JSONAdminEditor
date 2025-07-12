@@ -47,8 +47,16 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$\",\n        \"ait_tracking_num\": \"$ShipmentNum$\",\n        \"var1\": \"\",\n        \"var2\": \"\"\n      }",
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }"
+      "ContentVariables": {
+        "cust_name": "$Customer.FriendlyName$",
+        "ait_tracking_num": "$ShipmentNum$",
+        "var2": ""
+      },
+      "Templates": {
+        "Email": "123456qweqwe",
+        "Sms": "",
+        "Voice": ""
+      }
     }
   ],
   "PreferredCommunication": [
