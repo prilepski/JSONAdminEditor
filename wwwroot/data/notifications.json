@@ -17,7 +17,7 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64:DBSDIBDUIBG3209523",
       "IsSuppressed": true,
-      "ContentVariables": "{\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$cust\"\n      }",
+      "ContentVariables": "{\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$custsadasda\"\n      }",
       "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }"
     },
     {
@@ -33,8 +33,8 @@
         "Voice": "123456qweqwevoice"
       },
       "ContentVariables": {
-        "cust_name": "$Customer.FriendlyName$",
-        "var1": ""
+        "cust_name": "$Customer.FriendlyName$asdadascasdad",
+        "var1": "asdada"
       }
     }
   ],

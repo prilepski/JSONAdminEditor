@@ -16,6 +16,9 @@ public class EventsModel : PageModel
     [BindProperty(SupportsGet = true)]
     public bool IsNewEvent { get; set; }
 
+    [BindProperty]
+    public string? ActiveTab { get; set; }
+
     public List<string> ActiveEventTriggers { get; set; } = new();
     public List<string> AvailableOrderTypes { get; set; } = new();
     public List<(string TemplateId, string TemplateName)> AvailableTemplates { get; set; } = new();
@@ -200,6 +203,9 @@ public class EventsModel : PageModel
             ErrorMessage = "No event selected.";
             return Page();
         }
+
+        // Get the active tab from the form
+        ActiveTab = Request.Form["activeTab"].ToString();
 
         // Get the existing event data
         var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
