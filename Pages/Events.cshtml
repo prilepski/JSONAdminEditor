@@ -54,9 +54,28 @@
                     <div class="flex-grow-1">
                         <h3 class="mb-0">
                             <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-edit") me-2"></i>
-                            @(Model.IsNewEvent ? "Add New Event" : "Edit Event"): @Model.SelectedEvent
+                            @if (Model.IsNewEvent && Model.EventSupportsByOrderType)
+                            {
+                                <text>Add New @Model.SelectedOrderType Event: @Model.SelectedEvent</text>
+                            }
+                            else if (Model.IsNewEvent)
+                            {
+                                <text>Add New Event: @Model.SelectedEvent</text>
+                            }
+                            else if (Model.EventSupportsByOrderType)
+                            {
+                                <text>Edit @Model.SelectedOrderType Event: @Model.SelectedEvent</text>
+                            }
+                            else
+                            {
+                                <text>Edit Event: @Model.SelectedEvent</text>
+                            }
                         </h3>
-                        @if (Model.IsNewEvent)
+                        @if (Model.IsNewEvent && Model.EventSupportsByOrderType)
+                        {
+                            <small class="text-muted">Creating new @Model.SelectedOrderType event node from template</small>
+                        }
+                        else if (Model.IsNewEvent)
                         {
                             <small class="text-muted">Creating new event from template</small>
                         }
@@ -103,6 +122,7 @@
                         <form method="post" asp-page-handler="SaveEventData" id="eventDataForm">
                             <input type="hidden" asp-for="SelectedEvent" />
                             <input type="hidden" asp-for="IsNewEvent" />
+                            <input type="hidden" asp-for="SelectedOrderType" />
                             
                             @if (Model.ValidationErrors?.Any() == true)
                             {
@@ -217,7 +237,22 @@
                             <div class="d-flex justify-content-end mt-3">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-save") me-1"></i>
-                                    @(Model.IsNewEvent ? "Add Event" : "Save Event Data")
+                                    @if (Model.IsNewEvent && Model.EventSupportsByOrderType)
+                                    {
+                                        <text>Add @Model.SelectedOrderType Event</text>
+                                    }
+                                    else if (Model.IsNewEvent)
+                                    {
+                                        <text>Add Event</text>
+                                    }
+                                    else if (Model.EventSupportsByOrderType)
+                                    {
+                                        <text>Save @Model.SelectedOrderType Event</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Save Event Data</text>
+                                    }
                                 </button>
                             </div>
                         </form>
@@ -227,6 +262,7 @@
                     <div class="tab-pane fade" id="templates" role="tabpanel" aria-labelledby="templates-tab">
                         <form method="post" asp-page-handler="SaveTemplates" id="templatesForm">
                             <input type="hidden" asp-for="SelectedEvent" />
+                            <input type="hidden" asp-for="SelectedOrderType" />
                             <input type="hidden" name="activeTab" value="templates" />
                             
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -428,6 +464,26 @@
                 }
             }
             
+            // Handle order type rocker switch changes
+            const orderTypeSwitch = document.getElementById('orderTypeSwitch');
+            if (orderTypeSwitch) {
+                orderTypeSwitch.addEventListener('change', function() {
+                    const selectedOrderType = this.checked ? 'Pickup' : 'Delivery';
+                    const currentUrl = new URL(window.location);
+                    
+                    // Update SelectedOrderType parameter
+                    currentUrl.searchParams.set('SelectedOrderType', selectedOrderType);
+                    
+                    // Preserve other parameters
+                    if (currentEventName) {
+                        currentUrl.searchParams.set('SelectedEvent', currentEventName);
+                    }
+                    
+                    // Reload the page with the new order type
+                    window.location.href = currentUrl.toString();
+                });
+            }
+            
             // Initialize content variables tab functionality
             const contentVariablesTab = document.getElementById('content-variables-tab');
             const addVariableBtn = document.getElementById('addVariableBtn');
@@ -470,7 +526,11 @@
                     loadingState.style.display = 'block';
                 }
                 
-                const response = await fetch(`/Events?handler=ContentVariables&eventName=${encodeURIComponent(currentEventName)}`, {
+                // Get the current OrderType from the rocker switch
+                const orderTypeSwitch = document.getElementById('orderTypeSwitch');
+                const currentOrderType = orderTypeSwitch && orderTypeSwitch.checked ? 'Pickup' : 'Delivery';
+                
+                const response = await fetch(`/Events?handler=ContentVariables&eventName=${encodeURIComponent(currentEventName)}&selectedOrderType=${encodeURIComponent(currentOrderType)}`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json'
@@ -726,6 +786,11 @@
                 const formData = new FormData();
                 formData.append('eventName', currentEventName);
                 formData.append('contentVariables', JSON.stringify(variablesToSave));
+                
+                // Get the current OrderType from the rocker switch
+                const orderTypeSwitch = document.getElementById('orderTypeSwitch');
+                const currentOrderType = orderTypeSwitch && orderTypeSwitch.checked ? 'Pickup' : 'Delivery';
+                formData.append('SelectedOrderType', currentOrderType);
                 
                 const response = await fetch('/Events?handler=SaveContentVariables', {
                     method: 'POST',

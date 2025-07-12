@@ -51,8 +51,62 @@ public class EventsModel : PageModel
         
         if (!string.IsNullOrEmpty(SelectedEvent))
         {
-            // Load event trigger data to check ByOrderType
+            // Load event trigger data to check ByOrderType FIRST
             await LoadEventTriggerDataAsync();
+            
+            // If no specific OrderType is set and this event supports ByOrderType, 
+            // try to find the first available variant and set SelectedOrderType accordingly
+            if (string.IsNullOrEmpty(SelectedOrderType) && EventSupportsByOrderType)
+            {
+                var allEventVariants = await _notificationsService.GetEventsAsync();
+                var eventVariants = allEventVariants?.Where(e => 
+                    e.TryGetValue("Event", out var nameObj) && 
+                    nameObj?.ToString()?.Equals(SelectedEvent, StringComparison.OrdinalIgnoreCase) == true).ToList();
+                
+                if (eventVariants?.Any() == true)
+                {
+                    // Try to find Delivery first, then Pickup, then any other OrderType
+                    var deliveryVariant = eventVariants.FirstOrDefault(e => 
+                        e.TryGetValue("OrderType", out var ot) && 
+                        ot?.ToString()?.Equals("Delivery", StringComparison.OrdinalIgnoreCase) == true);
+                    
+                    var pickupVariant = eventVariants.FirstOrDefault(e => 
+                        e.TryGetValue("OrderType", out var ot) && 
+                        ot?.ToString()?.Equals("Pickup", StringComparison.OrdinalIgnoreCase) == true);
+                    
+                    if (deliveryVariant != null)
+                    {
+                        SelectedOrderType = "Delivery";
+                    }
+                    else if (pickupVariant != null)
+                    {
+                        SelectedOrderType = "Pickup";
+                    }
+                    else
+                    {
+                        // Fall back to the first variant's OrderType
+                        var firstVariant = eventVariants.First();
+                        if (firstVariant.TryGetValue("OrderType", out var firstOrderType))
+                        {
+                            SelectedOrderType = firstOrderType?.ToString() ?? "Delivery";
+                        }
+                        else
+                        {
+                            SelectedOrderType = "Delivery"; // Default fallback
+                        }
+                    }
+                }
+                else
+                {
+                    // No variants exist - default to Delivery for "add new event" mode
+                    SelectedOrderType = "Delivery";
+                }
+            }
+            else if (string.IsNullOrEmpty(SelectedOrderType))
+            {
+                // For events that don't support ByOrderType, default to Delivery
+                SelectedOrderType = "Delivery";
+            }
             
             if (IsNewEvent)
             {
@@ -72,6 +126,7 @@ public class EventsModel : PageModel
         await LoadActiveEventTriggersAsync();
         await LoadAvailableOrderTypesAsync();
         await LoadAvailableTemplatesAsync();
+        await LoadEventTriggerDataAsync(); // Load ByOrderType info
         await LoadEventTemplateAsync();
         return Page();
     }
@@ -144,7 +199,7 @@ public class EventsModel : PageModel
         // Preserve existing ContentVariables and Templates if they exist (only for existing events)
         if (!IsNewEvent)
         {
-            var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
+            var existingEvent = await _notificationsService.GetEventByNameAndOrderTypeAsync(SelectedEvent, SelectedOrderType);
             if (existingEvent != null)
             {
                 if (existingEvent.TryGetValue("ContentVariables", out var contentVars))
@@ -174,26 +229,28 @@ public class EventsModel : PageModel
 
         if (IsNewEvent)
         {
-            // Add new event
+            // Add new event with specific OrderType
             success = await _notificationsService.AddNewEventAsync(SelectedEvent, eventData);
-            successMessage = $"Event '{SelectedEvent}' added successfully!";
+            successMessage = $"New '{orderType}' event node for '{SelectedEvent}' added successfully!";
         }
         else
         {
-            // Update existing event
-            success = await _notificationsService.UpdateEventAsync(SelectedEvent, eventData);
-            successMessage = $"Event '{SelectedEvent}' updated successfully!";
+            // Update existing event using OrderType-aware method - only affects the specific OrderType
+            success = await _notificationsService.UpdateEventByOrderTypeAsync(SelectedEvent, SelectedOrderType, eventData);
+            successMessage = $"Event '{SelectedEvent}' ({orderType}) updated successfully!";
         }
 
         if (success)
         {
             SuccessMessage = successMessage;
             IsNewEvent = false; // Reset to normal editing mode
+            await LoadEventTriggerDataAsync(); // Reload trigger data to maintain rocker switch
             await LoadEventDataAsync(); // Reload to show updated data
         }
         else
         {
             ErrorMessage = IsNewEvent ? "Failed to add new event." : "Failed to save event data.";
+            await LoadEventTriggerDataAsync(); // Still need to reload trigger data for UI consistency
         }
 
         return Page();
@@ -214,8 +271,8 @@ public class EventsModel : PageModel
         // Get the active tab from the form
         ActiveTab = Request.Form["activeTab"].ToString();
 
-        // Get the existing event data
-        var existingEvent = await _notificationsService.GetEventByNameAsync(SelectedEvent);
+        // Get the existing event data using OrderType-aware method
+        var existingEvent = await _notificationsService.GetEventByNameAndOrderTypeAsync(SelectedEvent, SelectedOrderType);
         if (existingEvent == null)
         {
             ErrorMessage = $"Event '{SelectedEvent}' not found.";
@@ -238,17 +295,20 @@ public class EventsModel : PageModel
         // Update the event data with new templates
         existingEvent["Templates"] = templates;
 
-        // Save the updated event
-        var success = await _notificationsService.UpdateEventAsync(SelectedEvent, existingEvent);
+        // Save the updated event using OrderType-aware method
+        var success = await _notificationsService.UpdateEventByOrderTypeAsync(SelectedEvent, SelectedOrderType, existingEvent);
         
         if (success)
         {
-            SuccessMessage = $"Templates for '{SelectedEvent}' updated successfully!";
+            var orderTypePart = EventSupportsByOrderType && !string.IsNullOrEmpty(SelectedOrderType) ? $" ({SelectedOrderType})" : "";
+            SuccessMessage = $"Templates for '{SelectedEvent}'{orderTypePart} updated successfully!";
+            await LoadEventTriggerDataAsync(); // Reload trigger data to maintain rocker switch
             await LoadEventDataAsync(); // Reload to show updated data
         }
         else
         {
             ErrorMessage = "Failed to save templates.";
+            await LoadEventTriggerDataAsync(); // Still need to reload trigger data for UI consistency
         }
 
         return Page();
@@ -269,11 +329,31 @@ public class EventsModel : PageModel
         if (string.IsNullOrEmpty(SelectedEvent))
             return;
 
-        EventData = await _notificationsService.GetEventByNameAsync(SelectedEvent);
+        // Load event data based on rocker switch state (SelectedOrderType)
+        EventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(SelectedEvent, SelectedOrderType);
         
         if (EventData == null)
         {
-            ErrorMessage = $"Event '{SelectedEvent}' not found in notifications.json";
+            // Check if this event supports ByOrderType and if we're looking for a specific OrderType
+            if (EventSupportsByOrderType && !string.IsNullOrEmpty(SelectedOrderType))
+            {
+                // Specific OrderType doesn't exist, prepare for "Add New Event" mode
+                IsNewEvent = true;
+                await LoadEventTemplateAsync();
+                SuccessMessage = $"No '{SelectedOrderType}' variant found for event '{SelectedEvent}'. You can add a new {SelectedOrderType} event node below.";
+                ErrorMessage = null; // Clear any error message since this is expected behavior
+            }
+            else
+            {
+                ErrorMessage = $"Event '{SelectedEvent}' not found in notifications.json";
+            }
+        }
+        else
+        {
+            // Event data found, ensure we're not in new event mode
+            IsNewEvent = false;
+            ErrorMessage = null;
+            SuccessMessage = null;
         }
     }
 
@@ -288,15 +368,32 @@ public class EventsModel : PageModel
         {
             // Set the Event field to the selected event name
             template["Event"] = SelectedEvent;
+            
+            // Set the correct OrderType based on rocker switch state
+            if (EventSupportsByOrderType && !string.IsNullOrEmpty(SelectedOrderType))
+            {
+                template["OrderType"] = SelectedOrderType;
+            }
+            else
+            {
+                template["OrderType"] = "ALL";
+            }
+            
             EventData = template;
         }
         else
         {
             // Fallback to default values if template is not found
+            var orderType = "ALL";
+            if (EventSupportsByOrderType && !string.IsNullOrEmpty(SelectedOrderType))
+            {
+                orderType = SelectedOrderType;
+            }
+            
             EventData = new Dictionary<string, object>
             {
                 ["Event"] = SelectedEvent,
-                ["OrderType"] = "ALL",
+                ["OrderType"] = orderType,
                 ["Phone"] = "$consigneeContact.phone$",
                 ["Email"] = "$consigneeContact.email$",
                 ["Logo"] = "base64",
@@ -328,7 +425,7 @@ public class EventsModel : PageModel
         return AvailableOrderTypes.Any(ot => ot.Equals(orderType, StringComparison.OrdinalIgnoreCase));
     }
     
-    public async Task<IActionResult> OnGetContentVariablesAsync(string eventName)
+    public async Task<IActionResult> OnGetContentVariablesAsync(string eventName, string selectedOrderType)
     {
         try
         {
@@ -337,8 +434,8 @@ public class EventsModel : PageModel
                 return new JsonResult(new { success = false, error = "Event name is required" });
             }
             
-            // Load event-specific content variables
-            var eventData = await _notificationsService.GetEventByNameAsync(eventName);
+            // Load event-specific content variables using OrderType-aware method
+            var eventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(eventName, selectedOrderType);
             var eventContentVariables = new Dictionary<string, string>();
             
             if (eventData?.TryGetValue("ContentVariables", out var eventVars) == true)
@@ -391,7 +488,7 @@ public class EventsModel : PageModel
         }
     }
     
-    public async Task<IActionResult> OnPostSaveContentVariablesAsync(string eventName, string contentVariables)
+    public async Task<IActionResult> OnPostSaveContentVariablesAsync(string eventName, string contentVariables, string selectedOrderType)
     {
         try
         {
@@ -408,15 +505,16 @@ public class EventsModel : PageModel
                 return new JsonResult(new { success = false, error = "Invalid content variables data" });
             }
             
-            // Save the content variables to the event
-            var success = await _notificationsService.UpdateEventContentVariablesAsync(eventName, variablesData);
+            // Save the content variables to the event using OrderType-aware method
+            var success = await _notificationsService.UpdateEventContentVariablesByOrderTypeAsync(eventName, selectedOrderType, variablesData);
             
             if (success)
             {
+                var orderTypePart = !string.IsNullOrEmpty(selectedOrderType) ? $" ({selectedOrderType})" : "";
                 return new JsonResult(new 
                 { 
                     success = true, 
-                    message = $"Content variables for event '{eventName}' saved successfully!" 
+                    message = $"Content variables for event '{eventName}'{orderTypePart} saved successfully!" 
                 });
             }
             else
@@ -434,12 +532,8 @@ public class EventsModel : PageModel
     {
         try
         {
-            // Use the existing method from NotificationsService but load the full data
-            var triggers = await _notificationsService.GetActiveEventTriggersAsync();
-            
-            // We need to check the actual event-triggers.json file for ByOrderType
-            // Let's add a method to NotificationsService for this
-            EventSupportsByOrderType = CheckEventSupportsByOrderType(SelectedEvent);
+            // Use the NotificationsService method to check if event supports OrderType
+            EventSupportsByOrderType = await _notificationsService.CheckEventSupportsByOrderTypeAsync(SelectedEvent ?? "");
         }
         catch (Exception)
         {
@@ -449,17 +543,14 @@ public class EventsModel : PageModel
 
     private bool CheckEventSupportsByOrderType(string? eventName)
     {
+        // This method is now deprecated in favor of the async version above
+        // Keeping it for compatibility but will be removed in future updates
         if (string.IsNullOrEmpty(eventName))
             return false;
 
         try
         {
-            // For now, let's use a simple approach - we'll improve this with a proper service method later
-            // We can assume all events support order type splitting for this implementation
-            // In a real scenario, we'd add a method to NotificationsService to check this
-            
-            // Temporary: check if event name contains certain keywords or just return true for now
-            // This should be replaced with actual service method
+            // This is a synchronous fallback - ideally we should use the async version
             var supportedEvents = new[] { "Schedule Appointment", "Scheduling Reminder", "Final Scheduling Appointment" };
             return supportedEvents.Contains(eventName, StringComparer.OrdinalIgnoreCase);
         }

@@ -298,10 +298,207 @@ namespace JSONAdminEditor.Services
                 nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
         }
 
+        public async Task<Dictionary<string, object>?> GetEventByNameAndOrderTypeAsync(string eventName, string? orderType = null)
+        {
+            var events = await GetEventsAsync();
+            if (events == null) return null;
+
+            // Check if this event supports ByOrderType
+            var eventSupportsOrderType = await CheckEventSupportsByOrderTypeAsync(eventName);
+            
+            // Filter events by name first
+            var matchingEvents = events.Where(e => 
+                e.TryGetValue("Event", out var nameObj) && 
+                nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true).ToList();
+
+            if (!matchingEvents.Any()) return null;
+
+            // If event doesn't support order type, return the first match (usually "ALL")
+            if (!eventSupportsOrderType)
+            {
+                return matchingEvents.FirstOrDefault(e => 
+                    e.TryGetValue("OrderType", out var orderTypeObj) && 
+                    orderTypeObj?.ToString()?.Equals("ALL", StringComparison.OrdinalIgnoreCase) == true) 
+                    ?? matchingEvents.FirstOrDefault();
+            }
+
+            // If no specific order type requested, return "ALL" version
+            if (string.IsNullOrEmpty(orderType))
+            {
+                return matchingEvents.FirstOrDefault(e => 
+                    e.TryGetValue("OrderType", out var orderTypeObj) && 
+                    orderTypeObj?.ToString()?.Equals("ALL", StringComparison.OrdinalIgnoreCase) == true) 
+                    ?? matchingEvents.FirstOrDefault();
+            }
+
+            // Look for specific OrderType match - if not found, return null (so "add new event" can be shown)
+            var specificOrderTypeEvent = matchingEvents.FirstOrDefault(e => 
+                e.TryGetValue("OrderType", out var orderTypeObj) && 
+                orderTypeObj?.ToString()?.Equals(orderType, StringComparison.OrdinalIgnoreCase) == true);
+
+            return specificOrderTypeEvent; // Return null if not found
+        }
+
+        public async Task<bool> CheckEventSupportsByOrderTypeAsync(string eventName)
+        {
+            try
+            {
+                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "event-triggers.json");
+                
+                if (!File.Exists(eventTriggersFilePath))
+                {
+                    return false;
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(eventTriggersFilePath);
+                var triggers = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
+                
+                if (triggers == null) return false;
+                
+                var eventTrigger = triggers.FirstOrDefault(t => 
+                    t.TryGetValue("Event Name", out var nameObj) && 
+                    nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+
+                if (eventTrigger != null && eventTrigger.TryGetValue("ByOrderType", out var byOrderTypeObj))
+                {
+                    if (byOrderTypeObj is bool byOrderTypeBool)
+                        return byOrderTypeBool;
+                    
+                    if (bool.TryParse(byOrderTypeObj?.ToString(), out var byOrderTypeParsed))
+                        return byOrderTypeParsed;
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public async Task<bool> UpdateEventAsync(string eventName, Dictionary<string, object> eventData)
         {
             // Use the same logic as AddNewEventAsync - remove existing and add new
             return await AddNewEventAsync(eventName, eventData);
+        }
+
+        public async Task<bool> UpdateEventByOrderTypeAsync(string eventName, string? orderType, Dictionary<string, object> eventData)
+        {
+            try
+            {
+                // Read the entire notifications.json file
+                var existingContent = new Dictionary<string, object>();
+                
+                if (File.Exists(_notificationsFilePath))
+                {
+                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var document = JsonDocument.Parse(jsonContent);
+                    
+                    // Preserve existing sections
+                    foreach (var prop in document.RootElement.EnumerateObject())
+                    {
+                        var deserializedValue = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                        if (deserializedValue != null)
+                        {
+                            existingContent[prop.Name] = deserializedValue;
+                        }
+                    }
+                }
+
+                // Check if this event supports ByOrderType
+                var eventSupportsOrderType = await CheckEventSupportsByOrderTypeAsync(eventName);
+                
+                // Get existing Events array
+                var eventsList = new List<Dictionary<string, object>>();
+                if (existingContent.TryGetValue("Events", out var eventsObj) && eventsObj is JsonElement eventsElement)
+                {
+                    foreach (var item in eventsElement.EnumerateArray())
+                    {
+                        var eventDict = new Dictionary<string, object>();
+                        foreach (var prop in item.EnumerateObject())
+                        {
+                            eventDict[prop.Name] = prop.Value.ValueKind switch
+                            {
+                                JsonValueKind.String => prop.Value.GetString() ?? "",
+                                JsonValueKind.Number => prop.Value.GetInt32(),
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Null => "",
+                                _ => prop.Value.GetRawText()
+                            };
+                        }
+                        eventsList.Add(eventDict);
+                    }
+                }
+
+                // Find the event to update
+                Dictionary<string, object>? eventToUpdate = null;
+                
+                if (!eventSupportsOrderType || string.IsNullOrEmpty(orderType))
+                {
+                    // For events that don't support OrderType or no specific OrderType, find the first match (usually "ALL")
+                    eventToUpdate = eventsList.FirstOrDefault(e => 
+                        e.TryGetValue("Event", out var nameObj) && 
+                        nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true &&
+                        e.TryGetValue("OrderType", out var orderTypeObj) && 
+                        orderTypeObj?.ToString()?.Equals("ALL", StringComparison.OrdinalIgnoreCase) == true);
+                    
+                    // If no "ALL" found, get the first match
+                    if (eventToUpdate == null)
+                    {
+                        eventToUpdate = eventsList.FirstOrDefault(e => 
+                            e.TryGetValue("Event", out var nameObj) && 
+                            nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+                    }
+                }
+                else
+                {
+                    // Find the specific OrderType event to update
+                    eventToUpdate = eventsList.FirstOrDefault(e => 
+                        e.TryGetValue("Event", out var nameObj) && 
+                        nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true &&
+                        e.TryGetValue("OrderType", out var orderTypeObj) && 
+                        orderTypeObj?.ToString()?.Equals(orderType, StringComparison.OrdinalIgnoreCase) == true);
+                }
+
+                if (eventToUpdate == null)
+                    return false;
+
+                // Update the event data
+                foreach (var kvp in eventData)
+                {
+                    eventToUpdate[kvp.Key] = kvp.Value;
+                }
+
+                // Ensure the Event name and OrderType are correctly set
+                eventToUpdate["Event"] = eventName;
+                if (eventSupportsOrderType && !string.IsNullOrEmpty(orderType))
+                {
+                    eventToUpdate["OrderType"] = orderType;
+                }
+
+                // Update the Events array in the content
+                existingContent["Events"] = eventsList;
+                
+                // Write back to file
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = null,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                
+                var updatedJson = JsonSerializer.Serialize(existingContent, options);
+                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error if logging is configured
+                Console.WriteLine($"Error updating event by OrderType: {ex.Message}");
+                return false;
+            }
         }
 
         public async Task<List<string>> GetActiveEventTriggersAsync()
@@ -399,9 +596,23 @@ namespace JSONAdminEditor.Services
                             };
                         }
                         
-                        // Only add events that don't match the new event name (remove duplicates)
+                        // Only add events that don't match both the event name AND OrderType (to avoid duplicates)
+                        var shouldKeepEvent = true;
+                        
                         if (eventDict.TryGetValue("Event", out var existingEventName) && 
-                            !existingEventName?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true)
+                            existingEventName?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            // Same event name - check if OrderType also matches
+                            if (eventData.TryGetValue("OrderType", out var newOrderType) &&
+                                eventDict.TryGetValue("OrderType", out var existingOrderType) &&
+                                existingOrderType?.ToString()?.Equals(newOrderType?.ToString(), StringComparison.OrdinalIgnoreCase) == true)
+                            {
+                                // Same name and same OrderType - this is a duplicate, don't keep it
+                                shouldKeepEvent = false;
+                            }
+                        }
+                        
+                        if (shouldKeepEvent)
                         {
                             eventsList.Add(eventDict);
                         }
@@ -566,6 +777,96 @@ namespace JSONAdminEditor.Services
                 var eventData = eventsList.FirstOrDefault(e => 
                     e.TryGetValue("Event", out var eventNameObj) && 
                     eventNameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+
+                if (eventData == null) return false;
+
+                // Update or add ContentVariables
+                if (contentVariables.Any())
+                {
+                    eventData["ContentVariables"] = contentVariables;
+                }
+                else
+                {
+                    // Remove ContentVariables if empty
+                    eventData.Remove("ContentVariables");
+                }
+
+                // Update the Events array in the data
+                data["Events"] = eventsList;
+
+                // Save back to file
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
+                var updatedJson = JsonSerializer.Serialize(data, options);
+                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateEventContentVariablesByOrderTypeAsync(string eventName, string? orderType, Dictionary<string, string> contentVariables)
+        {
+            try
+            {
+                if (!File.Exists(_notificationsFilePath))
+                {
+                    return false;
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
+                
+                if (data == null) return false;
+
+                // Get or create Events array
+                if (!data.TryGetValue("Events", out var eventsObj) || eventsObj is not JsonElement eventsElement)
+                {
+                    return false;
+                }
+
+                var eventsList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(eventsElement.GetRawText());
+                if (eventsList == null) return false;
+
+                // Check if this event supports ByOrderType
+                var eventSupportsOrderType = await CheckEventSupportsByOrderTypeAsync(eventName);
+
+                // Find the event to update
+                Dictionary<string, object>? eventData = null;
+                
+                if (!eventSupportsOrderType || string.IsNullOrEmpty(orderType))
+                {
+                    // For events that don't support OrderType or no specific OrderType, find the first match (usually "ALL")
+                    eventData = eventsList.FirstOrDefault(e => 
+                        e.TryGetValue("Event", out var nameObj) && 
+                        nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true &&
+                        e.TryGetValue("OrderType", out var orderTypeObj) && 
+                        orderTypeObj?.ToString()?.Equals("ALL", StringComparison.OrdinalIgnoreCase) == true);
+                    
+                    // If no "ALL" found, get the first match
+                    if (eventData == null)
+                    {
+                        eventData = eventsList.FirstOrDefault(e => 
+                            e.TryGetValue("Event", out var nameObj) && 
+                            nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+                    }
+                }
+                else
+                {
+                    // Find the specific OrderType event to update
+                    eventData = eventsList.FirstOrDefault(e => 
+                        e.TryGetValue("Event", out var nameObj) && 
+                        nameObj?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true &&
+                        e.TryGetValue("OrderType", out var orderTypeObj) && 
+                        orderTypeObj?.ToString()?.Equals(orderType, StringComparison.OrdinalIgnoreCase) == true);
+                }
 
                 if (eventData == null) return false;
 

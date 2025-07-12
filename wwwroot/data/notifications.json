@@ -21,28 +21,34 @@
       "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }"
     },
     {
-      "Event": "Schedule Appointment",
-      "OrderType": "Delivery",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Logo": "base64",
-      "IsSuppressed": false,
-      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }",
-      "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$asdadascasdad\",\n        \"var1\": \"asdada\"\n      }"
-    },
-    {
       "Event": "Next Stop",
       "OrderType": "ALL",
       "Phone": "$consigneeContact.phone$",
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "ContentVariables": {},
-      "Templates": {
-        "Email": "",
-        "Sms": "",
-        "Voice": ""
-      }
+      "ContentVariables": "{}",
+      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }"
+    },
+    {
+      "Event": "Schedule Appointment",
+      "OrderType": "Pickup",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$\",\n        \"ait_tracking_num\": \"$ShipmentNum$\",\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$\"\n      }",
+      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }"
+    },
+    {
+      "Event": "Schedule Appointment",
+      "OrderType": "Delivery",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Logo": "base64",
+      "IsSuppressed": true,
+      "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$\",\n        \"ait_tracking_num\": \"$ShipmentNum$\",\n        \"var1\": \"\",\n        \"var2\": \"\"\n      }",
+      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }"
     }
   ],
   "PreferredCommunication": [
