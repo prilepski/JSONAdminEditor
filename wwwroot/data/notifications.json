@@ -1,34 +1,18 @@
 {
   "Events": [
     {
-      "Event": "Final Scheduling Appointment",
-      "OrderType": "ALL",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Logo": "base64",
-      "IsSuppressed": true,
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
-      "ContentVariables": "{}"
-    },
-    {
-      "Event": "Scheduling Reminder",
-      "OrderType": "ALL",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Logo": "base64:DBSDIBDUIBG3209523",
-      "IsSuppressed": true,
-      "ContentVariables": "{\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$custsadasda\"\n      }",
-      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }"
-    },
-    {
       "Event": "Next Stop",
       "OrderType": "ALL",
       "Phone": "$consigneeContact.phone$",
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "ContentVariables": "{}",
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }"
+      "ContentVariables": {},
+      "Templates": {
+        "Email": "5432qwerty",
+        "Sms": "5432qwertysms",
+        "Voice": "5432qwertyvoice"
+      }
     },
     {
       "Event": "Schedule Appointment",
@@ -37,8 +21,16 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "ContentVariables": "{\n        \"cust_name\": \"$Customer.FriendlyName$\",\n        \"ait_tracking_num\": \"$ShipmentNum$\",\n        \"tracking_url\": \"www.myait.com/Tracking/$ShipmentNum$\"\n      }",
-      "Templates": "{\n        \"Email\": \"123456qweqwe\",\n        \"Sms\": \"123456qweqwesms\",\n        \"Voice\": \"123456qweqwevoice\"\n      }"
+      "ContentVariables": {
+        "cust_name": "$Customer.FriendlyName$",
+        "ait_tracking_num": "$ShipmentNum$",
+        "tracking_url": "www.myait.com/Tracking/$ShipmentNum$"
+      },
+      "Templates": {
+        "Email": "5432qwerty",
+        "Sms": "123456qweqwesms",
+        "Voice": "123456qweqwevoice"
+      }
     },
     {
       "Event": "Schedule Appointment",
@@ -48,13 +40,10 @@
       "Logo": "base64",
       "IsSuppressed": true,
       "ContentVariables": {
-        "dcsdasda": "2234234",
-        "cust_name": "$Customer.FriendlyName$",
-        "ait_tracking_num": "$ShipmentNum$",
-        "var2": ""
+        "cust_name": "$Customer.FriendlyName$"
       },
       "Templates": {
-        "Email": "123456qweqwe",
+        "Email": "5432qwerty",
         "Sms": "5432qwertysms",
         "Voice": "5432qwertyvoice"
       }
@@ -66,8 +55,12 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
-      "ContentVariables": "{}"
+      "Templates": {
+        "Email": "123456qweqwe",
+        "Sms": "123456qweqwesms",
+        "Voice": "123456qweqwevoice"
+      },
+      "ContentVariables": {}
     },
     {
       "Event": "Scheduling Reminder",
@@ -76,8 +69,12 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
-      "ContentVariables": "{}"
+      "Templates": {
+        "Email": "5432qwerty",
+        "Sms": "123456qweqwesms",
+        "Voice": "123456qweqwevoice"
+      },
+      "ContentVariables": {}
     },
     {
       "Event": "Final Scheduling Appointment",
@@ -86,8 +83,12 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
-      "ContentVariables": "{}"
+      "Templates": {
+        "Email": "123456qweqwe",
+        "Sms": "123456qweqwesms",
+        "Voice": "123456qweqwevoice"
+      },
+      "ContentVariables": {}
     },
     {
       "Event": "Final Scheduling Appointment",
@@ -96,8 +97,12 @@
       "Email": "$consigneeContact.email$",
       "Logo": "base64",
       "IsSuppressed": true,
-      "Templates": "{\n        \"Email\": \"\",\n        \"Sms\": \"\",\n        \"Voice\": \"\"\n      }",
-      "ContentVariables": "{}"
+      "Templates": {
+        "Email": "123456qweqwe",
+        "Sms": "123456qweqwesms",
+        "Voice": "123456qweqwevoice"
+      },
+      "ContentVariables": {}
     }
   ],
   "PreferredCommunication": [

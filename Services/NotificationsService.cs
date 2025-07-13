@@ -35,14 +35,7 @@ namespace JSONAdminEditor.Services
                         var dict = new Dictionary<string, object>();
                         foreach (var prop in item.EnumerateObject())
                         {
-                            dict[prop.Name] = prop.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => prop.Value.GetString() ?? "",
-                                JsonValueKind.Number => prop.Value.GetInt32(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                _ => prop.Value.GetRawText()
-                            };
+                            dict[prop.Name] = ParseJsonPropertyValue(prop);
                         }
                         result.Add(dict);
                     }
@@ -155,14 +148,7 @@ namespace JSONAdminEditor.Services
                         var dict = new Dictionary<string, object>
                         {
                             ["Variable Name"] = prop.Name,
-                            ["Variable Mapping"] = prop.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => prop.Value.GetString() ?? "",
-                                JsonValueKind.Number => prop.Value.GetInt32(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                _ => prop.Value.GetRawText()
-                            }
+                            ["Variable Mapping"] = ParseJsonPropertyValue(prop)
                         };
                         result.Add(dict);
                     }
@@ -262,17 +248,7 @@ namespace JSONAdminEditor.Services
                         var dict = new Dictionary<string, object>();
                         foreach (var prop in item.EnumerateObject())
                         {
-                            dict[prop.Name] = prop.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => prop.Value.GetString() ?? "",
-                                JsonValueKind.Number => prop.Value.GetInt32(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                JsonValueKind.Null => "",
-                                JsonValueKind.Object => JsonSerializer.Deserialize<Dictionary<string, object>>(prop.Value.GetRawText()) ?? new Dictionary<string, object>(),
-                                JsonValueKind.Array => JsonSerializer.Deserialize<List<object>>(prop.Value.GetRawText()) ?? new List<object>(),
-                                _ => prop.Value.GetRawText()
-                            };
+                            dict[prop.Name] = ParseJsonPropertyValue(prop);
                         }
                         result.Add(dict);
                     }
@@ -417,15 +393,7 @@ namespace JSONAdminEditor.Services
                         var eventDict = new Dictionary<string, object>();
                         foreach (var prop in item.EnumerateObject())
                         {
-                            eventDict[prop.Name] = prop.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => prop.Value.GetString() ?? "",
-                                JsonValueKind.Number => prop.Value.GetInt32(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                JsonValueKind.Null => "",
-                                _ => prop.Value.GetRawText()
-                            };
+                            eventDict[prop.Name] = ParseJsonPropertyValue(prop);
                         }
                         eventsList.Add(eventDict);
                     }
@@ -585,15 +553,7 @@ namespace JSONAdminEditor.Services
                         var eventDict = new Dictionary<string, object>();
                         foreach (var prop in item.EnumerateObject())
                         {
-                            eventDict[prop.Name] = prop.Value.ValueKind switch
-                            {
-                                JsonValueKind.String => prop.Value.GetString() ?? "",
-                                JsonValueKind.Number => prop.Value.GetInt32(),
-                                JsonValueKind.True => true,
-                                JsonValueKind.False => false,
-                                JsonValueKind.Null => "",
-                                _ => prop.Value.GetRawText()
-                            };
+                            eventDict[prop.Name] = ParseJsonPropertyValue(prop);
                         }
                         
                         // Only add events that don't match both the event name AND OrderType (to avoid duplicates)
@@ -925,6 +885,76 @@ namespace JSONAdminEditor.Services
         public async Task<List<(string TemplateId, string TemplateName)>> GetVoiceTemplatesAsync()
         {
             return await GetAvailableTemplatesByChannelAsync("Voice");
+        }
+
+        // Helper method to properly parse JSON property values and normalize Templates/ContentVariables
+        private object ParseJsonPropertyValue(JsonProperty prop)
+        {
+            try
+            {
+                switch (prop.Value.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        var stringValue = prop.Value.GetString() ?? "";
+                        
+                        // Special handling for Templates and ContentVariables that might be JSON strings
+                        if ((prop.Name == "Templates" || prop.Name == "ContentVariables") && 
+                            !string.IsNullOrEmpty(stringValue) && 
+                            (stringValue.StartsWith("{") || stringValue.StartsWith("[")))
+                        {
+                            try
+                            {
+                                // Try to parse as JSON object/array
+                                var parsed = JsonSerializer.Deserialize<object>(stringValue);
+                                return parsed ?? stringValue;
+                            }
+                            catch (JsonException)
+                            {
+                                // If parsing fails, return as string
+                                return stringValue;
+                            }
+                        }
+                        return stringValue;
+                        
+                    case JsonValueKind.Number:
+                        return prop.Value.TryGetInt32(out var intValue) ? intValue : prop.Value.GetDouble();
+                        
+                    case JsonValueKind.True:
+                        return true;
+                        
+                    case JsonValueKind.False:
+                        return false;
+                        
+                    case JsonValueKind.Null:
+                        return "";
+                        
+                    case JsonValueKind.Object:
+                        // Parse object to Dictionary<string, object>
+                        var objDict = new Dictionary<string, object>();
+                        foreach (var subProp in prop.Value.EnumerateObject())
+                        {
+                            objDict[subProp.Name] = ParseJsonPropertyValue(subProp);
+                        }
+                        return objDict;
+                        
+                    case JsonValueKind.Array:
+                        // Parse array to List<object>
+                        var list = new List<object>();
+                        foreach (var item in prop.Value.EnumerateArray())
+                        {
+                            list.Add(JsonSerializer.Deserialize<object>(item.GetRawText()) ?? "");
+                        }
+                        return list;
+                        
+                    default:
+                        return prop.Value.GetRawText();
+                }
+            }
+            catch (Exception)
+            {
+                // Fallback to raw text if anything fails
+                return prop.Value.GetRawText();
+            }
         }
     }
 }

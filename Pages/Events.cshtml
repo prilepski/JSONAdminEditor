@@ -291,11 +291,8 @@
                                             <td><strong>Email</strong></td>
                                             <td>
                                                 @{
-                                                    var emailTemplateValue = "";
-                                                    if (Model.EventData.TryGetValue("Templates", out var templates) && templates is Dictionary<string, object> templatesDict)
-                                                    {
-                                                        emailTemplateValue = templatesDict.TryGetValue("Email", out var et) ? et?.ToString() : "";
-                                                    }
+                                                    var parsedTemplates = Model.GetParsedTemplates();
+                                                    var emailTemplateValue = parsedTemplates["Email"];
                                                 }
                                                 <select name="Templates.Email" class="form-select">
                                                     <option value="">Select Email Template...</option>
@@ -317,11 +314,7 @@
                                             <td><strong>SMS</strong></td>
                                             <td>
                                                 @{
-                                                    var smsTemplateValue = "";
-                                                    if (Model.EventData.TryGetValue("Templates", out var smsTemplates) && smsTemplates is Dictionary<string, object> smsTemplatesDict)
-                                                    {
-                                                        smsTemplateValue = smsTemplatesDict.TryGetValue("Sms", out var st) ? st?.ToString() : "";
-                                                    }
+                                                    var smsTemplateValue = parsedTemplates["Sms"];
                                                 }
                                                 <select name="Templates.Sms" class="form-select">
                                                     <option value="">Select SMS Template...</option>
@@ -343,11 +336,7 @@
                                             <td><strong>Voice</strong></td>
                                             <td>
                                                 @{
-                                                    var voiceTemplateValue = "";
-                                                    if (Model.EventData.TryGetValue("Templates", out var voiceTemplates) && voiceTemplates is Dictionary<string, object> voiceTemplatesDict)
-                                                    {
-                                                        voiceTemplateValue = voiceTemplatesDict.TryGetValue("Voice", out var vt) ? vt?.ToString() : "";
-                                                    }
+                                                    var voiceTemplateValue = parsedTemplates["Voice"];
                                                 }
                                                 <select name="Templates.Voice" class="form-select">
                                                     <option value="">Select Voice Template...</option>

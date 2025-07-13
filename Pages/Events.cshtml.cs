@@ -673,4 +673,79 @@ public class EventsModel : PageModel
             return false;
         }
     }
+
+    // Helper method to parse Templates from various formats (JSON string or object)
+    public Dictionary<string, string> GetParsedTemplates()
+    {
+        var result = new Dictionary<string, string>
+        {
+            ["Email"] = "",
+            ["Sms"] = "",
+            ["Voice"] = ""
+        };
+
+        if (EventData == null || !EventData.TryGetValue("Templates", out var templatesObj))
+            return result;
+
+        try
+        {
+            // Case 1: Templates is already a Dictionary<string, object>
+            if (templatesObj is Dictionary<string, object> templatesDict)
+            {
+                result["Email"] = templatesDict.TryGetValue("Email", out var email) ? email?.ToString() ?? "" : "";
+                result["Sms"] = templatesDict.TryGetValue("Sms", out var sms) ? sms?.ToString() ?? "" : "";
+                result["Voice"] = templatesDict.TryGetValue("Voice", out var voice) ? voice?.ToString() ?? "" : "";
+                return result;
+            }
+
+            // Case 2: Templates is a JsonElement (from System.Text.Json)
+            if (templatesObj is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.String)
+                {
+                    // It's a JSON string, parse it
+                    var elementJsonString = jsonElement.GetString();
+                    if (!string.IsNullOrEmpty(elementJsonString))
+                    {
+                        var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(elementJsonString);
+                        if (parsed != null)
+                        {
+                            result["Email"] = parsed.TryGetValue("Email", out var email) ? email ?? "" : "";
+                            result["Sms"] = parsed.TryGetValue("Sms", out var sms) ? sms ?? "" : "";
+                            result["Voice"] = parsed.TryGetValue("Voice", out var voice) ? voice ?? "" : "";
+                        }
+                    }
+                }
+                else if (jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    // It's already a JSON object
+                    if (jsonElement.TryGetProperty("Email", out var emailProp))
+                        result["Email"] = emailProp.GetString() ?? "";
+                    if (jsonElement.TryGetProperty("Sms", out var smsProp))
+                        result["Sms"] = smsProp.GetString() ?? "";
+                    if (jsonElement.TryGetProperty("Voice", out var voiceProp))
+                        result["Voice"] = voiceProp.GetString() ?? "";
+                }
+                return result;
+            }
+
+            // Case 3: Templates is a JSON string
+            if (templatesObj is string jsonString && !string.IsNullOrEmpty(jsonString))
+            {
+                var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
+                if (parsed != null)
+                {
+                    result["Email"] = parsed.TryGetValue("Email", out var email) ? email ?? "" : "";
+                    result["Sms"] = parsed.TryGetValue("Sms", out var sms) ? sms ?? "" : "";
+                    result["Voice"] = parsed.TryGetValue("Voice", out var voice) ? voice ?? "" : "";
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // If JSON parsing fails, return empty templates
+        }
+
+        return result;
+    }
 }
