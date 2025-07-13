@@ -84,7 +84,7 @@ namespace JSONAdminEditor.Services
                     model.IsValidJson = true;
                     
                     // Add uniqueness validation
-                    AddValidationInfo(model, filePath);
+                    await AddValidationInfoAsync(model, filePath);
                 }
                 else if (jsonData is Newtonsoft.Json.Linq.JObject jsonObject)
                 {
@@ -96,7 +96,7 @@ namespace JSONAdminEditor.Services
                     model.IsValidJson = true;
                     
                     // Add uniqueness validation
-                    AddValidationInfo(model, filePath);
+                    await AddValidationInfoAsync(model, filePath);
                 }
                 else
                 {
@@ -239,14 +239,14 @@ namespace JSONAdminEditor.Services
 
         public string GetUploadsFolderPath() => _uploadsFolder;
         
-        private void AddValidationInfo(JsonFileViewModel model, string filePath)
+        private async Task AddValidationInfoAsync(JsonFileViewModel model, string filePath)
         {
             var fileName = Path.GetFileName(filePath);
             model.UniqueField = _validationService.GetUniqueField(fileName);
             
             if (model.TableData != null && !string.IsNullOrEmpty(model.UniqueField))
             {
-                var validationResult = _validationService.ValidateUniqueness(fileName, model.TableData);
+                var validationResult = await _validationService.ValidateUniquenessAsync(fileName, model.TableData);
                 model.ValidationErrors = validationResult.Errors;
             }
         }

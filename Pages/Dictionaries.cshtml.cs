@@ -455,7 +455,7 @@ public class DictionariesModel : PageModel
                 
                 // Validate uniqueness before saving
                 var fileName = GetDictionaryFileName(selectedFileType);
-                var validationResult = _validationService.ValidateUniqueness(fileName, tableData);
+                var validationResult = await _validationService.ValidateUniquenessAsync(fileName, tableData);
                 
                 if (!validationResult.IsValid)
                 {

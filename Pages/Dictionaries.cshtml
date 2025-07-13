@@ -157,6 +157,41 @@
             '7': 'Order Types'
         };
         
+        // Cache for channel options
+        let channelOptionsCache = null;
+        
+        async function loadChannelOptions() {
+            if (channelOptionsCache) {
+                return channelOptionsCache;
+            }
+            
+            try {
+                const response = await fetch('/Dictionaries?handler=DictionaryData&fileType=6', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data && result.data.tableData) {
+                        channelOptionsCache = result.data.tableData
+                            .filter(row => row['IsActive'] === true || row['IsActive'] === 'true')
+                            .map(row => row['Channel Name'])
+                            .filter(name => name && name.trim());
+                        return channelOptionsCache;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading channel options:', error);
+            }
+            
+            // Fallback to default channels if loading fails
+            channelOptionsCache = ['Email', 'SMS', 'Voice'];
+            return channelOptionsCache;
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             const fileTypeSelect = document.getElementById('fileTypeSelect');
             const fileUploadSection = document.getElementById('fileUploadSection');
@@ -263,7 +298,7 @@
                     if (result.success && result.data) {
                         currentJsonData = result.data;
                         columnTypes = result.data.columnTypes || {};
-                        renderJsonEditor(result.data);
+                        await renderJsonEditor(result.data);
                     } else {
                         throw new Error(result.error || 'Failed to load dictionary data');
                     }
@@ -272,11 +307,11 @@
                 }
             } catch (error) {
                 console.error('Error loading dictionary:', error);
-                createEmptyDictionary(fileType);
+                await createEmptyDictionary(fileType);
             }
         }
         
-        function createEmptyDictionary(fileType) {
+        async function createEmptyDictionary(fileType) {
             const defaultColumns = getDefaultColumnsForFileType(fileType);
             const defaultColumnTypes = getDefaultColumnTypesForFileType(fileType);
             
@@ -289,10 +324,10 @@
                 filePath: getDefaultFilePathForType(fileType)
             };
             
-            renderJsonEditor(currentJsonData);
+            await renderJsonEditor(currentJsonData);
         }
         
-        function renderJsonEditor(jsonData) {
+        async function renderJsonEditor(jsonData) {
             const container = document.getElementById('jsonEditorContainer');
             
             if (!jsonData || !jsonData.tableData || jsonData.tableData.length === 0) {
@@ -307,6 +342,9 @@
             
             columnTypes = jsonData.columnTypes || {};
             currentJsonData = jsonData;
+            
+            // Load channel options for channelType dropdown
+            const channelOptions = await loadChannelOptions();
             
             let tableHtml = `
                 <div class="table-responsive">
@@ -344,6 +382,17 @@
                                 <option value="false" ${!boolValue ? 'selected' : ''}>False</option>
                             </select>
                         `;
+                    } else if (column.toLowerCase() === 'channeltype' && selectedFileType === '1') {
+                        // channelType dropdown for Templates dictionary
+                        tableHtml += `
+                            <select class="${inputClass} channel-dropdown" data-column="${column}" required>
+                                <option value="">Select Channel...</option>
+                        `;
+                        channelOptions.forEach(channel => {
+                            const selected = cellValue === channel ? 'selected' : '';
+                            tableHtml += `<option value="${channel}" ${selected}>${channel}</option>`;
+                        });
+                        tableHtml += `</select>`;
                     } else {
                         tableHtml += `
                             <input type="text" 
@@ -386,7 +435,7 @@
             });
         }
         
-        function addNewRow() {
+        async function addNewRow() {
             const table = document.getElementById('jsonTable');
             if (!table) {
                 // If no table exists, create one with default columns
@@ -400,7 +449,7 @@
                     tableData: []
                 };
                 
-                renderJsonEditor(currentJsonData);
+                await renderJsonEditor(currentJsonData);
                 return;
             }
             
@@ -410,6 +459,9 @@
             const rowIndex = tbody.rows.length - 1;
             
             newRow.setAttribute('data-row-index', rowIndex);
+            
+            // Load channel options for channelType dropdown
+            const channelOptions = await loadChannelOptions();
             
             // Add input cells for each column (skip the last column which is Actions)
             for (let i = 0; i < headerRow.cells.length - 1; i++) {
@@ -422,6 +474,15 @@
                                         <option value="true">True</option>
                                         <option value="false" selected>False</option>
                                       </select>`;
+                } else if (columnName.toLowerCase() === 'channeltype' && selectedFileType === '1') {
+                    // channelType dropdown for Templates dictionary
+                    let channelDropdownHtml = `<select class="form-control form-control-sm channel-dropdown" data-column="${columnName}" required>
+                                                 <option value="">Select Channel...</option>`;
+                    channelOptions.forEach(channel => {
+                        channelDropdownHtml += `<option value="${channel}">${channel}</option>`;
+                    });
+                    channelDropdownHtml += '</select>';
+                    cell.innerHTML = channelDropdownHtml;
                 } else {
                     cell.innerHTML = `<input type="text" class="form-control form-control-sm" data-column="${columnName}" value="" />`;
                 }
@@ -455,6 +516,11 @@
             
             const rows = table.getElementsByTagName('tbody')[0].rows;
             const data = [];
+            let hasValidationErrors = false;
+            
+            // Clear any existing validation errors
+            const existingErrors = table.querySelectorAll('.validation-error');
+            existingErrors.forEach(error => error.remove());
             
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
@@ -465,6 +531,19 @@
                     const column = input.getAttribute('data-column');
                     const columnType = columnTypes[column] || 'text';
                     let value = input.value;
+                    
+                    // Special validation for channelType in Templates dictionary
+                    if (column.toLowerCase() === 'channeltype' && selectedFileType === '1' && (!value || value.trim() === '')) {
+                        hasValidationErrors = true;
+                        input.classList.add('is-invalid');
+                        
+                        // Add validation error message
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback d-block validation-error';
+                        errorDiv.innerHTML = '<small>Channel Type is required</small>';
+                        input.parentNode.appendChild(errorDiv);
+                        return;
+                    }
                     
                     // Convert boolean values to actual boolean type
                     if (columnType === 'boolean') {
@@ -481,6 +560,12 @@
                 });
                 
                 data.push(rowData);
+            }
+            
+            // If there are validation errors, stop here
+            if (hasValidationErrors) {
+                showMessage('Please fix validation errors before saving.', 'error');
+                return;
             }
             
             // Show saving state
