@@ -183,32 +183,18 @@
                                                 <small class="text-muted">This field is read-only and matches the selected event.</small>
                                             </td>
                                         </tr>
-                                        
-                                        <!-- OrderType -->
-                                        <tr>
-                                            <td><strong>OrderType</strong></td>
-                                            <td>
-                                                @{
-                                                    var orderTypeValue = Model.EventData.TryGetValue("OrderType", out var ot) ? ot?.ToString() : "";
-                                                    var hasOrderTypeError = Model.ValidationErrors?.Any(e => e.FieldName == "OrderType") == true;
-                                                    var orderTypeError = hasOrderTypeError ? Model.ValidationErrors?.FirstOrDefault(e => e.FieldName == "OrderType")?.Message : "";
-                                                }
-                                                <select name="OrderType" class="form-select @(hasOrderTypeError ? "is-invalid" : "")">
-                                                    <option value="">Select Order Type...</option>
-                                                    @if (Model.AvailableOrderTypes?.Any() == true)
-                                                    {
-                                                        foreach (var orderType in Model.AvailableOrderTypes)
-                                                        {
-                                                            <option value="@orderType" selected="@(orderType.Equals(orderTypeValue, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@orderType</option>
-                                                        }
-                                                    }
-                                                </select>
-                                                @if (hasOrderTypeError)
-                                                {
-                                                    <div class="invalid-feedback">@orderTypeError</div>
-                                                }
-                                            </td>
-                                        </tr>
+                                                         <!-- OrderType -->
+                        <tr>
+                            <td><strong>OrderType</strong></td>
+                            <td>
+                                @{
+                                    var orderTypeValue = Model.EventData.TryGetValue("OrderType", out var ot) ? ot?.ToString() : "";
+                                }
+                                <input type="text" class="form-control" value="@orderTypeValue" readonly />
+                                <input type="hidden" name="OrderType" value="@orderTypeValue" />
+                                <small class="text-muted">This field is read-only and displays the current order type for this event.</small>
+                            </td>
+                        </tr>
                                         
                                         <!-- Phone -->
                                         <tr>
