@@ -44,23 +44,23 @@ namespace JSONAdminEditor.Services
                 {
                     case FileType.Templates:
                         fileName = "templates.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.Customers:
                         fileName = "customers.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.EventTriggers:
                         fileName = "event-triggers.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.EventChannels:
                         fileName = "event-channels.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.OrderTypes:
                         fileName = "order-types.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.CustomerSettings:
                         if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
@@ -119,23 +119,23 @@ namespace JSONAdminEditor.Services
                 {
                     case FileType.Templates:
                         fileName = "templates.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.Customers:
                         fileName = "customers.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.EventTriggers:
                         fileName = "event-triggers.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.EventChannels:
                         fileName = "event-channels.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.OrderTypes:
                         fileName = "order-types.json";
-                        filePath = Path.Combine(_dataFolder, fileName);
+                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
                         break;
                     case FileType.CustomerSettings:
                         if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
@@ -175,11 +175,11 @@ namespace JSONAdminEditor.Services
             var files = new List<ManagedFile>();
 
             // Add main files
-            AddFileIfExists(files, Path.Combine(_dataFolder, "templates.json"), FileType.Templates);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "customers.json"), FileType.Customers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "event-triggers.json"), FileType.EventTriggers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "event-channels.json"), FileType.EventChannels);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "order-types.json"), FileType.OrderTypes);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "templates.json"), FileType.Templates);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "customers.json"), FileType.Customers);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-triggers.json"), FileType.EventTriggers);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-channels.json"), FileType.EventChannels);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "order-types.json"), FileType.OrderTypes);
 
             // Add customer files
             if (Directory.Exists(_customerFolder))
@@ -218,11 +218,11 @@ namespace JSONAdminEditor.Services
             var files = new List<ManagedFile>();
 
             // Add main files
-            AddFileIfExists(files, Path.Combine(_dataFolder, "templates.json"), FileType.Templates);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "customers.json"), FileType.Customers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "event-triggers.json"), FileType.EventTriggers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "event-channels.json"), FileType.EventChannels);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "order-types.json"), FileType.OrderTypes);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "templates.json"), FileType.Templates);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "customers.json"), FileType.Customers);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-triggers.json"), FileType.EventTriggers);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-channels.json"), FileType.EventChannels);
+            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "order-types.json"), FileType.OrderTypes);
 
             // Add customer files (without lookup for performance)
             if (Directory.Exists(_customerFolder))
@@ -277,7 +277,7 @@ namespace JSONAdminEditor.Services
             if (string.IsNullOrWhiteSpace(customerId))
                 return null;
 
-            var customersFilePath = Path.Combine(_dataFolder, "customers.json");
+            var customersFilePath = Path.Combine(_dataFolder, "dictionaries", "customers.json");
             if (!File.Exists(customersFilePath))
                 return null;
 
@@ -310,7 +310,7 @@ namespace JSONAdminEditor.Services
             if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
                 return results;
 
-            var customersFilePath = Path.Combine(_dataFolder, "customers.json");
+            var customersFilePath = Path.Combine(_dataFolder, "dictionaries", "customers.json");
             if (!File.Exists(customersFilePath))
                 return results;
 
@@ -416,7 +416,7 @@ namespace JSONAdminEditor.Services
             
             // If not found by exact ID match, try searching by company name
             // This handles cases where the user typed a company name directly
-            var customersFilePath = Path.Combine(_dataFolder, "customers.json");
+            var customersFilePath = Path.Combine(_dataFolder, "dictionaries", "customers.json");
             if (!File.Exists(customersFilePath))
                 return false;
 

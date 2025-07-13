@@ -103,7 +103,7 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var channelsFilePath = Path.Combine(_environment.WebRootPath, "data", "event-channels.json");
+                var channelsFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "event-channels.json");
                 
                 if (!File.Exists(channelsFilePath))
                 {
@@ -319,7 +319,7 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "event-triggers.json");
+                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "event-triggers.json");
                 
                 if (!File.Exists(eventTriggersFilePath))
                 {
@@ -473,7 +473,7 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "event-triggers.json");
+                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "event-triggers.json");
                 
                 if (!File.Exists(eventTriggersFilePath))
                 {
@@ -622,7 +622,7 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var orderTypesFilePath = Path.Combine(_environment.WebRootPath, "data", "order-types.json");
+                var orderTypesFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "order-types.json");
                 
                 if (!File.Exists(orderTypesFilePath))
                 {
@@ -650,7 +650,7 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var templatesFilePath = Path.Combine(_environment.WebRootPath, "data", "templates.json");
+                var templatesFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "templates.json");
                 
                 if (!File.Exists(templatesFilePath))
                 {

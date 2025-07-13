@@ -153,11 +153,11 @@ public class DictionariesModel : PageModel
     {
         return fileType switch
         {
-            FileType.Templates => Path.Combine("wwwroot", "data", "templates.json"),
-            FileType.EventTriggers => Path.Combine("wwwroot", "data", "event-triggers.json"),
-            FileType.EventChannels => Path.Combine("wwwroot", "data", "event-channels.json"),
-            FileType.OrderTypes => Path.Combine("wwwroot", "data", "order-types.json"),
-            FileType.Customers => Path.Combine("wwwroot", "data", "customers.json"),
+            FileType.Templates => Path.Combine("wwwroot", "data", "dictionaries", "templates.json"),
+            FileType.EventTriggers => Path.Combine("wwwroot", "data", "dictionaries", "event-triggers.json"),
+            FileType.EventChannels => Path.Combine("wwwroot", "data", "dictionaries", "event-channels.json"),
+            FileType.OrderTypes => Path.Combine("wwwroot", "data", "dictionaries", "order-types.json"),
+            FileType.Customers => Path.Combine("wwwroot", "data", "dictionaries", "customers.json"),
             _ => string.Empty
         };
     }
