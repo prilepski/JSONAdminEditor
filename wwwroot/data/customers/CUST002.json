@@ -1,1 +1,6 @@
-{}
+{
+  "ContentVariables": {
+    "sdsdfs": "sdsdfsdf",
+    "cust_name": "$Customer.FriendlyName$"
+  }
+}

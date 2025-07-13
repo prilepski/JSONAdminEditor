@@ -444,6 +444,55 @@ namespace JSONAdminEditor.Services
             }
         }
 
+        public async Task<Dictionary<string, object>?> GetCustomerDataAsync(string customerId)
+        {
+            try
+            {
+                var sanitizedId = SanitizeFileName(customerId);
+                var filePath = Path.Combine(_customerFolder, $"{sanitizedId}.json");
+                
+                if (!File.Exists(filePath))
+                {
+                    return new Dictionary<string, object>();
+                }
+
+                var jsonContent = await File.ReadAllTextAsync(filePath);
+                var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
+                return data ?? new Dictionary<string, object>();
+            }
+            catch (Exception)
+            {
+                return new Dictionary<string, object>();
+            }
+        }
+
+        public async Task<bool> SaveCustomerDataAsync(string customerId, Dictionary<string, object> customerData)
+        {
+            try
+            {
+                var sanitizedId = SanitizeFileName(customerId);
+                var filePath = Path.Combine(_customerFolder, $"{sanitizedId}.json");
+                
+                // Ensure directory exists
+                Directory.CreateDirectory(_customerFolder);
+
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = null
+                };
+
+                var jsonContent = JsonSerializer.Serialize(customerData, options);
+                await File.WriteAllTextAsync(filePath, jsonContent);
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         private void AddFileIfExists(List<ManagedFile> files, string filePath, FileType fileType)
         {
             if (File.Exists(filePath))

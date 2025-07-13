@@ -1,10 +1,33 @@
-[
-  {
-    "templateId": "123456qweqwe",
-    "templateName": "Schedule Appointment"
+{
+  "ContentVariables": {
+    "sdfsdf": "sdfsdf",
+    "cust_name": "$Customer.FriendlyName$"
   },
-  {
-    "templateId": "5432qwerty",
-    "templateName": "Next Stop"
-  }
-]
+  "Events": [
+    {
+      "Event": "Final Scheduling Appointment",
+      "OrderType": "Delivery",
+      "Phone": "$consigneeContact.phone$2",
+      "Email": "$consigneeContact.email$1",
+      "Logo": "base641",
+      "IsSuppressed": true,
+      "Templates": {
+        "Email": "5432qwerty",
+        "Sms": "5432qwertysms"
+      },
+      "ContentVariables": {}
+    },
+    {
+      "Event": "Schedule Appointment",
+      "OrderType": "Delivery",
+      "Phone": "",
+      "Email": "",
+      "Logo": "",
+      "IsSuppressed": false,
+      "Templates": {},
+      "ContentVariables": {
+        "cust_name": "$Customer.FriendlyName$"
+      }
+    }
+  ]
+}

@@ -1,0 +1,871 @@
+@page
+@model JSONAdminEditor.Pages.CustomerEventsModel
+@{
+    ViewData["Title"] = "Customer Events";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">Customer Events Management</h1>
+            
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@Model.ErrorMessage
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert" id="serverSuccessMessage">
+            <i class="fas fa-check-circle me-2"></i>@Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Customer Selection -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3><i class="fas fa-user-search me-2"></i>Select Customer</h3>
+            <p class="mb-0 text-muted">Choose a customer to view and edit their specific event overrides.</p>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="customerNameInput" class="form-label">Customer Name:</label>
+                <div class="position-relative">
+                    <input class="form-control" placeholder="Start typing customer name or ID..." 
+                           autocomplete="off" id="customerNameInput" value="@Model.SelectedCustomer" />
+                    <div id="customerSuggestions" class="position-absolute w-100 bg-white border rounded shadow-sm" 
+                         style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
+                    </div>
+                </div>
+                <div class="form-text">Select a customer from suggestions to manage their event overrides</div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SelectedCustomer))
+    {
+        <!-- Event Selection -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-alt me-2"></i>Select Event for @Model.SelectedCustomer</h3>
+                <p class="mb-0 text-muted">Configure customer-specific event notification settings including order types, template IDs, and communication preferences. Select an event from the dropdown to edit its configuration.</p>
+            </div>
+            <div class="card-body">
+                <form method="get" id="eventSelectionForm">
+                    <input type="hidden" name="selectedCustomer" value="@Model.SelectedCustomer" />
+                    <div class="mb-3">
+                        <select class="form-select" name="selectedEvent" id="selectedEvent" onchange="this.form.submit()">
+                            <option value="">Select an event...</option>
+                            @if (Model.AvailableEvents?.Any() == true)
+                            {
+                                foreach (var eventName in Model.AvailableEvents)
+                                {
+                                    <option value="@eventName" selected="@(eventName == Model.SelectedEvent ? "selected" : null)">@eventName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SelectedEvent))
+        {
+            <!-- Event Data Editor -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">
+                                <i class="fas @(Model.IsNewEvent ? "fa-plus" : "fa-edit") me-2"></i>
+                                @if (Model.IsNewEvent && Model.EventSupportsByOrderType)
+                                {
+                                    <text>Add New @Model.SelectedOrderType Event: @Model.SelectedEvent</text>
+                                }
+                                else if (Model.IsNewEvent)
+                                {
+                                    <text>Add New Event: @Model.SelectedEvent</text>
+                                }
+                                else if (Model.EventSupportsByOrderType)
+                                {
+                                    <text>Edit @Model.SelectedOrderType Event: @Model.SelectedEvent</text>
+                                }
+                                else
+                                {
+                                    <text>Edit Event: @Model.SelectedEvent</text>
+                                }
+                            </h3>
+                            <small class="text-muted">Customer: @Model.SelectedCustomer</small>
+                        </div>
+                        @if (Model.EventSupportsByOrderType)
+                        {
+                            <div class="order-type-switch ms-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 text-muted">Delivery</span>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="orderTypeSwitch" 
+                                               @(Model.SelectedOrderType == "Pickup" ? "checked" : "") />
+                                    </div>
+                                    <span class="ms-2 text-muted">Pickup</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Tab Navigation with Unified Save Button -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                        <ul class="nav nav-tabs border-0 mb-0" id="eventTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(string.IsNullOrEmpty(Model.ActiveTab) || Model.ActiveTab == "basics" ? "active" : "")" id="basics-tab" data-bs-toggle="tab" data-bs-target="#basics" type="button" role="tab" aria-controls="basics" aria-selected="@(string.IsNullOrEmpty(Model.ActiveTab) || Model.ActiveTab == "basics" ? "true" : "false")">
+                                    <i class="fas fa-cog me-2"></i>Event Data
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(Model.ActiveTab == "templates" ? "active" : "")" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab" aria-controls="templates" aria-selected="@(Model.ActiveTab == "templates" ? "true" : "false")">
+                                    <i class="fas fa-file-alt me-2"></i>Templates
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(Model.ActiveTab == "content-variables" ? "active" : "")" id="content-variables-tab" data-bs-toggle="tab" data-bs-target="#content-variables" type="button" role="tab" aria-controls="content-variables" aria-selected="@(Model.ActiveTab == "content-variables" ? "true" : "false")">
+                                    <i class="fas fa-code me-2"></i>Content Variables
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-actions">
+                            <button type="button" class="btn btn-primary" id="saveEventBtn">
+                                <i class="fas fa-save me-2"></i>Save Event
+                            </button>
+                        </div>
+                    </div>
+
+                    <form method="post" asp-page-handler="SaveEvent" id="eventForm">
+                        <input type="hidden" name="selectedCustomer" value="@Model.SelectedCustomer" />
+                        <input type="hidden" name="selectedEvent" value="@Model.SelectedEvent" />
+                        <input type="hidden" name="selectedOrderType" value="@Model.SelectedOrderType" />
+                        <input type="hidden" name="isNewEvent" value="@Model.IsNewEvent" />
+                        
+                        <div class="tab-content" id="eventTabsContent">
+                            <!-- Event Data Tab -->
+                            <div class="tab-pane fade @(string.IsNullOrEmpty(Model.ActiveTab) || Model.ActiveTab == "basics" ? "show active" : "")" id="basics" role="tabpanel" aria-labelledby="basics-tab">
+                                <h5 class="mb-3"><i class="fas fa-cog me-2"></i>Event Data Configuration for @Model.SelectedEvent (@Model.SelectedOrderType)</h5>
+                                
+                                <div class="mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Event Data Management:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li><strong>Inherited fields</strong> (Is Redefined unchecked) use values from global event settings and cannot be modified</li>
+                                            <li><strong>Redefined fields</strong> (Is Redefined checked) are customer-specific overrides that can be modified</li>
+                                            <li>Only redefined fields are saved to the customer file</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="15%">Field</th>
+                                                <th width="50%">Value</th>
+                                                <th width="15%">Is Redefined</th>
+                                                <th width="20%">Global Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (Model.EventDataList?.Any() == true)
+                                            {
+                                                @foreach (var field in Model.EventDataList)
+                                                {
+                                                    <tr>
+                                                        <td><strong>@field.DisplayName</strong></td>
+                                                        <td>
+                                                            @if (field.FieldType == "checkbox")
+                                                            {
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input @(field.IsRedefined ? "border-warning" : "")" 
+                                                                           type="checkbox" 
+                                                                           name="@field.FieldName" 
+                                                                           value="true"
+                                                                           @(field.IsRedefined ? "" : "disabled")
+                                                                           @(bool.TryParse(field.Value, out var isChecked) && isChecked ? "checked" : "")>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <input type="text" 
+                                                                       name="@field.FieldName" 
+                                                                       class="form-control @(field.IsRedefined ? "border-warning" : "")" 
+                                                                       value="@field.Value"
+                                                                       @(field.IsRedefined ? "" : "readonly")
+                                                                       placeholder="@(field.FieldName == "Phone" ? "e.g., $consigneeContact.phone$" : 
+                                                                                     field.FieldName == "Email" ? "e.g., $consigneeContact.email$" : 
+                                                                                     field.FieldName == "Logo" ? "e.g., base64" : "")">
+                                                            }
+                                                            @if (field.IsRedefined)
+                                                            {
+                                                                <br><small class="text-warning"><i class="fas fa-edit me-1"></i>Customer Override</small>
+                                                            }
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" 
+                                                                       name="EventDataRedefined.@field.FieldName" 
+                                                                       value="true"
+                                                                       @(field.IsRedefined ? "checked" : "")
+                                                                       onchange="toggleEventDataRedefinedState(this, '@field.FieldName')">
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if (!string.IsNullOrEmpty(field.GlobalValue))
+                                                            {
+                                                                @if (field.FieldType == "checkbox")
+                                                                {
+                                                                    <span class="text-muted">@(bool.TryParse(field.GlobalValue, out var globalChecked) && globalChecked ? "Yes" : "No")</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <small class="text-muted">@field.GlobalValue</small>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">—</span>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-4">
+                                                        <i class="fas fa-cog fa-2x mb-2"></i><br>
+                                                        No event data configuration available for this event.<br>
+                                                        <small>Event data will be inherited from global settings when available.</small>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Templates Tab -->
+                            <div class="tab-pane fade @(Model.ActiveTab == "templates" ? "show active" : "")" id="templates" role="tabpanel" aria-labelledby="templates-tab">
+                                <h5 class="mb-3"><i class="fas fa-file-alt me-2"></i>Template Configuration for @Model.SelectedEvent (@Model.SelectedOrderType)</h5>
+                                
+                                <div class="mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Template Management:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li><strong>Inherited templates</strong> (Is Redefined unchecked) use values from global event settings and cannot be modified</li>
+                                            <li><strong>Redefined templates</strong> (Is Redefined checked) are customer-specific overrides that can be modified</li>
+                                            <li>Only redefined templates are saved to the customer file</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="15%">Channel</th>
+                                                <th width="50%">Template</th>
+                                                <th width="15%">Is Redefined</th>
+                                                <th width="20%">Global Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (Model.TemplatesList?.Any() == true)
+                                            {
+                                                @foreach (var template in Model.TemplatesList)
+                                                {
+                                                    <tr>
+                                                        <td><strong>@template.DisplayName</strong></td>
+                                                        <td>
+                                                            @{
+                                                                var availableTemplates = template.Channel.ToLower() switch
+                                                                {
+                                                                    "email" => Model.AvailableEmailTemplates,
+                                                                    "sms" => Model.AvailableSmsTemplates,
+                                                                    "voice" => Model.AvailableVoiceTemplates,
+                                                                    _ => new List<(string TemplateId, string TemplateName)>()
+                                                                };
+                                                            }
+                                                            <select name="Templates.@template.Channel" class="form-select @(template.IsRedefined ? "border-warning" : "")"
+                                                                    @(template.IsRedefined ? "" : "disabled")>
+                                                                <option value="">Select @template.DisplayName Template...</option>
+                                                                @if (availableTemplates?.Any() == true)
+                                                                {
+                                                                    foreach (var availableTemplate in availableTemplates)
+                                                                    {
+                                                                        <option value="@availableTemplate.TemplateId" 
+                                                                                selected="@(availableTemplate.TemplateId == template.Value)">
+                                                                            @availableTemplate.TemplateName (@availableTemplate.TemplateId)
+                                                                        </option>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <option disabled>No @template.DisplayName.ToLower() templates available</option>
+                                                                }
+                                                            </select>
+                                                            @if (!string.IsNullOrEmpty(template.Value))
+                                                            {
+                                                                <small class="text-muted">Current: @template.Value</small>
+                                                            }
+                                                            @if (template.IsRedefined)
+                                                            {
+                                                                <br><small class="text-warning"><i class="fas fa-edit me-1"></i>Customer Override</small>
+                                                            }
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" 
+                                                                       name="TemplateRedefined.@template.Channel" 
+                                                                       value="true"
+                                                                       @(template.IsRedefined ? "checked" : "")
+                                                                       onchange="toggleTemplateRedefinedState(this, '@template.Channel')">
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if (!string.IsNullOrEmpty(template.GlobalValue))
+                                                            {
+                                                                <small class="text-muted">@template.GlobalValue</small>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">—</span>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-4">
+                                                        <i class="fas fa-file-alt fa-2x mb-2"></i><br>
+                                                        No template configuration available for this event.<br>
+                                                        <small>Templates will be inherited from global settings when available.</small>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Content Variables Tab -->
+                            <div class="tab-pane fade @(Model.ActiveTab == "content-variables" ? "show active" : "")" id="content-variables" role="tabpanel" aria-labelledby="content-variables-tab">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5><i class="fas fa-code me-2"></i>Content Variables for @Model.SelectedEvent (@Model.SelectedOrderType)</h5>
+                                            <button type="button" class="btn btn-outline-primary" onclick="addCustomContentVariable()">
+                                                <i class="fas fa-plus me-2"></i>Add Custom Variable
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Content Variables Management:</strong>
+                                                <ul class="mb-0 mt-2">
+                                                    <li><strong>Customer-specific variables</strong> (top section) are unique to this customer and can be deleted</li>
+                                                    <li><strong>Global variables</strong> with "Is Redefined" checked are customer overrides of global settings</li>
+                                                    <li><strong>Global variables</strong> without "Is Redefined" are inherited from global event settings</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered" id="contentVariablesTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="25%">Variable Name</th>
+                                                        <th width="35%">Value</th>
+                                                        <th width="15%">Is Redefined</th>
+                                                        <th width="15%">Global Value</th>
+                                                        <th width="10%">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (Model.ContentVariablesList?.Any() == true)
+                                                    {
+                                                        @foreach (var cv in Model.ContentVariablesList)
+                                                        {
+                                                            <tr class="@(cv.IsCustomerSpecific ? "table-warning" : "")">
+                                                                <td>
+                                                                    @if (cv.IsCustomerSpecific)
+                                                                    {
+                                                                        <input type="text" class="form-control" name="VarName.@cv.Name" value="@cv.Name" data-original-name="@cv.Name">
+                                                                        <small class="text-warning"><i class="fas fa-star me-1"></i>Customer-specific</small>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="fw-bold">@cv.Name</span>
+                                                                        <input type="hidden" name="VarName.@cv.Name" value="@cv.Name">
+                                                                    }
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control @(cv.IsRedefined ? "border-warning" : "")" 
+                                                                           name="VarValue.@cv.Name" 
+                                                                           value="@cv.Value"
+                                                                           @(cv.IsRedefined ? "" : (cv.IsCustomerSpecific ? "" : "readonly"))>
+                                                                    @if (cv.IsRedefined)
+                                                                    {
+                                                                        <small class="text-warning"><i class="fas fa-edit me-1"></i>Overridden</small>
+                                                                    }
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    @if (cv.IsCustomerSpecific)
+                                                                    {
+                                                                        <span class="text-muted">N/A</span>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="checkbox" 
+                                                                                   name="IsRedefined.@cv.Name" 
+                                                                                   value="true"
+                                                                                   @(cv.IsRedefined ? "checked" : "")
+                                                                                   onchange="toggleRedefinedState(this, '@cv.Name')">
+                                                                        </div>
+                                                                    }
+                                                                </td>
+                                                                <td>
+                                                                    @if (!string.IsNullOrEmpty(cv.GlobalValue))
+                                                                    {
+                                                                        <small class="text-muted">@cv.GlobalValue</small>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="text-muted">—</span>
+                                                                    }
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    @if (cv.IsCustomerSpecific)
+                                                                    {
+                                                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCustomContentVariable(this)">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="text-muted">—</span>
+                                                                    }
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <tr>
+                                                            <td colspan="5" class="text-center text-muted py-4">
+                                                                <i class="fas fa-code fa-2x mb-2"></i><br>
+                                                                No content variables found for this event.<br>
+                                                                <small>Variables will be inherited from global settings when available.</small>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<script>
+// Customer search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const customerInput = document.getElementById('customerNameInput');
+    const customerSuggestions = document.getElementById('customerSuggestions');
+    let searchTimeout;
+    let selectedCustomerValid = false;
+    let selectedCustomerData = null;
+
+    // Add input event listener for search functionality
+    customerInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.trim();
+        selectedCustomerValid = false; // Reset validity when user types
+        
+        clearTimeout(searchTimeout);
+        
+        if (searchTerm.length < 2) {
+            hideSuggestions();
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            searchCustomers(searchTerm);
+        }, 300);
+    });
+
+    customerInput.addEventListener('focus', function() {
+        const searchTerm = this.value.trim();
+        if (searchTerm.length >= 2) {
+            searchCustomers(searchTerm);
+        }
+    });
+
+    customerInput.addEventListener('blur', handleBlur);
+
+    function handleBlur(e) {
+        // Delay hiding to allow click on suggestions
+        setTimeout(() => {
+            hideSuggestions();
+        }, 150);
+    }
+
+    function searchCustomers(searchTerm) {
+        fetch(`/CustomerEvents?handler=SearchCustomers&term=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(customers => {
+                displaySuggestions(customers, searchTerm);
+            })
+            .catch(error => {
+                console.error('Error searching customers:', error);
+                hideSuggestions();
+            });
+    }
+
+    function displaySuggestions(customers, searchTerm) {
+        const suggestionsDiv = document.getElementById('customerSuggestions');
+        if (!suggestionsDiv) return;
+
+        suggestionsDiv.innerHTML = '';
+
+        if (!customers || customers.length === 0) {
+            // Show "No matches found" message
+            const noMatchDiv = document.createElement('div');
+            noMatchDiv.className = 'p-2 text-muted';
+            noMatchDiv.style.fontStyle = 'italic';
+            noMatchDiv.innerHTML = '<i class="fas fa-search me-2"></i>No matches found';
+            suggestionsDiv.appendChild(noMatchDiv);
+            suggestionsDiv.style.display = 'block';
+            return;
+        }
+        
+        customers.forEach(customer => {
+            const div = document.createElement('div');
+            div.className = 'p-2 border-bottom customer-suggestion';
+            div.style.cursor = 'pointer';
+            div.style.borderBottom = '1px solid #dee2e6';
+            
+            // Create display text in format "Company Name (Customer ID)"
+            const displayText = `${customer.companyName} (${customer.customerId})`;
+            const highlightedText = highlightMatch(displayText, searchTerm);
+            div.innerHTML = highlightedText;
+            
+            // Add hover effects
+            div.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f8f9fa';
+            });
+            
+            div.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = 'white';
+            });
+            
+            div.addEventListener('click', function() {
+                selectCustomer(customer);
+            });
+            
+            suggestionsDiv.appendChild(div);
+        });
+
+        suggestionsDiv.style.display = 'block';
+    }
+
+    function highlightMatch(text, searchTerm) {
+        const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function selectCustomer(customer) {
+        const customerInput = document.getElementById('customerNameInput');
+        if (customerInput) {
+            // Display as "Company Name (Customer ID)" in the text box
+            customerInput.value = `${customer.companyName} (${customer.customerId})`;
+            customerInput.setAttribute('data-customer-id', customer.customerId);
+            selectedCustomerValid = true;
+            selectedCustomerData = customer;
+            
+            // Navigate to the page with selected customer
+            const url = new URL(window.location);
+            url.searchParams.set('selectedCustomer', customer.customerId);
+            url.searchParams.delete('selectedEvent'); // Clear event selection
+            window.location.href = url.toString();
+        }
+        hideSuggestions();
+    }
+
+    function hideSuggestions() {
+        const suggestionsDiv = document.getElementById('customerSuggestions');
+        if (suggestionsDiv) {
+            suggestionsDiv.style.display = 'none';
+        }
+    }
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!customerInput.contains(e.target) && !customerSuggestions.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+
+    // Order type switch functionality
+    const orderTypeSwitch = document.getElementById('orderTypeSwitch');
+    if (orderTypeSwitch) {
+        orderTypeSwitch.addEventListener('change', function() {
+            const newOrderType = this.checked ? 'Pickup' : 'Delivery';
+            const url = new URL(window.location);
+            url.searchParams.set('selectedOrderType', newOrderType);
+            window.location.href = url.toString();
+        });
+    }
+
+    // Save event functionality
+    const saveEventBtn = document.getElementById('saveEventBtn');
+    if (saveEventBtn) {
+        saveEventBtn.addEventListener('click', function() {
+            document.getElementById('eventForm').submit();
+        });
+    }
+});
+
+// Content variables management
+function addCustomContentVariable() {
+    const tbody = document.querySelector('#contentVariablesTable tbody');
+    const newRow = document.createElement('tr');
+    const timestamp = Date.now();
+    newRow.className = 'table-warning';
+    
+    newRow.innerHTML = `
+        <td>
+            <input type="text" class="form-control" name="VarName.new_${timestamp}" value="new_var_${timestamp}" placeholder="Variable name">
+            <small class="text-warning"><i class="fas fa-star me-1"></i>Customer-specific</small>
+        </td>
+        <td>
+            <input type="text" class="form-control" name="VarValue.new_${timestamp}" value="" placeholder="Variable value">
+        </td>
+        <td class="text-center">
+            <span class="text-muted">N/A</span>
+        </td>
+        <td>
+            <span class="text-muted">—</span>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCustomContentVariable(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    // Insert at the top (customer-specific variables should be at the top)
+    const firstRow = tbody.querySelector('tr');
+    if (firstRow && !firstRow.classList.contains('table-warning')) {
+        tbody.insertBefore(newRow, firstRow);
+    } else {
+        const existingCustomRows = tbody.querySelectorAll('tr.table-warning');
+        if (existingCustomRows.length > 0) {
+            const lastCustomRow = existingCustomRows[existingCustomRows.length - 1];
+            lastCustomRow.insertAdjacentElement('afterend', newRow);
+        } else {
+            tbody.insertBefore(newRow, firstRow);
+        }
+    }
+}
+
+function removeCustomContentVariable(button) {
+    const row = button.closest('tr');
+    row.remove();
+}
+
+function toggleRedefinedState(checkbox, variableName) {
+    const row = checkbox.closest('tr');
+    const valueInput = row.querySelector('input[name="VarValue.' + variableName + '"]');
+    
+    if (checkbox.checked) {
+        // Enable editing and mark as redefined
+        valueInput.removeAttribute('readonly');
+        valueInput.classList.add('border-warning');
+        
+        // Add "Overridden" label if not exists
+        let overriddenLabel = row.querySelector('.text-warning');
+        if (!overriddenLabel || !overriddenLabel.textContent.includes('Overridden')) {
+            const labelContainer = valueInput.parentNode;
+            if (!labelContainer.querySelector('small.text-warning')) {
+                const label = document.createElement('small');
+                label.className = 'text-warning';
+                label.innerHTML = '<i class="fas fa-edit me-1"></i>Overridden';
+                labelContainer.appendChild(label);
+            }
+        }
+    } else {
+        // Disable editing and remove redefined status
+        valueInput.setAttribute('readonly', 'readonly');
+        valueInput.classList.remove('border-warning');
+        
+        // Remove "Overridden" label
+        const overriddenLabel = row.querySelector('small.text-warning');
+        if (overriddenLabel && overriddenLabel.textContent.includes('Overridden')) {
+            overriddenLabel.remove();
+        }
+        
+        // Reset to global value
+        const globalValueCell = row.querySelector('td:nth-child(4)');
+        const globalValue = globalValueCell.textContent.trim();
+        if (globalValue && globalValue !== '—') {
+            valueInput.value = globalValue;
+        }
+    }
+}
+
+function toggleTemplateRedefinedState(checkbox, channel) {
+    const row = checkbox.closest('tr');
+    const templateSelect = row.querySelector('select[name="Templates.' + channel + '"]');
+    
+    if (checkbox.checked) {
+        // Enable editing and mark as redefined
+        templateSelect.removeAttribute('disabled');
+        templateSelect.classList.add('border-warning');
+        
+        // Add "Customer Override" label if not exists
+        const labelContainer = templateSelect.parentNode;
+        if (!labelContainer.querySelector('small.text-warning')) {
+            const label = document.createElement('small');
+            label.className = 'text-warning';
+            label.innerHTML = '<br><i class="fas fa-edit me-1"></i>Customer Override';
+            labelContainer.appendChild(label);
+        }
+    } else {
+        // Disable editing and remove redefined status
+        templateSelect.setAttribute('disabled', 'disabled');
+        templateSelect.classList.remove('border-warning');
+        
+        // Remove "Customer Override" label
+        const overrideLabel = row.querySelector('small.text-warning');
+        if (overrideLabel && overrideLabel.textContent.includes('Customer Override')) {
+            overrideLabel.remove();
+        }
+        
+        // Reset to global value
+        const globalValueCell = row.querySelector('td:nth-child(4)');
+        const globalValue = globalValueCell.textContent.trim();
+        if (globalValue && globalValue !== '—') {
+            // Find the option with the global value and select it
+            const options = templateSelect.querySelectorAll('option');
+            options.forEach(option => {
+                if (option.value === globalValue) {
+                    option.selected = true;
+                }
+            });
+        } else {
+            templateSelect.value = ''; // Clear selection if no global value
+        }
+    }
+}
+
+function toggleEventDataRedefinedState(checkbox, fieldName) {
+    const row = checkbox.closest('tr');
+    const fieldInput = row.querySelector('input[name="' + fieldName + '"], input[type="checkbox"][name="' + fieldName + '"]');
+    
+    if (checkbox.checked) {
+        // Enable editing and mark as redefined
+        if (fieldInput.type === 'checkbox') {
+            fieldInput.removeAttribute('disabled');
+        } else {
+            fieldInput.removeAttribute('readonly');
+        }
+        fieldInput.classList.add('border-warning');
+        
+        // Add "Customer Override" label if not exists
+        const labelContainer = fieldInput.parentNode;
+        if (!labelContainer.querySelector('small.text-warning')) {
+            const label = document.createElement('small');
+            label.className = 'text-warning';
+            label.innerHTML = '<br><i class="fas fa-edit me-1"></i>Customer Override';
+            labelContainer.appendChild(label);
+        }
+    } else {
+        // Disable editing and remove redefined status
+        if (fieldInput.type === 'checkbox') {
+            fieldInput.setAttribute('disabled', 'disabled');
+        } else {
+            fieldInput.setAttribute('readonly', 'readonly');
+        }
+        fieldInput.classList.remove('border-warning');
+        
+        // Remove "Customer Override" label
+        const overrideLabel = row.querySelector('small.text-warning');
+        if (overrideLabel && overrideLabel.textContent.includes('Customer Override')) {
+            overrideLabel.remove();
+        }
+        
+        // Reset to global value
+        const globalValueCell = row.querySelector('td:nth-child(4)');
+        const globalValue = globalValueCell.textContent.trim();
+        if (globalValue && globalValue !== '—') {
+            if (fieldInput.type === 'checkbox') {
+                fieldInput.checked = globalValue === 'Yes';
+            } else {
+                fieldInput.value = globalValue;
+            }
+        } else {
+            if (fieldInput.type === 'checkbox') {
+                fieldInput.checked = false;
+            } else {
+                fieldInput.value = ''; // Clear field if no global value
+            }
+        }
+    }
+}
+</script>
+
+<style>
+.customer-suggestion:hover {
+    background-color: #f8f9fa;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: #6c757d;
+}
+
+.nav-tabs .nav-link:hover {
+    border-bottom-color: #dee2e6;
+    color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom-color: #0d6efd;
+    color: #0d6efd;
+    background-color: transparent;
+}
+
+.order-type-switch .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.tab-actions {
+    flex-shrink: 0;
+}
+</style>

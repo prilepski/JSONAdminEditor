@@ -53,15 +53,21 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <span class="nav-link nav-header @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "parent-active" : "")">
+                            <span class="nav-link nav-header @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" || ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerEvents" ? "parent-active" : "")">
                                 <i class="fas fa-users me-2"></i>Customer Overrides
                                 <i class="fas fa-chevron-down ms-auto"></i>
                             </span>
-                            <ul class="nav flex-column submenu @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "show" : "")">
+                            <ul class="nav flex-column submenu @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" || ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerEvents" ? "show" : "")">
                                 <li class="nav-item">
                                     <a class="nav-link submenu-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerSettings" ? "active" : "")" 
                                        asp-area="" asp-page="/CustomerSettings">
                                         <i class="fas fa-code me-2"></i>Customer Content Variables
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link submenu-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/CustomerEvents" ? "active" : "")" 
+                                       asp-area="" asp-page="/CustomerEvents">
+                                        <i class="fas fa-calendar-alt me-2"></i>Customer Events
                                     </a>
                                 </li>
                             </ul>
