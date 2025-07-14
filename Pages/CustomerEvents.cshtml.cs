@@ -95,6 +95,63 @@ public class CustomerEventsModel : PageModel
 
         if (!string.IsNullOrEmpty(SelectedCustomer) && !string.IsNullOrEmpty(SelectedEvent))
         {
+            // Load event trigger data to check ByOrderType FIRST
+            await LoadEventTriggerDataAsync();
+            
+            // If no specific OrderType is set and this event supports ByOrderType, 
+            // try to find the first available variant and set SelectedOrderType accordingly
+            if (string.IsNullOrEmpty(SelectedOrderType) && EventSupportsByOrderType)
+            {
+                var customerEvents = await GetCustomerEventsAsync(SelectedCustomer);
+                var eventVariants = customerEvents?.Where(e => 
+                    e.TryGetValue("Event", out var nameObj) && 
+                    nameObj?.ToString()?.Equals(SelectedEvent, StringComparison.OrdinalIgnoreCase) == true).ToList();
+                
+                if (eventVariants?.Any() == true)
+                {
+                    // Try to find Delivery first, then Pickup, then any other OrderType
+                    var deliveryVariant = eventVariants.FirstOrDefault(e => 
+                        e.TryGetValue("OrderType", out var ot) && 
+                        ot?.ToString()?.Equals("Delivery", StringComparison.OrdinalIgnoreCase) == true);
+                    
+                    var pickupVariant = eventVariants.FirstOrDefault(e => 
+                        e.TryGetValue("OrderType", out var ot) && 
+                        ot?.ToString()?.Equals("Pickup", StringComparison.OrdinalIgnoreCase) == true);
+                    
+                    if (deliveryVariant != null)
+                    {
+                        SelectedOrderType = "Delivery";
+                    }
+                    else if (pickupVariant != null)
+                    {
+                        SelectedOrderType = "Pickup";
+                    }
+                    else
+                    {
+                        // Fall back to the first variant's OrderType
+                        var firstVariant = eventVariants.First();
+                        if (firstVariant.TryGetValue("OrderType", out var firstOrderType))
+                        {
+                            SelectedOrderType = firstOrderType?.ToString() ?? "Delivery";
+                        }
+                        else
+                        {
+                            SelectedOrderType = "Delivery"; // Default fallback
+                        }
+                    }
+                }
+                else
+                {
+                    // No customer variants exist - default to Delivery
+                    SelectedOrderType = "Delivery";
+                }
+            }
+            else if (string.IsNullOrEmpty(SelectedOrderType))
+            {
+                // For events that don't support ByOrderType, default to Delivery
+                SelectedOrderType = "Delivery";
+            }
+            
             await LoadEventDataAsync();
         }
     }
@@ -244,6 +301,19 @@ public class CustomerEventsModel : PageModel
         catch (Exception ex)
         {
             ErrorMessage = $"Error loading event data: {ex.Message}";
+        }
+    }
+
+    private async Task LoadEventTriggerDataAsync()
+    {
+        try
+        {
+            // Use the NotificationsService method to check if event supports OrderType
+            EventSupportsByOrderType = await _notificationsService.CheckEventSupportsByOrderTypeAsync(SelectedEvent ?? "");
+        }
+        catch (Exception)
+        {
+            EventSupportsByOrderType = false;
         }
     }
 
