@@ -37,7 +37,7 @@ public class EventDataInfo
 public class CustomerEventsModel : PageModel
 {
     private readonly NotificationsService _notificationsService;
-    private readonly FileManagementService _fileManagementService;
+    private readonly IStorageService _storageService;
 
     [BindProperty(SupportsGet = true)]
     public string? SelectedCustomer { get; set; }
@@ -80,10 +80,10 @@ public class CustomerEventsModel : PageModel
     public Dictionary<string, object>? GlobalEventData { get; set; } // Basic event data from the same event in global settings
     public List<EventDataInfo> EventDataList { get; set; } = new();
 
-    public CustomerEventsModel(NotificationsService notificationsService, FileManagementService fileManagementService)
+    public CustomerEventsModel(NotificationsService notificationsService, IStorageServiceFactory storageServiceFactory)
     {
         _notificationsService = notificationsService;
-        _fileManagementService = fileManagementService;
+        _storageService = storageServiceFactory.CreateStorageService();
     }
 
     public async Task OnGetAsync()
@@ -466,7 +466,7 @@ public class CustomerEventsModel : PageModel
     {
         try
         {
-            var customerData = await _fileManagementService.GetCustomerDataAsync(customerId);
+            var customerData = await _storageService.GetCustomerDataAsync(customerId);
             if (customerData != null && customerData.TryGetValue("Events", out var eventsObj))
             {
                 if (eventsObj is List<Dictionary<string, object>> eventsList)
@@ -556,7 +556,7 @@ public class CustomerEventsModel : PageModel
         if (string.IsNullOrWhiteSpace(term))
             return new JsonResult(new List<CustomerLookupResult>());
 
-        var results = await _fileManagementService.SearchCustomersAsync(term);
+        var results = await _storageService.SearchCustomersAsync(term);
         return new JsonResult(results);
     }
 
@@ -684,7 +684,7 @@ public class CustomerEventsModel : PageModel
 
     private async Task SaveCustomerEventAsync(string customerId, Dictionary<string, object> eventData)
     {
-        var customerData = await _fileManagementService.GetCustomerDataAsync(customerId) ?? new Dictionary<string, object>();
+        var customerData = await _storageService.GetCustomerDataAsync(customerId) ?? new Dictionary<string, object>();
         
         // Get existing events or create new list
         var events = new List<Dictionary<string, object>>();
@@ -725,7 +725,7 @@ public class CustomerEventsModel : PageModel
         }
 
         customerData["Events"] = events;
-        await _fileManagementService.SaveCustomerDataAsync(customerId, customerData);
+        await _storageService.SaveCustomerDataAsync(customerId, customerData);
     }
 
     // Helper method to parse Templates from various formats (JSON string or object)

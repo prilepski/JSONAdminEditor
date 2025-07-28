@@ -1,2 +1,8 @@
 /bin
 /obj
+wwwroot/.DS_Store
+wwwroot/data/.DS_Store
+
+# Sensitive configuration files
+appsettings.Local.json
+appsettings.Development.Local.json

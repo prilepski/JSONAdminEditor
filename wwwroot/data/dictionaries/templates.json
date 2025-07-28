@@ -1,32 +1,62 @@
 [
   {
-    "templateId": "123456qweqwe",
-    "templateName": "Schedule Appointment",
+    "templateId": "d-e162b3e6181545fead5e643982628504",
+    "templateName": "Ready For Scheduling - Pickup",
     "channelType": "Email"
   },
   {
-    "templateId": "5432qwerty",
-    "templateName": "Next Stop",
+    "templateId": "HX61a3cb19e35c428d9b1395d8139e94cc",
+    "templateName": "Ready For Scheduling - Pickup",
+    "channelType": "Sms"
+  },
+  {
+    "templateId": "d-48388ac5bd1a4460969ac2ed36c818cc",
+    "templateName": "Ready For Scheduling - Delivery",
     "channelType": "Email"
   },
   {
-    "templateId": "123456qweqwesms",
-    "templateName": "Schedule Appointment",
-    "channelType": "SMS"
+    "templateId": "Hxad1da069cc42534183daccd644579207",
+    "templateName": "Ready For Scheduling - Delivery",
+    "channelType": "Sms"
   },
   {
-    "templateId": "5432qwertysms",
-    "templateName": "Next Stop",
-    "channelType": "SMS"
+    "templateId": "d-72ba199f25aa4108a1b998c26fe7b4b0",
+    "templateName": "Scheduling Reminder HH - Delivery",
+    "channelType": "Email"
   },
   {
-    "templateId": "123456qweqwevoice",
-    "templateName": "Schedule Appointment",
+    "templateId": "Hxbdc5900bf4551db403f85f6a2a7c18be",
+    "templateName": "Scheduling Reminder HH - Delivery",
+    "channelType": "Sms"
+  },
+  {
+    "templateId": "EH24bb0d84e795df332aa9a4a600f0e3b8",
+    "templateName": "Scheduling Reminder 72 - Delivery",
     "channelType": "Voice"
   },
   {
-    "templateId": "5432qwertyvoice",
-    "templateName": "Next Stop",
-    "channelType": "Voice"
+    "templateId": "d-bd0b88948dd34009b08434c16b76c1e0",
+    "templateName": "Appointment Scheduled",
+    "channelType": "Email"
+  },
+  {
+    "templateId": "d-1595175d2744471683aa154d8e870bdb",
+    "templateName": "Next Stop Update - Delivery",
+    "channelType": "Email"
+  },
+  {
+    "templateId": "HX80cc578c377e8cc30015278665a01384b",
+    "templateName": "Next Stop Update - Delivery",
+    "channelType": "Sms"
+  },
+  {
+    "templateId": "d-e885a6aeedaf49f7aee598df4e47bc04",
+    "templateName": "Next Stop Update - Pickup",
+    "channelType": "Email"
+  },
+  {
+    "templateId": "HX4a0efd63e53d851c006816072f2ce1eb",
+    "templateName": "Next Stop Update - Pickup",
+    "channelType": "Sms"
   }
 ]

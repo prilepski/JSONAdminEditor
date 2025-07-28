@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace JSONAdminEditor.Services
 {
-    public class FileManagementService
+    public class FileManagementService : IStorageService
     {
         private readonly IWebHostEnvironment _environment;
         private readonly string _dataFolder;

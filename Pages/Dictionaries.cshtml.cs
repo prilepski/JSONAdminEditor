@@ -3,14 +3,16 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Services;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace JSONAdminEditor.Pages;
 
 public class DictionariesModel : PageModel
 {
-    private readonly FileManagementService _fileManagementService;
-    private readonly JsonFileService _jsonFileService;
+    private readonly IStorageService _storageService;
+    private readonly IJsonFileService _jsonFileService;
     private readonly UniqueFieldValidationService _validationService;
+    private readonly IWebHostEnvironment _environment;
 
     [BindProperty]
     public FileUploadViewModel Upload { get; set; } = new();
@@ -29,11 +31,12 @@ public class DictionariesModel : PageModel
     public JsonFileViewModel? JsonData { get; set; }
     public FileType? SelectedFileType { get; set; }
 
-    public DictionariesModel(FileManagementService fileManagementService, JsonFileService jsonFileService, UniqueFieldValidationService validationService)
+    public DictionariesModel(IStorageServiceFactory storageServiceFactory, IJsonFileService jsonFileService, UniqueFieldValidationService validationService, IWebHostEnvironment environment)
     {
-        _fileManagementService = fileManagementService;
+        _storageService = storageServiceFactory.CreateStorageService();
         _jsonFileService = jsonFileService;
         _validationService = validationService;
+        _environment = environment;
     }
 
     public void OnGet()
@@ -61,7 +64,7 @@ public class DictionariesModel : PageModel
                 var selectedFileType = (FileType)fileType;
                 var filePath = GetDictionaryFilePath(selectedFileType);
                 
-                if (!string.IsNullOrEmpty(filePath) && System.IO.File.Exists(filePath))
+                if (!string.IsNullOrEmpty(filePath))
                 {
                     var jsonData = await _jsonFileService.LoadJsonFileAsync(filePath);
                     
@@ -118,28 +121,33 @@ public class DictionariesModel : PageModel
         try
         {
             var filePath = GetDictionaryFilePath(fileType);
-            if (!string.IsNullOrEmpty(filePath) && System.IO.File.Exists(filePath))
+            
+            if (!string.IsNullOrEmpty(filePath))
             {
                 JsonData = await _jsonFileService.LoadJsonFileAsync(filePath);
                 
                 if (!JsonData.IsValidJson)
                 {
-                    ErrorMessage = $"Error loading {fileType} dictionary: {JsonData.ErrorMessage}";
-                    JsonData = null;
+                    if (JsonData.ErrorMessage == "File not found or empty")
+                    {
+                        Console.WriteLine("Creating empty data structure for new dictionary");
+                        // Create empty data structure for new dictionary
+                        JsonData = new JsonFileViewModel
+                        {
+                            FileName = GetDictionaryFileName(fileType),
+                            FilePath = filePath,
+                            IsValidJson = true,
+                            TableData = new List<Dictionary<string, object>>(),
+                            ColumnNames = GetDefaultColumnsForDictionary(fileType),
+                            ColumnTypes = GetDefaultColumnTypesForDictionary(fileType)
+                        };
+                    }
+                    else
+                    {
+                        ErrorMessage = $"Error loading {fileType} dictionary: {JsonData.ErrorMessage}";
+                        JsonData = null;
+                    }
                 }
-            }
-            else
-            {
-                // Create empty data structure for new dictionary
-                JsonData = new JsonFileViewModel
-                {
-                    FileName = GetDictionaryFileName(fileType),
-                    FilePath = filePath ?? GetDictionaryFilePath(fileType),
-                    IsValidJson = true,
-                    TableData = new List<Dictionary<string, object>>(),
-                    ColumnNames = GetDefaultColumnsForDictionary(fileType),
-                    ColumnTypes = GetDefaultColumnTypesForDictionary(fileType)
-                };
             }
         }
         catch (Exception ex)
@@ -153,11 +161,11 @@ public class DictionariesModel : PageModel
     {
         return fileType switch
         {
-            FileType.Templates => Path.Combine("wwwroot", "data", "dictionaries", "templates.json"),
-            FileType.EventTriggers => Path.Combine("wwwroot", "data", "dictionaries", "event-triggers.json"),
-            FileType.EventChannels => Path.Combine("wwwroot", "data", "dictionaries", "event-channels.json"),
-            FileType.OrderTypes => Path.Combine("wwwroot", "data", "dictionaries", "order-types.json"),
-            FileType.Customers => Path.Combine("wwwroot", "data", "dictionaries", "customers.json"),
+            FileType.Templates => "data/dictionaries/templates.json",
+            FileType.EventTriggers => "data/dictionaries/event-triggers.json",
+            FileType.EventChannels => "data/dictionaries/event-channels.json",
+            FileType.OrderTypes => "data/dictionaries/order-types.json",
+            FileType.Customers => "data/dictionaries/customers.json",
             _ => string.Empty
         };
     }
@@ -243,7 +251,7 @@ public class DictionariesModel : PageModel
             return Page();
         }
  */
-        var (success, message) = await _fileManagementService.UploadFileAsync(Upload);
+        var (success, message) = await _storageService.UploadFileAsync(Upload);
 
         if (success)
         {
@@ -312,7 +320,7 @@ public class DictionariesModel : PageModel
                 JsonFile = formFile
             };
 
-            var (success, message) = await _fileManagementService.OverwriteFileAsync(uploadModel);
+            var (success, message) = await _storageService.OverwriteFileAsync(uploadModel);
 
             if (success)
             {
@@ -386,7 +394,7 @@ public class DictionariesModel : PageModel
         }
 
         // Directly call OverwriteFileAsync since user has already confirmed via overlay
-        var (success, message) = await _fileManagementService.OverwriteFileAsync(uploadModel);
+        var (success, message) = await _storageService.OverwriteFileAsync(uploadModel);
 
         if (success)
         {
@@ -440,7 +448,7 @@ public class DictionariesModel : PageModel
         if (string.IsNullOrWhiteSpace(term))
             return new JsonResult(new List<CustomerLookupResult>());
 
-        var results = await _fileManagementService.SearchCustomersAsync(term);
+        var results = await _storageService.SearchCustomersAsync(term);
         return new JsonResult(results);
     }
 

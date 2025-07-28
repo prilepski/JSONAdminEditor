@@ -1,122 +1,151 @@
 {
   "Events": [
     {
-      "Event": "Next Stop",
-      "OrderType": "ALL",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Logo": "base64",
-      "IsSuppressed": true,
-      "ContentVariables": {},
-      "Templates": {
-        "Email": "5432qwerty",
-        "Sms": "5432qwertysms",
-        "Voice": "5432qwertyvoice"
-      }
-    },
-    {
-      "Event": "Schedule Appointment",
+      "Event": "Ready For Scheduling",
       "OrderType": "Pickup",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
+      "Phone": "$ShipperContact.Phone$",
+      "Email": "$ShipperContact.Email$",
       "Logo": "base64",
-      "IsSuppressed": true,
+      "IsSuppressed": false,
+      "Templates": {
+        "Email": "d-e162b3e6181545fead5e643982628504",
+        "Sms": "HX61a3cb19e35c428d9b1395d8139e94cc",
+        "Voice": ""
+      },
       "ContentVariables": {
-        "cust_name": "$Customer.FriendlyName$",
-        "ait_tracking_num": "$ShipmentNum$",
-        "tracking_url": "www.myait.com/Tracking/$ShipmentNum$"
-      },
-      "Templates": {
-        "Email": "5432qwerty",
-        "Sms": "123456qweqwesms",
-        "Voice": "123456qweqwevoice"
+        "sender": "$customerContact.name$",
+        "bringg_sched_url": "$appointmentInformation.scheduleURL$",
+        "agent_phone_num": "$agentContact.phone$",
+        "ait_tracking_num": "$shipmentInfo[0].shipmentId$"
       }
     },
     {
-      "Event": "Schedule Appointment",
+      "Event": "Ready For Scheduling",
       "OrderType": "Delivery",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
+      "Phone": "$Consignee.Phone$",
+      "Email": "$Consignee.Email$",
       "Logo": "base64",
-      "IsSuppressed": true,
+      "IsSuppressed": false,
+      "Templates": {
+        "Email": "d-48388ac5bd1a4460969ac2ed36c818cc",
+        "Sms": "Hxad1da069cc42534183daccd644579207",
+        "Voice": ""
+      },
       "ContentVariables": {
-        "cust_name": "$Customer.FriendlyName$"
-      },
-      "Templates": {
-        "Email": "5432qwerty",
-        "Sms": "5432qwertysms",
-        "Voice": "5432qwertyvoice"
+        "sender": "$customerContact.name$",
+        "bringg_sched_url": "$appointmentInformation.scheduleURL$",
+        "agent_phone_num": "$agentContact.phone$",
+        "ait_tracking_num": "$shipmentInfo[0].shipmentId$"
       }
     },
     {
-      "Event": "Scheduling Reminder",
+      "Event": "Scheduling Reminder 24",
       "OrderType": "Delivery",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
+      "Phone": "$Consignee.Phone$",
+      "Email": "$Consignee.Email$",
       "Logo": "base64",
-      "IsSuppressed": true,
+      "IsSuppressed": false,
       "Templates": {
-        "Email": "123456qweqwe",
-        "Sms": "123456qweqwesms",
-        "Voice": "123456qweqwevoice"
+        "Email": "d-72ba199f25aa4108a1b998c26fe7b4b0",
+        "Sms": "Hxbdc5900bf4551db403f85f6a2a7c18be",
+        "Voice": ""
       },
-      "ContentVariables": {}
+      "ContentVariables": {
+        "sender": "$customerContact.name$",
+        "bringg_sched_url": "$appointmentInformation.scheduleURL$",
+        "ait_tracking_num": "$shipmentInfo[0].shipmentId$",
+        "tracking_url": "https://fastrack.ait.com$shipmentInfo[0].shipmentId$"
+      }
     },
     {
-      "Event": "Scheduling Reminder",
-      "OrderType": "Pickup",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Logo": "base64",
-      "IsSuppressed": true,
-      "Templates": {
-        "Email": "5432qwerty",
-        "Sms": "123456qweqwesms",
-        "Voice": "123456qweqwevoice"
-      },
-      "ContentVariables": {}
-    },
-    {
-      "Event": "Final Scheduling Appointment",
+      "Event": "Scheduling Reminder 48",
       "OrderType": "Delivery",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
+      "Phone": "$Consignee.Phone$",
+      "Email": "$Consignee.Email$",
       "Logo": "base64",
-      "IsSuppressed": true,
+      "IsSuppressed": false,
       "Templates": {
-        "Email": "123456qweqwe",
-        "Sms": "123456qweqwesms",
-        "Voice": "123456qweqwevoice"
+        "Email": "d-72ba199f25aa4108a1b998c26fe7b4b0",
+        "Sms": "Hxbdc5900bf4551db403f85f6a2a7c18be",
+        "Voice": ""
       },
-      "ContentVariables": {}
+      "ContentVariables": {
+        "sender": "$customerContact.name$",
+        "bringg_sched_url": "$appointmentInformation.scheduleURL$",
+        "agent_phone_num": "$agentContact.phone$",
+        "ait_tracking_num": "$shipmentInfo[0].shipmentId$"
+      }
     },
     {
-      "Event": "Final Scheduling Appointment",
+      "Event": "Scheduling Reminder 72",
+      "OrderType": "Delivery",
+      "Phone": "$Consignee.Phone$",
+      "Email": "$Consignee.Email$",
+      "Logo": "base64",
+      "IsSuppressed": false,
+      "Templates": {
+        "Email": "",
+        "Sms": "",
+        "Voice": "EH24bb0d84e795df332aa9a4a600f0e3b8"
+      },
+      "ContentVariables": {
+        "sender": "$customerContact.name$"
+      }
+    },
+    {
+      "Event": "Appointment Scheduled",
+      "OrderType": "Delivery",
+      "Phone": "$Consignee.Phone$",
+      "Email": "$Consignee.Email$",
+      "Logo": "base64",
+      "IsSuppressed": false,
+      "Templates": {
+        "Email": "d-bd0b88948dd34009b08434c16b76c1e0",
+        "Sms": "",
+        "Voice": ""
+      },
+      "ContentVariables": {
+        "sender": "$customerContact.name$",
+        "appt_start": "$appointmentInformation.DateTimeStart$",
+        "appt_end": "$appointmentInformation.DateTimeEnd$",
+        "appt_date": "$appointmentInformation.Date$"
+      }
+    },
+    {
+      "Event": "Next Stop Update",
+      "OrderType": "Delivery",
+      "Phone": "$Consignee.Phone$",
+      "Email": "$Consignee.Email$",
+      "Logo": "base64",
+      "IsSuppressed": false,
+      "Templates": {
+        "Email": "d-1595175d2744471683aa154d8e870bdb",
+        "Sms": "HX80cc578c377e8cc30015278665a01384b",
+        "Voice": ""
+      },
+      "ContentVariables": {
+        "sender": "$customerContact.name$",
+        "ait_tracking_num": "$shipmentInfo[0].shipmentId$",
+        "tracking_url": "$driverTrackURL$"
+      }
+    },
+    {
+      "Event": "Next Stop Update",
       "OrderType": "Pickup",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
+      "Phone": "$ShipperContact.Phone$",
+      "Email": "$ShipperContact.Email$",
       "Logo": "base64",
       "IsSuppressed": true,
       "Templates": {
-        "Email": "123456qweqwe",
-        "Sms": "123456qweqwesms",
-        "Voice": "123456qweqwevoice"
+        "Email": "d-e885a6aeedaf49f7aee598df4e47bc04",
+        "Sms": "HX4a0efd63e53d851c006816072f2ce1eb",
+        "Voice": ""
       },
-      "ContentVariables": {}
-    }
-  ],
-  "PreferredCommunication": [
-    {
-      "Channel": "email",
-      "Priority": 1
-    },
-    {
-      "Channel": "sms",
-      "Priority": 1
-    },
-    {
-      "Channel": "voice",
-      "Priority": 3
+      "ContentVariables": {
+        "sender": "$customerContact.name$",
+        "ait_tracking_num": "$shipmentInfo[0].shipmentId$",
+        "tracking_url": "$driverTrackURL$"
+      }
     }
   ],
   "ContentVariables": {
@@ -124,7 +153,12 @@
     "ait_tracking_num": "$ShipmentNum$",
     "tracking_url": "www.myait.com/Tracking/$ShipmentNum$",
     "cust_logo": "base64:DBSDIBDUIBG3209523",
-    "var1": "",
-    "var2": ""
-  }
+    "ait_phone_num": "TBD"
+  },
+  "PreferredCommunication": [
+    {
+      "Channel": "email",
+      "Priority": 1
+    }
+  ]
 }

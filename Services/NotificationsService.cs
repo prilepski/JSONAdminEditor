@@ -5,25 +5,25 @@ namespace JSONAdminEditor.Services
 {
     public class NotificationsService
     {
-        private readonly IWebHostEnvironment _environment;
+        private readonly IFileContentService _fileContentService;
         private readonly string _notificationsFilePath;
 
-        public NotificationsService(IWebHostEnvironment environment)
+        public NotificationsService(IFileContentService fileContentService)
         {
-            _environment = environment;
-            _notificationsFilePath = Path.Combine(_environment.WebRootPath, "data", "notifications.json");
+            _fileContentService = fileContentService;
+            _notificationsFilePath = "data/notifications.json";
         }
 
         public async Task<List<Dictionary<string, object>>?> GetPreferredCommunicationAsync()
         {
             try
             {
-                if (!File.Exists(_notificationsFilePath))
+                if (!(await _fileContentService.FileExistsAsync(_notificationsFilePath)))
                 {
                     return new List<Dictionary<string, object>>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                 var document = JsonDocument.Parse(jsonContent);
                 
                 if (document.RootElement.TryGetProperty("PreferredCommunication", out var prefCommElement))
@@ -58,9 +58,9 @@ namespace JSONAdminEditor.Services
                 // Read the entire notifications.json file
                 var existingContent = new Dictionary<string, object>();
                 
-                if (File.Exists(_notificationsFilePath))
+                if (await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
-                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                     var document = JsonDocument.Parse(jsonContent);
                     
                     // Preserve existing sections
@@ -89,7 +89,7 @@ namespace JSONAdminEditor.Services
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
-                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                await _fileContentService.WriteFileAsync(_notificationsFilePath, updatedJson);
                 
                 return true;
             }
@@ -103,14 +103,14 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var channelsFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "event-channels.json");
+                var channelsFilePath = "data/dictionaries/event-channels.json";
                 
-                if (!File.Exists(channelsFilePath))
+                if (!await _fileContentService.FileExistsAsync(channelsFilePath))
                 {
                     return new List<string>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(channelsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(channelsFilePath);
                 var channels = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
                 
                 if (channels == null) return new List<string>();
@@ -131,12 +131,12 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                if (!File.Exists(_notificationsFilePath))
+                if (!await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
                     return new List<Dictionary<string, object>>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                 var document = JsonDocument.Parse(jsonContent);
                 
                 if (document.RootElement.TryGetProperty("ContentVariables", out var contentVarsElement))
@@ -171,9 +171,9 @@ namespace JSONAdminEditor.Services
                 // Read the entire notifications.json file
                 var existingContent = new Dictionary<string, object>();
                 
-                if (File.Exists(_notificationsFilePath))
+                if (await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
-                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                     var document = JsonDocument.Parse(jsonContent);
                     
                     // Preserve existing sections
@@ -217,7 +217,7 @@ namespace JSONAdminEditor.Services
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
-                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                await _fileContentService.WriteFileAsync(_notificationsFilePath, updatedJson);
                 
                 return true;
             }
@@ -231,12 +231,12 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                if (!File.Exists(_notificationsFilePath))
+                if (!await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
                     return new List<Dictionary<string, object>>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                 var document = JsonDocument.Parse(jsonContent);
                 
                 if (document.RootElement.TryGetProperty("Events", out var eventsElement))
@@ -319,14 +319,14 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "event-triggers.json");
+                var eventTriggersFilePath = "data/dictionaries/event-triggers.json";
                 
-                if (!File.Exists(eventTriggersFilePath))
+                if (!await _fileContentService.FileExistsAsync(eventTriggersFilePath))
                 {
                     return false;
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(eventTriggersFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(eventTriggersFilePath);
                 var triggers = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
                 
                 if (triggers == null) return false;
@@ -365,9 +365,9 @@ namespace JSONAdminEditor.Services
                 // Read the entire notifications.json file
                 var existingContent = new Dictionary<string, object>();
                 
-                if (File.Exists(_notificationsFilePath))
+                if (await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
-                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                     var document = JsonDocument.Parse(jsonContent);
                     
                     // Preserve existing sections
@@ -457,7 +457,7 @@ namespace JSONAdminEditor.Services
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
-                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                await _fileContentService.WriteFileAsync(_notificationsFilePath, updatedJson);
                 
                 return true;
             }
@@ -473,14 +473,14 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var eventTriggersFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "event-triggers.json");
+                var eventTriggersFilePath = "data/dictionaries/event-triggers.json";
                 
-                if (!File.Exists(eventTriggersFilePath))
+                if (!await _fileContentService.FileExistsAsync(eventTriggersFilePath))
                 {
                     return new List<string>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(eventTriggersFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(eventTriggersFilePath);
                 var triggers = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
                 
                 if (triggers == null) return new List<string>();
@@ -503,14 +503,14 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var templateFilePath = Path.Combine(_environment.WebRootPath, "data", "templates", "event-template.json");
+                var templateFilePath = "data/templates/event-template.json";
                 
-                if (!File.Exists(templateFilePath))
+                if (!await _fileContentService.FileExistsAsync(templateFilePath))
                 {
                     return null;
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(templateFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(templateFilePath);
                 var template = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
                 
                 return template;
@@ -528,9 +528,9 @@ namespace JSONAdminEditor.Services
                 // Read the entire notifications.json file
                 var existingContent = new Dictionary<string, object>();
                 
-                if (File.Exists(_notificationsFilePath))
+                if (await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
-                    var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                    var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                     var document = JsonDocument.Parse(jsonContent);
                     
                     // Preserve existing sections
@@ -608,7 +608,7 @@ namespace JSONAdminEditor.Services
                 };
                 
                 var updatedJson = JsonSerializer.Serialize(existingContent, options);
-                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                await _fileContentService.WriteFileAsync(_notificationsFilePath, updatedJson);
                 
                 return true;
             }
@@ -622,14 +622,14 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var orderTypesFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "order-types.json");
+                var orderTypesFilePath = "data/dictionaries/order-types.json";
                 
-                if (!File.Exists(orderTypesFilePath))
+                if (!await _fileContentService.FileExistsAsync(orderTypesFilePath))
                 {
                     return new List<string>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(orderTypesFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(orderTypesFilePath);
                 var orderTypes = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
                 
                 if (orderTypes == null) return new List<string>();
@@ -650,14 +650,14 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                var templatesFilePath = Path.Combine(_environment.WebRootPath, "data", "dictionaries", "templates.json");
+                var templatesFilePath = "data/dictionaries/templates.json";
                 
-                if (!File.Exists(templatesFilePath))
+                if (!await _fileContentService.FileExistsAsync(templatesFilePath))
                 {
                     return new List<(string, string, string)>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(templatesFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(templatesFilePath);
                 var templates = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonContent);
                 
                 if (templates == null) return new List<(string, string, string)>();
@@ -684,12 +684,12 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                if (!File.Exists(_notificationsFilePath))
+                if (!await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
                     return new Dictionary<string, string>();
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                 var document = JsonDocument.Parse(jsonContent);
                 
                 if (document.RootElement.TryGetProperty("ContentVariables", out var contentVarsElement))
@@ -714,12 +714,12 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                if (!File.Exists(_notificationsFilePath))
+                if (!await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
                     return false;
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                 var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
                 
                 if (data == null) return false;
@@ -762,7 +762,7 @@ namespace JSONAdminEditor.Services
                 };
 
                 var updatedJson = JsonSerializer.Serialize(data, options);
-                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                await _fileContentService.WriteFileAsync(_notificationsFilePath, updatedJson);
 
                 return true;
             }
@@ -776,12 +776,12 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                if (!File.Exists(_notificationsFilePath))
+                if (!await _fileContentService.FileExistsAsync(_notificationsFilePath))
                 {
                     return false;
                 }
 
-                var jsonContent = await File.ReadAllTextAsync(_notificationsFilePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(_notificationsFilePath);
                 var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
                 
                 if (data == null) return false;
@@ -852,7 +852,7 @@ namespace JSONAdminEditor.Services
                 };
 
                 var updatedJson = JsonSerializer.Serialize(data, options);
-                await File.WriteAllTextAsync(_notificationsFilePath, updatedJson);
+                await _fileContentService.WriteFileAsync(_notificationsFilePath, updatedJson);
 
                 return true;
             }

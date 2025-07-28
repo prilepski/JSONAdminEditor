@@ -4,28 +4,24 @@ using JSONAdminEditor.Models;
 
 namespace JSONAdminEditor.Services
 {
-    public class JsonFileService
+    public class JsonFileService : IJsonFileService
     {
         private readonly IWebHostEnvironment _environment;
         private readonly UniqueFieldValidationService _validationService;
+        private readonly IFileContentService _fileContentService;
         private readonly string _uploadsFolder;
-        private readonly string _dataFolder;
 
-        public JsonFileService(IWebHostEnvironment environment, UniqueFieldValidationService validationService)
+        public JsonFileService(IWebHostEnvironment environment, UniqueFieldValidationService validationService, IFileContentService fileContentService)
         {
             _environment = environment;
             _validationService = validationService;
+            _fileContentService = fileContentService;
             _uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-            _dataFolder = Path.Combine(_environment.WebRootPath, "data");
             
-            // Ensure directories exist
+            // Ensure uploads directory exists (always local for temporary files)
             if (!Directory.Exists(_uploadsFolder))
             {
                 Directory.CreateDirectory(_uploadsFolder);
-            }
-            if (!Directory.Exists(_dataFolder))
-            {
-                Directory.CreateDirectory(_dataFolder);
             }
         }
 
@@ -70,7 +66,14 @@ namespace JSONAdminEditor.Services
 
             try
             {
-                var jsonContent = await File.ReadAllTextAsync(filePath);
+                var jsonContent = await _fileContentService.ReadFileAsync(filePath);
+                if (string.IsNullOrEmpty(jsonContent))
+                {
+                    model.ErrorMessage = "File not found or empty";
+                    model.IsValidJson = false;
+                    return model;
+                }
+                
                 model.JsonContent = jsonContent;
 
                 // Try to parse and convert to table format
@@ -123,8 +126,7 @@ namespace JSONAdminEditor.Services
             try
             {
                 var jsonString = JsonConvert.SerializeObject(tableData, Formatting.Indented);
-                await File.WriteAllTextAsync(filePath, jsonString);
-                return true;
+                return await _fileContentService.WriteFileAsync(filePath, jsonString);
             }
             catch
             {
