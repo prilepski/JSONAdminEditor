@@ -6,6 +6,10 @@ using Amazon.Extensions.NETCore.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Explicitly add Local configuration files to ensure they're loaded
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.Local.json", optional: true, reloadOnChange: true);
+
 // Configure storage settings
 builder.Services.Configure<StorageSettings>(
     builder.Configuration.GetSection("StorageSettings"));
@@ -32,6 +36,16 @@ var s3Settings = storageSettings?.S3Settings ?? new S3Settings
     BucketName = "default-bucket", 
     UseCredentialsFromEnvironment = true 
 };
+
+// Debug: Show what configuration values are actually loaded
+Console.WriteLine("=== Configuration Debug Info ===");
+Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"StorageType: {storageSettings?.StorageType}");
+Console.WriteLine($"BucketName: '{s3Settings.BucketName}'");
+Console.WriteLine($"AccessKey: '{s3Settings.AccessKey}'");
+Console.WriteLine($"SecretKey length: {s3Settings.SecretKey?.Length ?? 0}");
+Console.WriteLine($"UseCredentialsFromEnvironment: {s3Settings.UseCredentialsFromEnvironment}");
+Console.WriteLine("===============================");
 
 builder.Services.AddSingleton<IAmazonS3>(provider =>
 {
