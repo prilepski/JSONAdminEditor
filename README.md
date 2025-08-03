@@ -5,12 +5,15 @@ A .NET 9 web application that provides a web-based interface for editing JSON fi
 ## Features
 
 - **File Management System**: Organized management of predefined JSON files with structured file types
+- **Dual Storage Support**: FileSystem (local) and AWS S3 cloud storage options
+- **Secure Credential Management**: Local configuration files for sensitive AWS credentials (excluded from git)
+- **Storage Abstraction Layer**: Unified interface supporting seamless switching between storage backends
 - **Structured File Types**: Support for Templates, Customers, Event Triggers, Event Channels, and Customer Overrides
 - **Vertical Navigation**: Easy navigation between different management pages
 - **Dynamic Table Generation**: Automatically converts JSON arrays and objects into editable tables
 - **In-line Editing**: Edit data directly in table cells
 - **Add/Remove Rows**: Dynamic row management with add and delete functionality
-- **Save Changes**: Save modified content back to the original JSON file
+- **Save Changes**: Save modified content back to the original JSON file or S3 bucket
 - **Customer-Specific Settings**: Dedicated folder structure for customer configurations
 - **File Protection**: Core files are protected from deletion, customer files can be managed
 - **Responsive Design**: Bootstrap-based responsive interface
@@ -20,6 +23,8 @@ A .NET 9 web application that provides a web-based interface for editing JSON fi
 
 - **.NET 9.0** with ASP.NET Core
 - **Razor Pages** for UI
+- **AWS SDK for .NET** (AWSSDK.S3, AWSSDK.Extensions.NETCore.Setup)
+- **Storage Abstraction Layer** supporting FileSystem and AWS S3
 - **Bootstrap 5** for styling
 - **JavaScript** for dynamic interactions
 - **System.Text.Json & Newtonsoft.Json** for JSON handling
@@ -40,6 +45,24 @@ A .NET 9 web application that provides a web-based interface for editing JSON fi
    ```bash
    dotnet restore
    ```
+
+### Configuration
+
+The application supports both local file system storage and AWS S3 storage for JSON files. For detailed configuration instructions, including:
+
+- Setting up storage types (FileSystem vs S3)
+- Configuring AWS credentials securely
+- Understanding the file structure and organization
+- Setting up local configuration files
+
+**See: [CONFIG_SETUP.md](CONFIG_SETUP.md)** for comprehensive configuration guidance.
+
+### Quick Start Configuration
+
+For immediate development with local file storage (no setup required):
+- The application defaults to FileSystem storage
+- Files are stored in `wwwroot/data/`
+- No additional configuration needed
 
 ### Running the Application
 
@@ -83,20 +106,32 @@ The application will be available at `http://localhost:5000` or `https://localho
 
 ```
 JSONAdminEditor/
-├── Models/                 # Data models and ViewModels
-│   └── JsonModels.cs      # JSON-related models
-├── Pages/                 # Razor Pages
-│   ├── Index.cshtml       # Main editor interface
-│   ├── Index.cshtml.cs    # Page model with handlers
-│   └── Shared/           # Shared layouts and components
-├── Services/              # Business logic
-│   └── JsonFileService.cs # JSON file operations
-├── wwwroot/               # Static files
-│   ├── css/              # Stylesheets
-│   ├── js/               # JavaScript files
-│   ├── uploads/          # Uploaded JSON files (auto-created)
-│   └── sample-data.json  # Sample data for testing
-└── Program.cs            # Application configuration
+├── Models/                    # Data models and ViewModels
+│   ├── StorageSettings.cs     # Storage configuration models
+│   └── JsonModels.cs         # JSON-related models
+├── Pages/                    # Razor Pages
+│   ├── Dictionaries.cshtml   # Dictionary management interface
+│   ├── ContentVariables.cshtml # Content variables management
+│   ├── CustomerEvents.cshtml # Customer events configuration
+│   └── Shared/              # Shared layouts and components
+├── Services/                 # Business logic and storage abstraction
+│   ├── IStorageService.cs    # Storage interface
+│   ├── FileManagementService.cs # Local file system storage
+│   ├── S3StorageService.cs   # AWS S3 storage implementation
+│   ├── StorageServiceFactory.cs # Storage service factory
+│   ├── FileContentService.cs # Unified file content access
+│   ├── JsonFileService.cs    # JSON file operations
+│   └── NotificationsService.cs # Notifications management
+├── wwwroot/                  # Static files and local data storage
+│   ├── css/                 # Stylesheets
+│   ├── js/                  # JavaScript files
+│   ├── data/                # JSON data files (FileSystem storage)
+│   │   ├── dictionaries/    # Core dictionary files
+│   │   ├── customers/       # Customer-specific overrides
+│   │   └── notifications.json # Main notifications config
+│   └── uploads/             # Temporary uploaded files
+├── CONFIG_SETUP.md           # Configuration and storage setup guide
+└── Program.cs               # Application configuration
 ```
 
 ## Sample Data
