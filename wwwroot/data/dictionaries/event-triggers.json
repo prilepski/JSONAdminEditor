@@ -28,5 +28,10 @@
     "Event Name": "Appointment Scheduled",
     "ByOrderType": true,
     "IsActive": true
+  },
+  {
+    "Event Name": "jjjjj",
+    "ByOrderType": false,
+    "IsActive": false
   }
 ]

@@ -1,0 +1,112 @@
+import React, {useState} from 'react';
+import {FileType} from '../types';
+import {ValidationError} from '../types/api';
+import {useDictionaryQuery, useDictionaryMutation, useUploadMutation} from '../hooks/useDictionaryQuery';
+import {DictionarySelector} from '../components/DictionarySelector';
+import {FileUpload} from '../components/FileUpload';
+import {JsonEditor} from '../components/JsonEditor';
+import toast from 'react-hot-toast';
+import {Skeleton} from '../components/Skeleton';
+
+export const Dictionaries: React.FC = () => {
+    const [selectedFileType, setSelectedFileType] = useState<FileType>(FileType.None);
+  
+    const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+
+    const {data: dictionaryResponse, isLoading, error} = useDictionaryQuery(selectedFileType);
+    const saveMutation = useDictionaryMutation();
+    const uploadMutation = useUploadMutation();
+
+    const dictionaryData = dictionaryResponse?.success ? dictionaryResponse.data : null;
+
+    const handleFileTypeChange = (fileType: FileType) => {
+        setSelectedFileType(fileType);
+        setValidationErrors([]);
+    };
+
+    const handleUploadSuccess = (text: string) => {
+        toast.success(text);
+    };
+
+    const handleUploadError = (text: string) => {
+        toast.error(text);
+    };
+
+    const handleSave = async (tableData: Record<string, any>[]) => {
+        if (!dictionaryData) {
+            return {success: false, error: 'No dictionary data available'};
+        }
+
+        try {
+            const result = await saveMutation.mutateAsync({
+                filePath: dictionaryData.filePath,
+                jsonData: tableData,
+                fileType: selectedFileType
+            });
+
+            if (result.success) {
+                toast.success(result.message || 'Dictionary saved successfully!');
+                return {success: true, message: result.message};
+            } else {
+                toast.error(result.error || 'Failed to save dictionary');
+                if (result.validationErrors) {
+                    setValidationErrors(result.validationErrors);
+                }
+                return {success: false, error: result.error};
+            }
+        } catch (error) {
+            const errorMessage = 'Error saving dictionary';
+            toast.error(errorMessage);
+            return {success: false, error: errorMessage};
+        }
+    };
+
+    return (
+        <>
+            <h1 className="mb-4">
+                <i className="fas fa-cog me-2"></i>
+                Dictionary Management
+            </h1>
+
+            {error && toast.error(String(error))}
+
+            <DictionarySelector
+                selectedFileType={selectedFileType}
+                onFileTypeChange={handleFileTypeChange}
+            />
+
+            {selectedFileType !== FileType.None && (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="row align-items-center">
+                            <div className="col-md-6">
+                                <h3>
+                                    <i className="fas fa-edit me-2"></i>
+                                    Dictionary Editor
+                                </h3>
+                            </div>
+                            <div className="col-md-6">
+                                <FileUpload
+                                    selectedFileType={selectedFileType}
+                                    onUploadSuccess={handleUploadSuccess}
+                                    onUploadError={handleUploadError}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <Skeleton loading={isLoading} rows={5} height="40px">
+                            <JsonEditor
+                                dictionaryData={dictionaryData}
+                                selectedFileType={selectedFileType}
+                                validationErrors={validationErrors}
+                                onSave={handleSave}
+                                onClearValidationErrors={() => setValidationErrors([])}
+                            />
+                        </Skeleton>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+};

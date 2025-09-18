@@ -15,7 +15,12 @@ builder.Services.Configure<StorageSettings>(
     builder.Configuration.GetSection("StorageSettings"));
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddRazorPages();
+
+// Add Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register storage services
 builder.Services.AddScoped<FileManagementService>();
@@ -89,7 +94,12 @@ builder.Services.AddSingleton<IAmazonS3>(provider =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
 {
     app.UseExceptionHandler("/Error");
 }
@@ -98,12 +108,14 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// Redirect root URL to Dictionaries page since Index was removed
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/Dictionaries");
-    return Task.CompletedTask;
-});
+// Serve React static files
+app.UseStaticFiles();
+
+// Map API controllers
+app.MapControllers();
+
+// Serve React app for SPA routes
+app.MapFallbackToFile("index.html");
 
 app.MapStaticAssets();
 app.MapRazorPages()

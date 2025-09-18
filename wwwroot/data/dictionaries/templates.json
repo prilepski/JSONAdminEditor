@@ -58,5 +58,15 @@
     "templateId": "HX4a0efd63e53d851c006816072f2ce1eb",
     "templateName": "Next Stop Update - Pickup",
     "channelType": "Sms"
+  },
+  {
+    "templateId": "efgrdfg",
+    "templateName": "",
+    "channelType": "Email"
+  },
+  {
+    "templateId": "hghg",
+    "templateName": "",
+    "channelType": "Voice"
   }
 ]
