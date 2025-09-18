@@ -1,5 +1,6 @@
 # JSON Admin Editor
 
+
 A .NET 9 web application that provides a web-based interface for editing JSON files. The application displays JSON content in a table format and allows users to modify the data and save changes back to the file.
 
 ## Features
