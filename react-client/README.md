@@ -32,20 +32,42 @@ Modern React frontend for JSON Admin Editor with Vite bundling and comprehensive
 
 ```bash
 # Install dependencies
+npm install
+# OR
 pnpm install
 
 # Start development server
+npm run dev
+# OR
 pnpm dev
 
 # Build for production
-pnpm build
+npm run build:prod
+# OR
+pnpm build:prod
 
 # Run tests
+npm test
+# OR
 pnpm test
 ```
 
-**Development server:** `http://localhost:3000`  
-**API proxy:** `http://localhost:5000`
+## 🌍 Environment Configuration
+
+### Available Environments
+- **Development** - `pnpm dev` (port 3000)
+- **Test** - `pnpm build:test` (port 3001) 
+- **Production** - `pnpm build:prod`
+
+### Environment Variables
+| Variable | Dev                         | Test                        | Prod |
+|----------|-----------------------------|-----------------------------|----- |
+| `VITE_API_BASE_URL` | `http://localhost:5000/api` | `http://localhost:5000/api` | `/api` |
+| `VITE_APP_NAME` | JSON Admin Editor (Dev)     | JSON Admin Editor (Test)    | JSON Admin Editor |
+| `VITE_ENABLE_DEVTOOLS` | `true`                      | `true`                      | `false` |
+| `VITE_DEV_PORT` | `3000`                      | `3001`                      | `3000` |
+| `VITE_PROXY_TARGET` | `http://localhost:5000`     | `http://localhost:5001`     | - |
+| `VITE_SOURCEMAP` | `true`                      | `true`                      | `false` |
 
 ## 📁 Project Structure
 
@@ -117,7 +139,9 @@ src/
 - **SaveButton** - Loading states and error handling
 - **CustomerSelector** - Reusable customer dropdown
 - **TabNavigation** - Generic tab component
-- **Skeleton** - Loading placeholders
+- **LoadingSpinner** - Configurable loading spinner
+- **TableSkeleton** - Animated table placeholders
+- **CardSkeleton** - Card layout placeholders
 
 ## 🧪 Testing
 
@@ -145,18 +169,27 @@ pnpm test:coverage
 | Command | Description |
 |---------|-------------|
 | `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
+| `pnpm build` | Default build |
+| `pnpm build:test` | Build for test environment |
+| `pnpm build:prod` | Build for production |
 | `pnpm preview` | Preview production build |
 | `pnpm test` | Run tests |
 | `pnpm test:ui` | Run tests with UI |
 | `pnpm test:coverage` | Generate coverage report |
+| `pnpm lint` | Run ESLint |
+| `pnpm lint:fix` | Fix ESLint issues |
+| `pnpm format` | Format code with Prettier |
+| `pnpm format:check` | Check code formatting |
 
 ## 🎯 Code Quality
 
 - **TypeScript strict mode** - Full type safety
+- **ESLint + Prettier** - Code formatting and linting
+- **Pre-commit hooks** - Automated quality checks
 - **Functional components** - Modern React patterns
 - **Custom hooks** - Reusable logic
 - **Error boundaries** - Graceful error handling
+- **Loading states** - Skeleton components and spinners
 - **Responsive design** - Mobile-first approach
 
 ## 🚀 Performance

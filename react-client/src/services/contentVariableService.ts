@@ -2,7 +2,7 @@ import axios from 'axios';
 import { ApiResponse, TableData } from '../types';
 
 const api = axios.create({
-  baseURL: '/api/content-variables',
+  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/content-variables`,
   headers: { 'Content-Type': 'application/json' },
 });
 

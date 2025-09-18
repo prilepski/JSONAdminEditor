@@ -2,7 +2,7 @@ import axios from 'axios';
 import { FileType, ApiResponse, DictionaryData, FileUploadRequest, TableData } from '../types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

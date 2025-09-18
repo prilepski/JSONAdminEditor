@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Template } from '../types/template';
 
 const api = axios.create({
-  baseURL: '/api/events',
+  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/events`,
   headers: { 'Content-Type': 'application/json' },
 });
 

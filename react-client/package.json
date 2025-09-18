@@ -42,12 +42,14 @@
     "vitest": "^0.32.4"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode development",
     "build": "tsc --noEmit && vite build",
+    "build:test": "tsc --noEmit && vite build --mode test",
+    "build:prod": "tsc --noEmit && vite build --mode production",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
+    "test": "vitest --mode test",
+    "test:ui": "vitest --ui --mode test",
+    "test:coverage": "vitest --coverage --mode test",
     "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx,css,md}'",
