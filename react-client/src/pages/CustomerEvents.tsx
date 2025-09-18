@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useCustomersQuery, useCustomerEventsQuery, useCustomerEventsMutation } from '../hooks/useCustomerQuery';
 import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery';
 import toast from 'react-hot-toast';
-import { Template } from '../types/template';
 import { CustomerEventData, EventField, TemplateField, ContentVariable } from '../types/customerEvent';
 import { PageHeader, CustomerSelector, SaveButton, TabNavigation } from '../components/common';
+import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
+import { CustomerEventDataTable } from '../components/events/CustomerEventDataTable';
+import { CustomerTemplateTable } from '../components/events/CustomerTemplateTable';
+import { CustomerContentVariablesTable } from '../components/events/CustomerContentVariablesTable';
 
 export const CustomerEvents: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -205,9 +208,7 @@ export const CustomerEvents: React.FC = () => {
     });
   };
 
-  const getTemplatesByChannel = (channel: 'Email' | 'Sms' | 'Voice'): Template[] => {
-    return availableTemplates.filter(t => t.channelType === channel);
-  };
+
 
   const tabs = [
     { id: 'event-data', label: 'Event Data', icon: 'fa-cog' },
@@ -225,43 +226,15 @@ export const CustomerEvents: React.FC = () => {
         onCustomerChange={setSelectedCustomer}
       />
 
-      {/* Event Selection */}
       {selectedCustomer && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h3><i className="fas fa-calendar-alt me-2"></i>Select Event for {selectedCustomer}</h3>
-          </div>
-          <div className="card-body">
-            <div className="row">
-              <div className="col-md-6">
-                <select
-                  className="form-select"
-                  value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
-                >
-                  <option value="">Select an event...</option>
-                  {activeEventTriggers.map(trigger => (
-                    <option key={trigger} value={trigger}>{trigger}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-6">
-                <div className="d-flex align-items-center">
-                  <span className="me-2 text-muted">Delivery</span>
-                  <div className="form-check form-switch">
-                    <input 
-                      className="form-check-input" 
-                      type="checkbox" 
-                      checked={selectedOrderType === 'Pickup'}
-                      onChange={(e) => setSelectedOrderType(e.target.checked ? 'Pickup' : 'Delivery')}
-                    />
-                  </div>
-                  <span className="ms-2 text-muted">Pickup</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CustomerEventSelector
+          selectedCustomer={selectedCustomer}
+          selectedEvent={selectedEvent}
+          selectedOrderType={selectedOrderType}
+          eventTriggers={activeEventTriggers}
+          onEventChange={setSelectedEvent}
+          onOrderTypeChange={setSelectedOrderType}
+        />
       )}
 
       {/* Event Editor */}
@@ -286,189 +259,30 @@ export const CustomerEvents: React.FC = () => {
               onTabChange={setActiveTab}
             />
 
-            {/* Event Data Tab */}
             {activeTab === 'event-data' && (
-              <div>
-                <div className="alert alert-info">
-                  <i className="fas fa-info-circle me-2"></i>
-                  <strong>Event Data Management:</strong> Check "Is Redefined" to override global settings for this customer.
-                </div>
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Field</th>
-                        <th>Value</th>
-                        <th>Is Redefined</th>
-                        <th>Global Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {eventFields.map(field => (
-                        <tr key={field.name}>
-                          <td><strong>{field.name}</strong></td>
-                          <td>
-                            {field.type === 'checkbox' ? (
-                              <div className="form-check">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  checked={field.value === 'true'}
-                                  disabled={!field.isRedefined}
-                                  onChange={(e) => updateEventField(field.name, String(e.target.checked))}
-                                />
-                              </div>
-                            ) : (
-                              <input
-                                type="text"
-                                className="form-control"
-                                value={field.value}
-                                readOnly={!field.isRedefined}
-                                onChange={(e) => updateEventField(field.name, e.target.value)}
-                              />
-                            )}
-                          </td>
-                          <td className="text-center">
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={field.isRedefined}
-                                onChange={(e) => toggleEventFieldRedefined(field.name, e.target.checked)}
-                              />
-                            </div>
-                          </td>
-                          <td>
-                            <span className="text-muted">{field.globalValue || '—'}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <CustomerEventDataTable
+                eventFields={eventFields}
+                onUpdateField={updateEventField}
+                onToggleRedefined={toggleEventFieldRedefined}
+              />
             )}
 
-            {/* Templates Tab */}
             {activeTab === 'templates' && (
-              <div>
-                <div className="alert alert-info">
-                  <i className="fas fa-info-circle me-2"></i>
-                  <strong>Template Management:</strong> Check "Is Redefined" to override global templates for this customer.
-                </div>
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Channel</th>
-                        <th>Template</th>
-                        <th>Is Redefined</th>
-                        <th>Global Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {templateFields.map(template => (
-                        <tr key={template.channel}>
-                          <td><strong>{template.channel}</strong></td>
-                          <td>
-                            <select
-                              className="form-select"
-                              value={template.value}
-                              disabled={!template.isRedefined}
-                              onChange={(e) => updateTemplateField(template.channel, e.target.value)}
-                            >
-                              <option value="">Select template...</option>
-                              {getTemplatesByChannel(template.channel).map(t => (
-                                <option key={t.templateId} value={t.templateId}>
-                                  {t.templateName} ({t.templateId})
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="text-center">
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={template.isRedefined}
-                                onChange={(e) => toggleTemplateRedefined(template.channel, e.target.checked)}
-                              />
-                            </div>
-                          </td>
-                          <td>
-                            <span className="text-muted">{template.globalValue || '—'}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <CustomerTemplateTable
+                templateFields={templateFields}
+                availableTemplates={availableTemplates}
+                onUpdateTemplate={updateTemplateField}
+                onToggleRedefined={toggleTemplateRedefined}
+              />
             )}
 
-            {/* Content Variables Tab */}
             {activeTab === 'content-variables' && (
-              <div>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h5><i className="fas fa-code me-2"></i>Content Variables</h5>
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary"
-                    onClick={addContentVariable}
-                  >
-                    <i className="fas fa-plus me-1"></i>Add Variable
-                  </button>
-                </div>
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Variable Name</th>
-                        <th>Value</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(contentVariables).map(([key, data]) => (
-                        <tr key={key}>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={key}
-                              onChange={(e) => updateContentVariable(key, e.target.value, data.value)}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={data.value}
-                              onChange={(e) => updateContentVariable(key, key, e.target.value)}
-                            />
-                          </td>
-                          <td className="text-center">
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => removeContentVariable(key)}
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {Object.keys(contentVariables).length === 0 && (
-                        <tr>
-                          <td colSpan={3} className="text-center text-muted py-4">
-                            No content variables. Click "Add Variable" to create one.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <CustomerContentVariablesTable
+                contentVariables={contentVariables}
+                onAdd={addContentVariable}
+                onUpdate={updateContentVariable}
+                onRemove={removeContentVariable}
+              />
             )}
           </div>
         </div>

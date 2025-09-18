@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FileType, DictionaryData, ValidationError, TableData } from '../types';
 import { useChannelOptionsQuery } from '../hooks/useDictionaryQuery';
+import { DataTable } from './tables/DataTable';
+import { SaveButton } from './common/SaveButton';
 
 interface JsonEditorProps {
   dictionaryData?: DictionaryData | null;
@@ -80,9 +82,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     setSaving(false);
   };
 
-  const getValidationError = (rowIndex: number, fieldName: string): ValidationError | undefined => {
-    return validationErrors.find(e => e.rowIndex === rowIndex && e.fieldName === fieldName);
-  };
+
 
   if (selectedFileType === FileType.None) {
     return null;
@@ -112,23 +112,11 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           >
             <i className="fas fa-plus me-1"></i>Add Row
           </button>
-          <button
-            type="button"
-            className="btn btn-primary"
+          <SaveButton
             onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-1" role="status"></span>
-                Saving...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-save me-1"></i>Save Changes
-              </>
-            )}
-          </button>
+            loading={saving}
+            text="Save Changes"
+          />
         </div>
       </div>
 
@@ -138,81 +126,16 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           <p className="text-muted">No data in this dictionary yet. Click "Add Row" to start adding entries.</p>
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-striped table-hover">
-            <thead className="table-dark">
-              <tr>
-                {dictionaryData.columnNames?.map((column) => (
-                  <th key={column}>{column}</th>
-                ))}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {dictionaryData.columnNames?.map((column) => {
-                    const columnType = dictionaryData.columnTypes?.[column] || 'text';
-                    const cellValue = row[column] || '';
-                    const validationError = getValidationError(rowIndex, column);
-                    const inputClass = validationError ? 'form-control form-control-sm is-invalid' : 'form-control form-control-sm';
-
-                    return (
-                      <td key={column}>
-                        {columnType === 'boolean' ? (
-                          <select
-                            className={inputClass}
-                            value={cellValue.toString()}
-                            onChange={(e) => updateCell(rowIndex, column, e.target.value)}
-                          >
-                            <option value="true">True</option>
-                            <option value="false">False</option>
-                          </select>
-                        ) : column.toLowerCase() === 'channeltype' && selectedFileType === FileType.Templates ? (
-                          <select
-                            className={inputClass}
-                            value={cellValue.toString()}
-                            onChange={(e) => updateCell(rowIndex, column, e.target.value)}
-                            required
-                          >
-                            <option value="">Select Channel...</option>
-                            {channelOptions.map((channel) => (
-                              <option key={channel} value={channel}>
-                                {channel}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            className={inputClass}
-                            value={cellValue.toString()}
-                            onChange={(e) => updateCell(rowIndex, column, e.target.value)}
-                          />
-                        )}
-                        {validationError && (
-                          <div className="invalid-feedback d-block">
-                            <small>{validationError.message}</small>
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-danger btn-sm"
-                      onClick={() => deleteRow(rowIndex)}
-                      disabled={saving}
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={tableData}
+          columns={dictionaryData.columnNames || []}
+          columnTypes={dictionaryData.columnTypes || {}}
+          validationErrors={validationErrors}
+          onUpdateCell={updateCell}
+          onDeleteRow={deleteRow}
+          channelOptions={channelOptions}
+          selectedFileType={selectedFileType}
+        />
       )}
     </div>
   );

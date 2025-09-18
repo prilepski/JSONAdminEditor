@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useEventTriggersQuery, useOrderTypesQuery, useTemplatesQuery, useEventQuery, useEventSupportQuery, useEventMutation } from '../hooks/useEventQuery';
 import toast from 'react-hot-toast';
-
+import { PageHeader, TabNavigation, SaveButton } from '../components/common';
+import { EventSelector } from '../components/events/EventSelector';
+import { EventDataForm } from '../components/events/EventDataForm';
+import { TemplateSelectionForm } from '../components/events/TemplateSelectionForm';
+import { ContentVariablesForm } from '../components/events/ContentVariablesForm';
 
 interface EventData {
   Event?: string;
@@ -28,13 +32,6 @@ export const Events: React.FC = () => {
   const { data: availableOrderTypes = [] } = useOrderTypesQuery();
   const { data: availableTemplates = [] } = useTemplatesQuery();
   const [eventSupportsByOrderType, setEventSupportsByOrderType] = useState(false);
-
-
-
-
-
-
-
 
   const { data: eventSupports = false } = useEventSupportQuery(selectedEvent);
   const { data: eventInfo } = useEventQuery(selectedEvent, selectedOrderType);
@@ -96,266 +93,72 @@ export const Events: React.FC = () => {
     } : null);
   };
 
+  const updateContentVariables = (variables: Record<string, string>) => {
+    setEventData(prev => prev ? { ...prev, ContentVariables: variables } : null);
+  };
+
+  const tabs = [
+    { id: 'event-data', label: 'Event Data', icon: 'fa-cog' },
+    { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
+    { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' }
+  ];
+
   return (
     <>
-      <h1 className="mb-4">
-        <i className="fas fa-calendar-alt me-2"></i>Event Management
-      </h1>
+      <PageHeader icon="fa-calendar-alt" title="Event Management" />
 
-      {/* Event Selection */}
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3>Select Event</h3>
-        </div>
-        <div className="card-body">
-          <div className="row">
-            <div className="col-md-6">
-              <select
-                className="form-select"
-                value={selectedEvent}
-                onChange={(e) => setSelectedEvent(e.target.value)}
-              >
-                <option value="">Select an event...</option>
-                {activeEventTriggers.map(trigger => (
-                  <option key={trigger} value={trigger}>{trigger}</option>
-                ))}
-              </select>
-            </div>
-            {eventSupportsByOrderType && (
-              <div className="col-md-6">
-                <select
-                  className="form-select"
-                  value={selectedOrderType}
-                  onChange={(e) => setSelectedOrderType(e.target.value)}
-                >
-                  {availableOrderTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <EventSelector
+        selectedEvent={selectedEvent}
+        selectedOrderType={selectedOrderType}
+        eventTriggers={activeEventTriggers}
+        orderTypes={availableOrderTypes}
+        eventSupportsByOrderType={eventSupportsByOrderType}
+        onEventChange={setSelectedEvent}
+        onOrderTypeChange={setSelectedOrderType}
+      />
 
-      {/* Event Editor */}
       {selectedEvent && eventData && (
         <div className="card">
           <div className="card-header">
-            <ul className="nav nav-tabs card-header-tabs">
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'event-data' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('event-data')}
-                >
-                  Event Data
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'templates' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('templates')}
-                >
-                  Templates
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'content-variables' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('content-variables')}
-                >
-                  Content Variables
-                </button>
-              </li>
-            </ul>
+            <div className="d-flex justify-content-between align-items-center">
+              <h3 className="mb-0">
+                <i className="fas fa-edit me-2"></i>Edit Event: {selectedEvent}
+              </h3>
+              <SaveButton
+                onClick={handleSaveEventData}
+                loading={eventMutation.isPending}
+                text="Save Changes"
+              />
+            </div>
           </div>
           <div className="card-body">
+            <TabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+
             {activeTab === 'event-data' && (
-              <div>
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Order Type</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={eventData.OrderType || ''}
-                      onChange={(e) => updateEventField('OrderType', e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Phone</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={eventData.Phone || ''}
-                      onChange={(e) => updateEventField('Phone', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Email</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={eventData.Email || ''}
-                      onChange={(e) => updateEventField('Email', e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Logo</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={eventData.Logo || ''}
-                      onChange={(e) => updateEventField('Logo', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <div className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={eventData.IsSuppressed || false}
-                      onChange={(e) => updateEventField('IsSuppressed', e.target.checked)}
-                    />
-                    <label className="form-check-label">Is Suppressed</label>
-                  </div>
-                </div>
-              </div>
+              <EventDataForm
+                eventData={eventData}
+                onUpdate={updateEventField}
+              />
             )}
 
             {activeTab === 'templates' && (
-              <div>
-                <div className="mb-3">
-                  <label className="form-label">Email Template</label>
-                  <select
-                    className="form-select"
-                    value={eventData.Templates?.Email || ''}
-                    onChange={(e) => updateTemplateField('Email', e.target.value)}
-                  >
-                    <option value="">Select template...</option>
-                    {availableTemplates.filter(t => t.channelType === 'Email').map(template => (
-                      <option key={template.templateId} value={template.templateId}>
-                        {template.templateName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">SMS Template</label>
-                  <select
-                    className="form-select"
-                    value={eventData.Templates?.Sms || ''}
-                    onChange={(e) => updateTemplateField('Sms', e.target.value)}
-                  >
-                    <option value="">Select template...</option>
-                    {availableTemplates.filter(t => t.channelType === 'Sms').map(template => (
-                      <option key={template.templateId} value={template.templateId}>
-                        {template.templateName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Voice Template</label>
-                  <select
-                    className="form-select"
-                    value={eventData.Templates?.Voice || ''}
-                    onChange={(e) => updateTemplateField('Voice', e.target.value)}
-                  >
-                    <option value="">Select template...</option>
-                    {availableTemplates.filter(t => t.channelType === 'Voice').map(template => (
-                      <option key={template.templateId} value={template.templateId}>
-                        {template.templateName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <TemplateSelectionForm
+                templates={eventData.Templates || {}}
+                availableTemplates={availableTemplates}
+                onUpdate={updateTemplateField}
+              />
             )}
 
             {activeTab === 'content-variables' && (
-              <div>
-                <p className="text-muted mb-3">Content variables for this event:</p>
-                {eventData.ContentVariables && Object.entries(eventData.ContentVariables).map(([key, value]) => (
-                  <div key={key} className="row mb-2">
-                    <div className="col-md-4">
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={key}
-                        onChange={(e) => {
-                          const newVars = { ...eventData.ContentVariables };
-                          delete newVars[key];
-                          newVars[e.target.value] = value;
-                          updateEventField('ContentVariables', newVars);
-                        }}
-                        placeholder="Variable name"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={value}
-                        onChange={(e) => {
-                          const newVars = { ...eventData.ContentVariables };
-                          newVars[key] = e.target.value;
-                          updateEventField('ContentVariables', newVars);
-                        }}
-                        placeholder="Variable value"
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => {
-                          const newVars = { ...eventData.ContentVariables };
-                          delete newVars[key];
-                          updateEventField('ContentVariables', newVars);
-                        }}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  className="btn btn-success btn-sm"
-                  onClick={() => {
-                    const newVars = { ...eventData.ContentVariables, '': '' };
-                    updateEventField('ContentVariables', newVars);
-                  }}
-                >
-                  <i className="fas fa-plus me-1"></i>Add Variable
-                </button>
-              </div>
+              <ContentVariablesForm
+                contentVariables={eventData.ContentVariables || {}}
+                onUpdate={updateContentVariables}
+              />
             )}
-
-            <div className="mt-4">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleSaveEventData}
-                disabled={eventMutation.isPending}
-              >
-                {eventMutation.isPending ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-1"></span>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-save me-1"></i>
-                    Save Changes
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         </div>
       )}
