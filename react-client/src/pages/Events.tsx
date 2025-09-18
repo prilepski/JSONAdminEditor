@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useEventTriggersQuery, useOrderTypesQuery, useTemplatesQuery, useEventQuery, useEventSupportQuery, useEventMutation } from '../hooks/useEventQuery';
 import toast from 'react-hot-toast';
 import { PageHeader, TabNavigation, SaveButton } from '../components/common';
+import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { EventSelector } from '../components/events/EventSelector';
 import { EventDataForm } from '../components/events/EventDataForm';
 import { TemplateSelectionForm } from '../components/events/TemplateSelectionForm';
@@ -104,18 +105,20 @@ export const Events: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageErrorBoundary pageName="Events">
       <PageHeader icon="fa-calendar-alt" title="Event Management" />
 
-      <EventSelector
-        selectedEvent={selectedEvent}
-        selectedOrderType={selectedOrderType}
-        eventTriggers={activeEventTriggers}
-        orderTypes={availableOrderTypes}
-        eventSupportsByOrderType={eventSupportsByOrderType}
-        onEventChange={setSelectedEvent}
-        onOrderTypeChange={setSelectedOrderType}
-      />
+      <ComponentErrorBoundary componentName="Event Selector">
+        <EventSelector
+          selectedEvent={selectedEvent}
+          selectedOrderType={selectedOrderType}
+          eventTriggers={activeEventTriggers}
+          orderTypes={availableOrderTypes}
+          eventSupportsByOrderType={eventSupportsByOrderType}
+          onEventChange={setSelectedEvent}
+          onOrderTypeChange={setSelectedOrderType}
+        />
+      </ComponentErrorBoundary>
 
       {selectedEvent && eventData && (
         <div className="card">
@@ -139,29 +142,35 @@ export const Events: React.FC = () => {
             />
 
             {activeTab === 'event-data' && (
-              <EventDataForm
-                eventData={eventData}
-                onUpdate={updateEventField}
-              />
+              <ComponentErrorBoundary componentName="Event Data Form">
+                <EventDataForm
+                  eventData={eventData}
+                  onUpdate={updateEventField}
+                />
+              </ComponentErrorBoundary>
             )}
 
             {activeTab === 'templates' && (
-              <TemplateSelectionForm
-                templates={eventData.Templates || {}}
-                availableTemplates={availableTemplates}
-                onUpdate={updateTemplateField}
-              />
+              <ComponentErrorBoundary componentName="Template Selection">
+                <TemplateSelectionForm
+                  templates={eventData.Templates || {}}
+                  availableTemplates={availableTemplates}
+                  onUpdate={updateTemplateField}
+                />
+              </ComponentErrorBoundary>
             )}
 
             {activeTab === 'content-variables' && (
-              <ContentVariablesForm
-                contentVariables={eventData.ContentVariables || {}}
-                onUpdate={updateContentVariables}
-              />
+              <ComponentErrorBoundary componentName="Content Variables">
+                <ContentVariablesForm
+                  contentVariables={eventData.ContentVariables || {}}
+                  onUpdate={updateContentVariables}
+                />
+              </ComponentErrorBoundary>
             )}
           </div>
         </div>
       )}
-    </>
+    </PageErrorBoundary>
   );
 };

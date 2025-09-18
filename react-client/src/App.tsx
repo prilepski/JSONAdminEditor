@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
 import NiceModal from '@ebay/nice-modal-react';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { PageErrorBoundary } from './components/common';
 import { Sidebar } from './components/Sidebar';
 import { Dictionaries } from './pages/Dictionaries';
 import { Events } from './pages/Events';
@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <ErrorBoundary>
+    <PageErrorBoundary pageName="Application">
       <QueryClientProvider client={queryClient}>
         <NiceModal.Provider>
           <Router>
@@ -59,7 +59,7 @@ function App() {
         </NiceModal.Provider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
-    </ErrorBoundary>
+    </PageErrorBoundary>
   );
 }
 

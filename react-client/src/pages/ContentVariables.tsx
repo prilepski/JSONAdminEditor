@@ -5,6 +5,7 @@ import { ValidationError, TableData } from '../types';
 import toast from 'react-hot-toast';
 import { Skeleton } from '../components/Skeleton';
 import { PageHeader } from '../components/common';
+import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const ContentVariables: React.FC = () => {
   const { data = [], isLoading } = useContentVariablesQuery();
@@ -42,7 +43,7 @@ export const ContentVariables: React.FC = () => {
   };
 
   return (
-    <>
+    <PageErrorBoundary pageName="Content Variables">
       <PageHeader 
         icon="fa-tags" 
         title="Content Variables Management"
@@ -55,16 +56,18 @@ export const ContentVariables: React.FC = () => {
         </div>
         <div className="card-body">
           <Skeleton loading={isLoading && !data.length} rows={5} height="40px">
-            <JsonEditor
-              dictionaryData={dictionaryData}
-              selectedFileType={1}
-              validationErrors={validationErrors}
-              onSave={handleSave}
-              onClearValidationErrors={() => setValidationErrors([])}
-            />
+            <ComponentErrorBoundary componentName="Content Variables Editor">
+              <JsonEditor
+                dictionaryData={dictionaryData}
+                selectedFileType={1}
+                validationErrors={validationErrors}
+                onSave={handleSave}
+                onClearValidationErrors={() => setValidationErrors([])}
+              />
+            </ComponentErrorBoundary>
           </Skeleton>
         </div>
       </div>
-    </>
+    </PageErrorBoundary>
   );
 };

@@ -7,6 +7,7 @@ import {JsonEditor} from '../components/JsonEditor';
 import toast from 'react-hot-toast';
 import {Skeleton} from '../components/Skeleton';
 import { PageHeader } from '../components/common';
+import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const Dictionaries: React.FC = () => {
     const [selectedFileType, setSelectedFileType] = useState<FileType>(FileType.None);
@@ -56,14 +57,16 @@ export const Dictionaries: React.FC = () => {
     };
 
     return (
-        <>
+        <PageErrorBoundary pageName="Dictionaries">
             <PageHeader icon="fa-cog" title="Dictionary Management" />
             {error && toast.error(String(error))}
 
-            <DictionarySelector
-                selectedFileType={selectedFileType}
-                onFileTypeChange={handleFileTypeChange}
-            />
+            <ComponentErrorBoundary componentName="Dictionary Selector">
+                <DictionarySelector
+                    selectedFileType={selectedFileType}
+                    onFileTypeChange={handleFileTypeChange}
+                />
+            </ComponentErrorBoundary>
 
             {selectedFileType !== FileType.None && (
                 <div className="card">
@@ -76,27 +79,31 @@ export const Dictionaries: React.FC = () => {
                                 </h3>
                             </div>
                             <div className="col-md-6">
-                                <FileUpload
-                                    selectedFileType={selectedFileType}
-                                    onUploadSuccess={(text) => toast.success(text)}
-                                    onUploadError={(text) => toast.error(text)}
-                                />
+                                <ComponentErrorBoundary componentName="File Upload">
+                                    <FileUpload
+                                        selectedFileType={selectedFileType}
+                                        onUploadSuccess={(text) => toast.success(text)}
+                                        onUploadError={(text) => toast.error(text)}
+                                    />
+                                </ComponentErrorBoundary>
                             </div>
                         </div>
                     </div>
                     <div className="card-body">
                         <Skeleton loading={isLoading} rows={5} height="40px">
-                            <JsonEditor
-                                dictionaryData={dictionaryData}
-                                selectedFileType={selectedFileType}
-                                validationErrors={validationErrors}
-                                onSave={handleSave}
-                                onClearValidationErrors={() => setValidationErrors([])}
-                            />
+                            <ComponentErrorBoundary componentName="JSON Editor">
+                                <JsonEditor
+                                    dictionaryData={dictionaryData}
+                                    selectedFileType={selectedFileType}
+                                    validationErrors={validationErrors}
+                                    onSave={handleSave}
+                                    onClearValidationErrors={() => setValidationErrors([])}
+                                />
+                            </ComponentErrorBoundary>
                         </Skeleton>
                     </div>
                 </div>
             )}
-        </>
+        </PageErrorBoundary>
     );
 };

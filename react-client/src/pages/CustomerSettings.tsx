@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { CustomerContentVariable } from '../types/customer';
 import { CustomerSettingsData } from '../types/customerSettings';
 import { PageHeader, CustomerSelector, SaveButton } from '../components/common';
+import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -125,22 +126,24 @@ export const CustomerSettings: React.FC = () => {
   };
 
   return (
-    <>
+    <PageErrorBoundary pageName="Customer Settings">
       <PageHeader 
         icon="fa-code" 
         title="Customer Content Variables"
         description="Choose a customer to view and edit their specific content variable overrides."
       />
 
-      <CustomerSelector
-        customers={customers}
-        selectedCustomer={selectedCustomer}
-        onCustomerChange={setSelectedCustomer}
-      />
+      <ComponentErrorBoundary componentName="Customer Selector">
+        <CustomerSelector
+          customers={customers}
+          selectedCustomer={selectedCustomer}
+          onCustomerChange={setSelectedCustomer}
+        />
+      </ComponentErrorBoundary>
 
-      {/* Editing Section */}
       {showEditingSection && selectedCustomer && (
-        <div className="card">
+        <ComponentErrorBoundary componentName="Customer Variables Editor">
+          <div className="card">
           <div className="card-header">
             <h3>
               <i className="fas fa-code me-2"></i>
@@ -250,6 +253,7 @@ export const CustomerSettings: React.FC = () => {
             )}
           </div>
         </div>
+        </ComponentErrorBoundary>
       )}
 
       {/* Default State */}
@@ -262,6 +266,6 @@ export const CustomerSettings: React.FC = () => {
           </div>
         </div>
       )}
-    </>
+    </PageErrorBoundary>
   );
 };

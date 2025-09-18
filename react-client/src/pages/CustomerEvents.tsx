@@ -4,6 +4,7 @@ import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery
 import toast from 'react-hot-toast';
 import { CustomerEventData, EventField, TemplateField, ContentVariable } from '../types/customerEvent';
 import { PageHeader, CustomerSelector, SaveButton, TabNavigation } from '../components/common';
+import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
 import { CustomerEventDataTable } from '../components/events/CustomerEventDataTable';
 import { CustomerTemplateTable } from '../components/events/CustomerTemplateTable';
@@ -217,24 +218,28 @@ export const CustomerEvents: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageErrorBoundary pageName="Customer Events">
       <PageHeader icon="fa-calendar-alt" title="Customer Events Management" />
 
-      <CustomerSelector
-        customers={customers}
-        selectedCustomer={selectedCustomer}
-        onCustomerChange={setSelectedCustomer}
-      />
+      <ComponentErrorBoundary componentName="Customer Selector">
+        <CustomerSelector
+          customers={customers}
+          selectedCustomer={selectedCustomer}
+          onCustomerChange={setSelectedCustomer}
+        />
+      </ComponentErrorBoundary>
 
       {selectedCustomer && (
-        <CustomerEventSelector
-          selectedCustomer={selectedCustomer}
-          selectedEvent={selectedEvent}
-          selectedOrderType={selectedOrderType}
-          eventTriggers={activeEventTriggers}
-          onEventChange={setSelectedEvent}
-          onOrderTypeChange={setSelectedOrderType}
-        />
+        <ComponentErrorBoundary componentName="Event Selector">
+          <CustomerEventSelector
+            selectedCustomer={selectedCustomer}
+            selectedEvent={selectedEvent}
+            selectedOrderType={selectedOrderType}
+            eventTriggers={activeEventTriggers}
+            onEventChange={setSelectedEvent}
+            onOrderTypeChange={setSelectedOrderType}
+          />
+        </ComponentErrorBoundary>
       )}
 
       {/* Event Editor */}
@@ -260,33 +265,39 @@ export const CustomerEvents: React.FC = () => {
             />
 
             {activeTab === 'event-data' && (
-              <CustomerEventDataTable
-                eventFields={eventFields}
-                onUpdateField={updateEventField}
-                onToggleRedefined={toggleEventFieldRedefined}
-              />
+              <ComponentErrorBoundary componentName="Event Data Table">
+                <CustomerEventDataTable
+                  eventFields={eventFields}
+                  onUpdateField={updateEventField}
+                  onToggleRedefined={toggleEventFieldRedefined}
+                />
+              </ComponentErrorBoundary>
             )}
 
             {activeTab === 'templates' && (
-              <CustomerTemplateTable
-                templateFields={templateFields}
-                availableTemplates={availableTemplates}
-                onUpdateTemplate={updateTemplateField}
-                onToggleRedefined={toggleTemplateRedefined}
-              />
+              <ComponentErrorBoundary componentName="Template Table">
+                <CustomerTemplateTable
+                  templateFields={templateFields}
+                  availableTemplates={availableTemplates}
+                  onUpdateTemplate={updateTemplateField}
+                  onToggleRedefined={toggleTemplateRedefined}
+                />
+              </ComponentErrorBoundary>
             )}
 
             {activeTab === 'content-variables' && (
-              <CustomerContentVariablesTable
-                contentVariables={contentVariables}
-                onAdd={addContentVariable}
-                onUpdate={updateContentVariable}
-                onRemove={removeContentVariable}
-              />
+              <ComponentErrorBoundary componentName="Content Variables Table">
+                <CustomerContentVariablesTable
+                  contentVariables={contentVariables}
+                  onAdd={addContentVariable}
+                  onUpdate={updateContentVariable}
+                  onRemove={removeContentVariable}
+                />
+              </ComponentErrorBoundary>
             )}
           </div>
         </div>
       )}
-    </>
+    </PageErrorBoundary>
   );
 };

@@ -2,3 +2,6 @@ export { PageHeader } from './PageHeader';
 export { SaveButton } from './SaveButton';
 export { CustomerSelector } from './CustomerSelector';
 export { TabNavigation } from './TabNavigation';
+export { PageErrorBoundary } from './PageErrorBoundary';
+export { ComponentErrorBoundary } from './ComponentErrorBoundary';
+export { ErrorFallback } from './ErrorFallback';

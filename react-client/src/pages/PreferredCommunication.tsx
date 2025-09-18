@@ -4,6 +4,7 @@ import { usePreferredCommunicationQuery, usePreferredCommunicationMutation } fro
 import { ValidationError } from '../types/api';
 import toast from 'react-hot-toast';
 import { Skeleton } from '../components/Skeleton';
+import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const PreferredCommunication: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
@@ -56,7 +57,7 @@ export const PreferredCommunication: React.FC = () => {
   };
 
   return (
-    <>
+    <PageErrorBoundary pageName="Preferred Communication">
       <h1 className="mb-4">
         <i className="fas fa-comments me-2"></i>Preferred Communication Management
       </h1>
@@ -73,16 +74,18 @@ export const PreferredCommunication: React.FC = () => {
         </div>
         <div className="card-body">
           <Skeleton loading={isLoading && !data.length} rows={5} height="40px">
-            <JsonEditor
-              dictionaryData={dictionaryData}
-              selectedFileType={1}
-              validationErrors={validationErrors}
-              onSave={handleSave}
-              onClearValidationErrors={() => setValidationErrors([])}
-            />
+            <ComponentErrorBoundary componentName="Preferred Communication Editor">
+              <JsonEditor
+                dictionaryData={dictionaryData}
+                selectedFileType={1}
+                validationErrors={validationErrors}
+                onSave={handleSave}
+                onClearValidationErrors={() => setValidationErrors([])}
+              />
+            </ComponentErrorBoundary>
           </Skeleton>
         </div>
       </div>
-    </>
+    </PageErrorBoundary>
   );
 };
