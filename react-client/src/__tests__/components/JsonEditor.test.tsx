@@ -27,7 +27,7 @@ describe('JsonEditor', () => {
 
   it('renders table with data', () => {
     render(<JsonEditor {...mockProps} />);
-    
+
     expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText('Value')).toBeInTheDocument();
     expect(screen.getByDisplayValue('test')).toBeInTheDocument();
@@ -36,21 +36,21 @@ describe('JsonEditor', () => {
 
   it('renders save button', () => {
     render(<JsonEditor {...mockProps} />);
-    
+
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
   });
 
   it('calls onSave when save button is clicked', async () => {
     render(<JsonEditor {...mockProps} />);
-    
+
     await userEvent.click(screen.getByRole('button', { name: /save/i }));
-    
+
     expect(mockProps.onSave).toHaveBeenCalledWith(mockDictionaryData.tableData);
   });
 
   it('renders add row button', () => {
     render(<JsonEditor {...mockProps} />);
-    
+
     expect(screen.getByRole('button', { name: /add row/i })).toBeInTheDocument();
   });
 
@@ -61,7 +61,7 @@ describe('JsonEditor', () => {
     };
 
     render(<JsonEditor {...propsWithErrors} />);
-    
+
     expect(screen.getByText('Name is required')).toBeInTheDocument();
   });
 });

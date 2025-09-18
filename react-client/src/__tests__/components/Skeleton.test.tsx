@@ -8,7 +8,7 @@ describe('Skeleton', () => {
         <div>Test Content</div>
       </Skeleton>
     );
-    
+
     expect(screen.getByText('Test Content')).toBeInTheDocument();
     expect(screen.queryByTestId('skeleton')).not.toBeInTheDocument();
   });
@@ -19,7 +19,7 @@ describe('Skeleton', () => {
         <div>Test Content</div>
       </Skeleton>
     );
-    
+
     expect(screen.getByTestId('skeleton')).toBeInTheDocument();
     expect(screen.queryByText('Test Content')).not.toBeInTheDocument();
   });
@@ -30,7 +30,7 @@ describe('Skeleton', () => {
         <div>Test Content</div>
       </Skeleton>
     );
-    
+
     const skeleton = screen.getByTestId('skeleton');
     expect(skeleton.children).toHaveLength(3);
   });
@@ -41,7 +41,7 @@ describe('Skeleton', () => {
         <div>Test Content</div>
       </Skeleton>
     );
-    
+
     const skeletonRow = screen.getByTestId('skeleton').firstChild as HTMLElement;
     expect(skeletonRow).toHaveStyle('height: 50px');
   });

@@ -12,7 +12,7 @@ export enum FileType {
   Customers = 2,
   EventTriggers = 5,
   EventChannels = 6,
-  OrderTypes = 7
+  OrderTypes = 7,
 }
 
 // Base validation error interface

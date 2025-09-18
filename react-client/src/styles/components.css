@@ -136,7 +136,8 @@ main {
 }
 
 /* Button Styles */
-.btn-group-sm > .btn, .btn-sm {
+.btn-group-sm > .btn,
+.btn-sm {
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
 }
@@ -152,7 +153,8 @@ main {
 }
 
 /* Table Borders */
-.table-bordered td, .table-bordered th {
+.table-bordered td,
+.table-bordered th {
   border: 1px solid var(--border-color);
 }
 
@@ -168,21 +170,21 @@ main {
     height: auto;
     box-shadow: none;
   }
-  
+
   main {
     margin-top: 0;
   }
-  
+
   .sidebar .nav {
     flex-direction: row;
     justify-content: center;
   }
-  
+
   .sidebar .nav-link {
     border-right: none;
     border-bottom: 3px solid transparent;
   }
-  
+
   .sidebar .nav-link.active {
     border-right: none;
     border-bottom: 3px solid var(--border-active);

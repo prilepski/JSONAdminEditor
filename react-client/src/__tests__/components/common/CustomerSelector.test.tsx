@@ -18,7 +18,7 @@ describe('CustomerSelector', () => {
         onCustomerChange={mockOnChange}
       />
     );
-    
+
     expect(screen.getByText('Select Customer')).toBeInTheDocument();
   });
 
@@ -31,7 +31,7 @@ describe('CustomerSelector', () => {
         title="Choose Customer"
       />
     );
-    
+
     expect(screen.getByText('Choose Customer')).toBeInTheDocument();
   });
 
@@ -43,8 +43,8 @@ describe('CustomerSelector', () => {
         onCustomerChange={mockOnChange}
       />
     );
-    
-    mockCustomers.forEach(customer => {
+
+    mockCustomers.forEach((customer) => {
       expect(screen.getByRole('option', { name: customer })).toBeInTheDocument();
     });
   });
@@ -57,9 +57,9 @@ describe('CustomerSelector', () => {
         onCustomerChange={mockOnChange}
       />
     );
-    
+
     await userEvent.selectOptions(screen.getByRole('combobox'), 'Customer A');
-    
+
     expect(mockOnChange).toHaveBeenCalledWith('Customer A');
   });
 });

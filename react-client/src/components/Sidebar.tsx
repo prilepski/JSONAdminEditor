@@ -7,14 +7,14 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
-  const isParentActive = (paths: string[]) => paths.some(path => location.pathname === path);
+  const isParentActive = (paths: string[]) => paths.some((path) => location.pathname === path);
 
   return (
     <nav className="col-md-2 col-lg-2 d-md-block bg-light sidebar">
       <div className="position-sticky pt-3">
         <ul className="nav flex-column">
           <li className="nav-item">
-            <span 
+            <span
               className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events']) ? 'parent-active' : ''}`}
               onClick={() => setGlobalSettingsOpen(!globalSettingsOpen)}
             >
@@ -23,45 +23,65 @@ export const Sidebar: React.FC = () => {
             </span>
             <ul className={`nav flex-column submenu ${globalSettingsOpen ? 'show' : ''}`}>
               <li className="nav-item">
-                <Link className={`nav-link submenu-link ${isActive('/preferred-communication') ? 'active' : ''}`} to="/preferred-communication">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/preferred-communication') ? 'active' : ''}`}
+                  to="/preferred-communication"
+                >
                   <i className="fas fa-comments me-2"></i>Preferred Communication
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link submenu-link ${isActive('/content-variables') ? 'active' : ''}`} to="/content-variables">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/content-variables') ? 'active' : ''}`}
+                  to="/content-variables"
+                >
                   <i className="fas fa-tags me-2"></i>Content Variables
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link submenu-link ${isActive('/events') ? 'active' : ''}`} to="/events">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/events') ? 'active' : ''}`}
+                  to="/events"
+                >
                   <i className="fas fa-calendar-alt me-2"></i>Events
                 </Link>
               </li>
             </ul>
           </li>
           <li className="nav-item">
-            <span 
+            <span
               className={`nav-link nav-header ${isParentActive(['/customer-settings', '/customer-events']) ? 'parent-active' : ''}`}
               onClick={() => setCustomerOverridesOpen(!customerOverridesOpen)}
             >
               <i className="fas fa-users me-2"></i>Customer Overrides
-              <i className={`fas fa-chevron-${customerOverridesOpen ? 'down' : 'right'} ms-auto`}></i>
+              <i
+                className={`fas fa-chevron-${customerOverridesOpen ? 'down' : 'right'} ms-auto`}
+              ></i>
             </span>
             <ul className={`nav flex-column submenu ${customerOverridesOpen ? 'show' : ''}`}>
               <li className="nav-item">
-                <Link className={`nav-link submenu-link ${isActive('/customer-settings') ? 'active' : ''}`} to="/customer-settings">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/customer-settings') ? 'active' : ''}`}
+                  to="/customer-settings"
+                >
                   <i className="fas fa-code me-2"></i>Customer Content Variables
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link submenu-link ${isActive('/customer-events') ? 'active' : ''}`} to="/customer-events">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/customer-events') ? 'active' : ''}`}
+                  to="/customer-events"
+                >
                   <i className="fas fa-calendar-alt me-2"></i>Customer Events
                 </Link>
               </li>
             </ul>
           </li>
           <li className="nav-item">
-            <Link className={`nav-link ${isActive('/dictionaries') ? 'active' : ''}`} to="/dictionaries">
+            <Link
+              className={`nav-link ${isActive('/dictionaries') ? 'active' : ''}`}
+              to="/dictionaries"
+            >
               <i className="fas fa-cog me-2"></i>Dictionaries
             </Link>
           </li>

@@ -14,10 +14,10 @@ interface TemplateSelectionFormProps {
 export const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
   templates,
   availableTemplates,
-  onUpdate
+  onUpdate,
 }) => (
   <div>
-    {['Email', 'Sms', 'Voice'].map(channel => (
+    {['Email', 'Sms', 'Voice'].map((channel) => (
       <div key={channel} className="mb-3">
         <label className="form-label">{channel} Template</label>
         <select
@@ -27,8 +27,8 @@ export const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
         >
           <option value="">Select template...</option>
           {availableTemplates
-            .filter(t => t.channelType === channel)
-            .map(template => (
+            .filter((t) => t.channelType === channel)
+            .map((template) => (
               <option key={template.templateId} value={template.templateId}>
                 {template.templateName}
               </option>

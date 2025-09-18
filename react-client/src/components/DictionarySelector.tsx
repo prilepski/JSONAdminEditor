@@ -22,9 +22,12 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
   return (
     <div className="card mb-4">
       <div className="card-header">
-        <h3><i className="fas fa-cog me-2"></i>Select a Dictionary</h3>
+        <h3>
+          <i className="fas fa-cog me-2"></i>Select a Dictionary
+        </h3>
         <p className="mb-0 text-muted">
-          Manage system dictionaries that provide reference data for notifications, events, and customer configurations.
+          Manage system dictionaries that provide reference data for notifications, events, and
+          customer configurations.
         </p>
       </div>
       <div className="card-body">

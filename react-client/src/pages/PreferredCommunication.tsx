@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { JsonEditor } from '../components/JsonEditor';
-import { usePreferredCommunicationQuery, usePreferredCommunicationMutation } from '../hooks/usePreferredCommunicationQuery';
+import {
+  usePreferredCommunicationQuery,
+  usePreferredCommunicationMutation,
+} from '../hooks/usePreferredCommunicationQuery';
 import { ValidationError } from '../types/api';
 import toast from 'react-hot-toast';
 import { Skeleton } from '../components/Skeleton';
@@ -16,18 +19,14 @@ export const PreferredCommunication: React.FC = () => {
   const columnTypes = {
     'Customer ID': 'text',
     'Preferred Channel': 'text',
-    'Phone': 'text',
-    'Email': 'text',
-    'IsActive': 'boolean'
+    Phone: 'text',
+    Email: 'text',
+    IsActive: 'boolean',
   };
-
-
-
-
 
   const handleSave = async (tableData: Record<string, any>[]) => {
     setValidationErrors([]);
-    
+
     try {
       const result = await saveMutation.mutateAsync(tableData);
       if (result.success) {
@@ -53,7 +52,7 @@ export const PreferredCommunication: React.FC = () => {
     tableData: data,
     filePath: 'preferred-communication',
     fileName: 'preferred-communication.json',
-    isValidJson: true
+    isValidJson: true,
   };
 
   return (

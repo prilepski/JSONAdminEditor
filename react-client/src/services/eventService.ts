@@ -37,12 +37,17 @@ export const eventService = {
     return response.data;
   },
 
-  saveEvent: async (eventName: string, orderType: string, eventData: any, isNew: boolean): Promise<boolean> => {
-    const response = await api.post('/save', { 
-      eventName, 
-      orderType, 
-      eventData, 
-      isNew 
+  saveEvent: async (
+    eventName: string,
+    orderType: string,
+    eventData: any,
+    isNew: boolean
+  ): Promise<boolean> => {
+    const response = await api.post('/save', {
+      eventName,
+      orderType,
+      eventData,
+      isNew,
     });
     return response.data.success;
   },

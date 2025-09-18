@@ -7,11 +7,11 @@ interface SaveButtonProps {
   text?: string;
 }
 
-export const SaveButton: React.FC<SaveButtonProps> = ({ 
-  onClick, 
-  loading = false, 
-  disabled = false, 
-  text = "Save Changes" 
+export const SaveButton: React.FC<SaveButtonProps> = ({
+  onClick,
+  loading = false,
+  disabled = false,
+  text = 'Save Changes',
 }) => (
   <button
     type="button"

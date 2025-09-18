@@ -104,8 +104,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <div className="card-body">
               <p className="mb-3">
                 <strong>Warning:</strong> The{' '}
-                <span className="text-primary">{dictionaryNames[selectedFileType]}</span>{' '}
-                dictionary will be completely replaced with the content of the selected file.
+                <span className="text-primary">{dictionaryNames[selectedFileType]}</span> dictionary
+                will be completely replaced with the content of the selected file.
               </p>
               <p className="mb-3 text-muted">
                 This action cannot be undone. All existing data in this dictionary will be lost.

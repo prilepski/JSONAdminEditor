@@ -12,7 +12,11 @@ export const dictionaryService = {
     return response.data;
   },
 
-  save: async (filePath: string, jsonData: TableData[], fileType: FileType): Promise<ApiResponse> => {
+  save: async (
+    filePath: string,
+    jsonData: TableData[],
+    fileType: FileType
+  ): Promise<ApiResponse> => {
     const formData = new FormData();
     formData.append('filePath', filePath);
     formData.append('jsonData', JSON.stringify(jsonData));

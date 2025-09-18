@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useCustomersQuery, useCustomerEventsQuery, useCustomerEventsMutation } from '../hooks/useCustomerQuery';
+import {
+  useCustomersQuery,
+  useCustomerEventsQuery,
+  useCustomerEventsMutation,
+} from '../hooks/useCustomerQuery';
 import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery';
 import toast from 'react-hot-toast';
-import { CustomerEventData, EventField, TemplateField, ContentVariable } from '../types/customerEvent';
+import {
+  CustomerEventData,
+  EventField,
+  TemplateField,
+  ContentVariable,
+} from '../types/customerEvent';
 import { PageHeader, CustomerSelector, SaveButton, TabNavigation } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
@@ -18,7 +27,7 @@ export const CustomerEvents: React.FC = () => {
   const [eventFields, setEventFields] = useState<EventField[]>([]);
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [contentVariables, setContentVariables] = useState<Record<string, ContentVariable>>({});
-  
+
   const { data: customers = [] } = useCustomersQuery();
   const { data: activeEventTriggers = [] } = useEventTriggersQuery();
   const { data: availableTemplates = [] } = useTemplatesQuery();
@@ -28,64 +37,64 @@ export const CustomerEvents: React.FC = () => {
   useEffect(() => {
     if (selectedEvent && selectedCustomer) {
       // Find existing customer event data
-      const existingEvent = Array.isArray(customerEventData) 
-        ? customerEventData.find((event: any) => 
-            event.Event === selectedEvent && event.OrderType === selectedOrderType
+      const existingEvent = Array.isArray(customerEventData)
+        ? customerEventData.find(
+            (event: any) => event.Event === selectedEvent && event.OrderType === selectedOrderType
           )
         : customerEventData;
 
       // Initialize event fields with existing data or defaults
       const fields: EventField[] = [
-        { 
-          name: 'Phone', 
-          value: existingEvent?.Phone || '$consigneeContact.phone$', 
-          isRedefined: !!existingEvent?.Phone, 
+        {
+          name: 'Phone',
+          value: existingEvent?.Phone || '$consigneeContact.phone$',
+          isRedefined: !!existingEvent?.Phone,
           type: 'text',
-          globalValue: '$consigneeContact.phone$'
+          globalValue: '$consigneeContact.phone$',
         },
-        { 
-          name: 'Email', 
-          value: existingEvent?.Email || '$consigneeContact.email$', 
-          isRedefined: !!existingEvent?.Email, 
+        {
+          name: 'Email',
+          value: existingEvent?.Email || '$consigneeContact.email$',
+          isRedefined: !!existingEvent?.Email,
           type: 'text',
-          globalValue: '$consigneeContact.email$'
+          globalValue: '$consigneeContact.email$',
         },
-        { 
-          name: 'Logo', 
-          value: existingEvent?.Logo || 'base64', 
-          isRedefined: !!existingEvent?.Logo, 
+        {
+          name: 'Logo',
+          value: existingEvent?.Logo || 'base64',
+          isRedefined: !!existingEvent?.Logo,
           type: 'text',
-          globalValue: 'base64'
+          globalValue: 'base64',
         },
-        { 
-          name: 'IsSuppressed', 
-          value: existingEvent?.IsSuppressed ? 'true' : 'false', 
-          isRedefined: existingEvent?.IsSuppressed !== undefined, 
+        {
+          name: 'IsSuppressed',
+          value: existingEvent?.IsSuppressed ? 'true' : 'false',
+          isRedefined: existingEvent?.IsSuppressed !== undefined,
           type: 'checkbox',
-          globalValue: 'false'
+          globalValue: 'false',
         },
       ];
       setEventFields(fields);
 
       // Initialize template fields with existing data
       const templates: TemplateField[] = [
-        { 
-          channel: 'Email', 
-          value: existingEvent?.Templates?.Email || '', 
+        {
+          channel: 'Email',
+          value: existingEvent?.Templates?.Email || '',
           isRedefined: !!existingEvent?.Templates?.Email,
-          globalValue: ''
+          globalValue: '',
         },
-        { 
-          channel: 'Sms', 
-          value: existingEvent?.Templates?.Sms || '', 
+        {
+          channel: 'Sms',
+          value: existingEvent?.Templates?.Sms || '',
           isRedefined: !!existingEvent?.Templates?.Sms,
-          globalValue: ''
+          globalValue: '',
         },
-        { 
-          channel: 'Voice', 
-          value: existingEvent?.Templates?.Voice || '', 
+        {
+          channel: 'Voice',
+          value: existingEvent?.Templates?.Voice || '',
           isRedefined: !!existingEvent?.Templates?.Voice,
-          globalValue: ''
+          globalValue: '',
         },
       ];
       setTemplateFields(templates);
@@ -97,7 +106,7 @@ export const CustomerEvents: React.FC = () => {
           vars[key] = {
             name: key,
             value: String(value),
-            isRedefined: true
+            isRedefined: true,
           };
         });
       }
@@ -114,7 +123,7 @@ export const CustomerEvents: React.FC = () => {
     };
 
     // Add redefined event fields
-    eventFields.forEach(field => {
+    eventFields.forEach((field) => {
       if (field.isRedefined) {
         if (field.type === 'checkbox') {
           (saveData as any)[field.name] = field.value === 'true';
@@ -126,7 +135,7 @@ export const CustomerEvents: React.FC = () => {
 
     // Add redefined templates
     const templates: Record<string, string> = {};
-    templateFields.forEach(template => {
+    templateFields.forEach((template) => {
       if (template.isRedefined) {
         templates[template.channel] = template.value;
       }
@@ -147,7 +156,10 @@ export const CustomerEvents: React.FC = () => {
     }
 
     try {
-      const success = await saveMutation.mutateAsync({ customerId: selectedCustomer, data: saveData });
+      const success = await saveMutation.mutateAsync({
+        customerId: selectedCustomer,
+        data: saveData,
+      });
       if (success) {
         toast.success(`Customer event '${selectedEvent}' saved successfully!`);
       } else {
@@ -159,39 +171,41 @@ export const CustomerEvents: React.FC = () => {
   };
 
   const updateEventField = (fieldName: string, value: string) => {
-    setEventFields(prev => prev.map(field => 
-      field.name === fieldName ? { ...field, value } : field
-    ));
+    setEventFields((prev) =>
+      prev.map((field) => (field.name === fieldName ? { ...field, value } : field))
+    );
   };
 
   const toggleEventFieldRedefined = (fieldName: string, isRedefined: boolean) => {
-    setEventFields(prev => prev.map(field => 
-      field.name === fieldName ? { ...field, isRedefined } : field
-    ));
+    setEventFields((prev) =>
+      prev.map((field) => (field.name === fieldName ? { ...field, isRedefined } : field))
+    );
   };
 
   const updateTemplateField = (channel: 'Email' | 'Sms' | 'Voice', value: string) => {
-    setTemplateFields(prev => prev.map(template => 
-      template.channel === channel ? { ...template, value } : template
-    ));
+    setTemplateFields((prev) =>
+      prev.map((template) => (template.channel === channel ? { ...template, value } : template))
+    );
   };
 
   const toggleTemplateRedefined = (channel: 'Email' | 'Sms' | 'Voice', isRedefined: boolean) => {
-    setTemplateFields(prev => prev.map(template => 
-      template.channel === channel ? { ...template, isRedefined } : template
-    ));
+    setTemplateFields((prev) =>
+      prev.map((template) =>
+        template.channel === channel ? { ...template, isRedefined } : template
+      )
+    );
   };
 
   const addContentVariable = () => {
     const newKey = `new_var_${Date.now()}`;
-    setContentVariables(prev => ({
+    setContentVariables((prev) => ({
       ...prev,
-      [newKey]: { name: newKey, value: '', isRedefined: true }
+      [newKey]: { name: newKey, value: '', isRedefined: true },
     }));
   };
 
   const updateContentVariable = (oldKey: string, newKey: string, value: string) => {
-    setContentVariables(prev => {
+    setContentVariables((prev) => {
       const newVars = { ...prev };
       if (oldKey !== newKey) {
         delete newVars[oldKey];
@@ -202,19 +216,17 @@ export const CustomerEvents: React.FC = () => {
   };
 
   const removeContentVariable = (key: string) => {
-    setContentVariables(prev => {
+    setContentVariables((prev) => {
       const newVars = { ...prev };
       delete newVars[key];
       return newVars;
     });
   };
 
-
-
   const tabs = [
     { id: 'event-data', label: 'Event Data', icon: 'fa-cog' },
     { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
-    { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' }
+    { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
   ];
 
   return (
@@ -248,21 +260,14 @@ export const CustomerEvents: React.FC = () => {
           <div className="card-header">
             <div className="d-flex justify-content-between align-items-center">
               <h3 className="mb-0">
-                <i className="fas fa-edit me-2"></i>Edit Event: {selectedEvent} ({selectedOrderType})
+                <i className="fas fa-edit me-2"></i>Edit Event: {selectedEvent} ({selectedOrderType}
+                )
               </h3>
-              <SaveButton
-                onClick={handleSave}
-                loading={saveMutation.isPending}
-                text="Save Event"
-              />
+              <SaveButton onClick={handleSave} loading={saveMutation.isPending} text="Save Event" />
             </div>
           </div>
           <div className="card-body">
-            <TabNavigation
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
             {activeTab === 'event-data' && (
               <ComponentErrorBoundary componentName="Event Data Table">

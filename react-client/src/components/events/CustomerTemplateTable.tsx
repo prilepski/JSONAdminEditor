@@ -13,17 +13,18 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
   templateFields,
   availableTemplates,
   onUpdateTemplate,
-  onToggleRedefined
+  onToggleRedefined,
 }) => {
   const getTemplatesByChannel = (channel: 'Email' | 'Sms' | 'Voice'): Template[] => {
-    return availableTemplates.filter(t => t.channelType === channel);
+    return availableTemplates.filter((t) => t.channelType === channel);
   };
 
   return (
     <div>
       <div className="alert alert-info">
         <i className="fas fa-info-circle me-2"></i>
-        <strong>Template Management:</strong> Check "Is Redefined" to override global templates for this customer.
+        <strong>Template Management:</strong> Check "Is Redefined" to override global templates for
+        this customer.
       </div>
       <div className="table-responsive">
         <table className="table table-bordered">
@@ -36,9 +37,11 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
             </tr>
           </thead>
           <tbody>
-            {templateFields.map(template => (
+            {templateFields.map((template) => (
               <tr key={template.channel}>
-                <td><strong>{template.channel}</strong></td>
+                <td>
+                  <strong>{template.channel}</strong>
+                </td>
                 <td>
                   <select
                     className="form-select"
@@ -47,7 +50,7 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
                     onChange={(e) => onUpdateTemplate(template.channel, e.target.value)}
                   >
                     <option value="">Select template...</option>
-                    {getTemplatesByChannel(template.channel).map(t => (
+                    {getTemplatesByChannel(template.channel).map((t) => (
                       <option key={t.templateId} value={t.templateId}>
                         {t.templateName} ({t.templateId})
                       </option>

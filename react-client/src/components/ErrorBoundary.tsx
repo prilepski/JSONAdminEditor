@@ -26,19 +26,18 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="container mt-5">
-          <div className="alert alert-danger">
-            <h4>Something went wrong</h4>
-            <p>An unexpected error occurred. Please refresh the page.</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => window.location.reload()}
-            >
-              Refresh Page
-            </button>
+      return (
+        this.props.fallback || (
+          <div className="container mt-5">
+            <div className="alert alert-danger">
+              <h4>Something went wrong</h4>
+              <p>An unexpected error occurred. Please refresh the page.</p>
+              <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                Refresh Page
+              </button>
+            </div>
           </div>
-        </div>
+        )
       );
     }
 

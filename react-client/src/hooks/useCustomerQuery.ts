@@ -26,7 +26,7 @@ export const useCustomerSettingsQuery = (customerId: string) => {
 
 export const useCustomerEventsMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ customerId, data }: { customerId: string; data: any }) =>
       customerService.saveCustomerEvents(customerId, data),
@@ -38,7 +38,7 @@ export const useCustomerEventsMutation = () => {
 
 export const useCustomerSettingsMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ customerId, data }: { customerId: string; data: any }) =>
       customerService.saveCustomerSettings(customerId, data),

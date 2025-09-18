@@ -12,10 +12,17 @@ export const useDictionaryQuery = (fileType: FileType) => {
 
 export const useDictionaryMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ filePath, jsonData, fileType }: { filePath: string; jsonData: Record<string, any>[]; fileType: FileType }) =>
-      dictionaryService.save(filePath, jsonData, fileType),
+    mutationFn: ({
+      filePath,
+      jsonData,
+      fileType,
+    }: {
+      filePath: string;
+      jsonData: Record<string, any>[];
+      fileType: FileType;
+    }) => dictionaryService.save(filePath, jsonData, fileType),
     onSuccess: (_, { fileType }) => {
       queryClient.invalidateQueries({ queryKey: ['dictionary', fileType] });
     },
@@ -24,7 +31,7 @@ export const useDictionaryMutation = () => {
 
 export const useUploadMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: dictionaryService.upload,
     onSuccess: (_, { fileType }) => {

@@ -14,45 +14,27 @@ describe('TabNavigation', () => {
   });
 
   it('renders all tabs', () => {
-    render(
-      <TabNavigation
-        tabs={mockTabs}
-        activeTab="tab1"
-        onTabChange={mockOnTabChange}
-      />
-    );
-    
+    render(<TabNavigation tabs={mockTabs} activeTab="tab1" onTabChange={mockOnTabChange} />);
+
     expect(screen.getByText('Tab 1')).toBeInTheDocument();
     expect(screen.getByText('Tab 2')).toBeInTheDocument();
   });
 
   it('marks active tab correctly', () => {
-    render(
-      <TabNavigation
-        tabs={mockTabs}
-        activeTab="tab1"
-        onTabChange={mockOnTabChange}
-      />
-    );
-    
+    render(<TabNavigation tabs={mockTabs} activeTab="tab1" onTabChange={mockOnTabChange} />);
+
     const activeTab = screen.getByText('Tab 1').closest('button');
     const inactiveTab = screen.getByText('Tab 2').closest('button');
-    
+
     expect(activeTab).toHaveClass('active');
     expect(inactiveTab).not.toHaveClass('active');
   });
 
   it('calls onTabChange when tab is clicked', async () => {
-    render(
-      <TabNavigation
-        tabs={mockTabs}
-        activeTab="tab1"
-        onTabChange={mockOnTabChange}
-      />
-    );
-    
+    render(<TabNavigation tabs={mockTabs} activeTab="tab1" onTabChange={mockOnTabChange} />);
+
     await userEvent.click(screen.getByText('Tab 2'));
-    
+
     expect(mockOnTabChange).toHaveBeenCalledWith('tab2');
   });
 });

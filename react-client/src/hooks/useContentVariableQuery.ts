@@ -10,7 +10,7 @@ export const useContentVariablesQuery = () => {
 
 export const useContentVariablesMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: contentVariableService.saveContentVariables,
     onSuccess: () => {

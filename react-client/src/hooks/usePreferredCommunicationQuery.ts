@@ -10,7 +10,7 @@ export const usePreferredCommunicationQuery = () => {
 
 export const usePreferredCommunicationMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: preferredCommunicationService.savePreferredCommunication,
     onSuccess: () => {

@@ -20,17 +20,19 @@ export const DataTable: React.FC<DataTableProps> = ({
   onUpdateCell,
   onDeleteRow,
   channelOptions = [],
-  selectedFileType
+  selectedFileType,
 }) => {
   const getValidationError = (rowIndex: number, fieldName: string): ValidationError | undefined => {
-    return validationErrors.find(e => e.rowIndex === rowIndex && e.fieldName === fieldName);
+    return validationErrors.find((e) => e.rowIndex === rowIndex && e.fieldName === fieldName);
   };
 
   const renderCell = (row: TableData, column: string, rowIndex: number) => {
     const columnType = columnTypes[column] || 'text';
     const cellValue = row[column] || '';
     const validationError = getValidationError(rowIndex, column);
-    const inputClass = validationError ? 'form-control form-control-sm is-invalid' : 'form-control form-control-sm';
+    const inputClass = validationError
+      ? 'form-control form-control-sm is-invalid'
+      : 'form-control form-control-sm';
 
     if (columnType === 'boolean') {
       return (

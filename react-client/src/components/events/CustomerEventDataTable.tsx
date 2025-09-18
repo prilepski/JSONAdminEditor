@@ -10,12 +10,13 @@ interface CustomerEventDataTableProps {
 export const CustomerEventDataTable: React.FC<CustomerEventDataTableProps> = ({
   eventFields,
   onUpdateField,
-  onToggleRedefined
+  onToggleRedefined,
 }) => (
   <div>
     <div className="alert alert-info">
       <i className="fas fa-info-circle me-2"></i>
-      <strong>Event Data Management:</strong> Check "Is Redefined" to override global settings for this customer.
+      <strong>Event Data Management:</strong> Check "Is Redefined" to override global settings for
+      this customer.
     </div>
     <div className="table-responsive">
       <table className="table table-bordered">
@@ -28,9 +29,11 @@ export const CustomerEventDataTable: React.FC<CustomerEventDataTableProps> = ({
           </tr>
         </thead>
         <tbody>
-          {eventFields.map(field => (
+          {eventFields.map((field) => (
             <tr key={field.name}>
-              <td><strong>{field.name}</strong></td>
+              <td>
+                <strong>{field.name}</strong>
+              </td>
               <td>
                 {field.type === 'checkbox' ? (
                   <div className="form-check">

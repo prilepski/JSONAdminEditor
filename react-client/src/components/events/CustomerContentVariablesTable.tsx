@@ -12,16 +12,14 @@ export const CustomerContentVariablesTable: React.FC<CustomerContentVariablesTab
   contentVariables,
   onAdd,
   onUpdate,
-  onRemove
+  onRemove,
 }) => (
   <div>
     <div className="d-flex justify-content-between align-items-center mb-3">
-      <h5><i className="fas fa-code me-2"></i>Content Variables</h5>
-      <button
-        type="button"
-        className="btn btn-outline-primary"
-        onClick={onAdd}
-      >
+      <h5>
+        <i className="fas fa-code me-2"></i>Content Variables
+      </h5>
+      <button type="button" className="btn btn-outline-primary" onClick={onAdd}>
         <i className="fas fa-plus me-1"></i>Add Variable
       </button>
     </div>

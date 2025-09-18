@@ -1,11 +1,16 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useContentVariablesQuery, useContentVariablesMutation } from '../../hooks/useContentVariableQuery';
+import {
+  useContentVariablesQuery,
+  useContentVariablesMutation,
+} from '../../hooks/useContentVariableQuery';
 import { TestWrapper } from '../utils/testUtils';
 import * as contentVariableService from '../../services/contentVariableService';
 
 jest.mock('../../services/contentVariableService');
 
-const mockContentVariableService = contentVariableService.contentVariableService as jest.Mocked<typeof contentVariableService.contentVariableService>;
+const mockContentVariableService = contentVariableService.contentVariableService as jest.Mocked<
+  typeof contentVariableService.contentVariableService
+>;
 
 describe('useContentVariableQuery', () => {
   it('fetches content variables successfully', async () => {
@@ -46,7 +51,7 @@ describe('useContentVariablesMutation', () => {
     });
 
     const testData = [{ 'Variable Name': 'test', 'Variable Value': 'value' }];
-    
+
     await result.current.mutateAsync(testData);
 
     expect(mockContentVariableService.saveContentVariables).toHaveBeenCalledWith(testData);

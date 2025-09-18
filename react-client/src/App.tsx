@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -33,11 +32,11 @@ function App() {
                   </div>
                 </nav>
               </header>
-              
+
               <div className="container-fluid">
                 <div className="row">
                   <Sidebar />
-                  
+
                   <main className="col-md-10 ms-sm-auto col-lg-10 px-md-4">
                     <div className="pt-3 pb-3">
                       <Routes>
@@ -47,7 +46,10 @@ function App() {
                         <Route path="/content-variables" element={<ContentVariables />} />
                         <Route path="/customer-events" element={<CustomerEvents />} />
                         <Route path="/customer-settings" element={<CustomerSettings />} />
-                        <Route path="/preferred-communication" element={<PreferredCommunication />} />
+                        <Route
+                          path="/preferred-communication"
+                          element={<PreferredCommunication />}
+                        />
                       </Routes>
                     </div>
                   </main>

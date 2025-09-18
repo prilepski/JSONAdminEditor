@@ -17,7 +17,7 @@ export const EventSelector: React.FC<EventSelectorProps> = ({
   orderTypes,
   eventSupportsByOrderType,
   onEventChange,
-  onOrderTypeChange
+  onOrderTypeChange,
 }) => (
   <div className="card mb-4">
     <div className="card-header">
@@ -32,8 +32,10 @@ export const EventSelector: React.FC<EventSelectorProps> = ({
             onChange={(e) => onEventChange(e.target.value)}
           >
             <option value="">Select an event...</option>
-            {eventTriggers.map(trigger => (
-              <option key={trigger} value={trigger}>{trigger}</option>
+            {eventTriggers.map((trigger) => (
+              <option key={trigger} value={trigger}>
+                {trigger}
+              </option>
             ))}
           </select>
         </div>
@@ -44,8 +46,10 @@ export const EventSelector: React.FC<EventSelectorProps> = ({
               value={selectedOrderType}
               onChange={(e) => onOrderTypeChange(e.target.value)}
             >
-              {orderTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
+              {orderTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
               ))}
             </select>
           </div>

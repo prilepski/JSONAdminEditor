@@ -6,10 +6,10 @@ interface ErrorFallbackProps {
   componentName?: string;
 }
 
-export const ErrorFallback: React.FC<ErrorFallbackProps> = ({ 
-  error, 
-  resetError, 
-  componentName = 'Component' 
+export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
+  error,
+  resetError,
+  componentName = 'Component',
 }) => (
   <div className="alert alert-danger" role="alert">
     <div className="d-flex align-items-center mb-3">
@@ -19,7 +19,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
         <p className="mb-0">An error occurred in {componentName}</p>
       </div>
     </div>
-    
+
     <details className="mb-3">
       <summary className="btn btn-outline-secondary btn-sm">Show error details</summary>
       <pre className="mt-2 p-2 bg-light border rounded small">
@@ -27,11 +27,8 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
         {error.stack && `\n\n${error.stack}`}
       </pre>
     </details>
-    
-    <button 
-      className="btn btn-primary" 
-      onClick={resetError}
-    >
+
+    <button className="btn btn-primary" onClick={resetError}>
       <i className="fas fa-redo me-1"></i>Try again
     </button>
   </div>

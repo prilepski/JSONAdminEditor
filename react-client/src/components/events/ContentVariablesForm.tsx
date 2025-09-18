@@ -7,7 +7,7 @@ interface ContentVariablesFormProps {
 
 export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
   contentVariables,
-  onUpdate
+  onUpdate,
 }) => {
   const updateVariable = (oldKey: string, newKey: string, value: string) => {
     const newVars = { ...contentVariables };
@@ -62,11 +62,7 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        className="btn btn-success btn-sm"
-        onClick={addVariable}
-      >
+      <button type="button" className="btn btn-success btn-sm" onClick={addVariable}>
         <i className="fas fa-plus me-1"></i>Add Variable
       </button>
     </div>

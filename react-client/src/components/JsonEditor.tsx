@@ -8,7 +8,9 @@ interface JsonEditorProps {
   dictionaryData?: DictionaryData | null;
   selectedFileType: FileType;
   validationErrors: ValidationError[];
-  onSave: (tableData: TableData[]) => Promise<{ success: boolean; message?: string; error?: string }>;
+  onSave: (
+    tableData: TableData[]
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
   onClearValidationErrors: () => void;
 }
 
@@ -28,8 +30,6 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
       setTableData([...dictionaryData.tableData]);
     }
   }, [dictionaryData]);
-
-
 
   const getDictionaryName = (fileType: FileType): string => {
     const names: Record<FileType, string> = {
@@ -65,13 +65,13 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   const updateCell = (rowIndex: number, column: string, value: any) => {
     const newData = [...tableData];
     const columnType = dictionaryData?.columnTypes?.[column] || 'text';
-    
+
     if (columnType === 'boolean') {
       newData[rowIndex][column] = value === 'true';
     } else {
       newData[rowIndex][column] = value;
     }
-    
+
     setTableData(newData);
     onClearValidationErrors();
   };
@@ -81,8 +81,6 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     await onSave(tableData);
     setSaving(false);
   };
-
-
 
   if (selectedFileType === FileType.None) {
     return null;
@@ -112,18 +110,16 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           >
             <i className="fas fa-plus me-1"></i>Add Row
           </button>
-          <SaveButton
-            onClick={handleSave}
-            loading={saving}
-            text="Save Changes"
-          />
+          <SaveButton onClick={handleSave} loading={saving} text="Save Changes" />
         </div>
       </div>
 
       {tableData.length === 0 ? (
         <div className="text-center py-4">
           <i className="fas fa-table fa-3x text-muted mb-3"></i>
-          <p className="text-muted">No data in this dictionary yet. Click "Add Row" to start adding entries.</p>
+          <p className="text-muted">
+            No data in this dictionary yet. Click "Add Row" to start adding entries.
+          </p>
         </div>
       ) : (
         <DataTable

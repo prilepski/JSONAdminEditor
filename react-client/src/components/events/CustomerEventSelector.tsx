@@ -15,11 +15,13 @@ export const CustomerEventSelector: React.FC<CustomerEventSelectorProps> = ({
   selectedOrderType,
   eventTriggers,
   onEventChange,
-  onOrderTypeChange
+  onOrderTypeChange,
 }) => (
   <div className="card mb-4">
     <div className="card-header">
-      <h3><i className="fas fa-calendar-alt me-2"></i>Select Event for {selectedCustomer}</h3>
+      <h3>
+        <i className="fas fa-calendar-alt me-2"></i>Select Event for {selectedCustomer}
+      </h3>
     </div>
     <div className="card-body">
       <div className="row">
@@ -30,8 +32,10 @@ export const CustomerEventSelector: React.FC<CustomerEventSelectorProps> = ({
             onChange={(e) => onEventChange(e.target.value)}
           >
             <option value="">Select an event...</option>
-            {eventTriggers.map(trigger => (
-              <option key={trigger} value={trigger}>{trigger}</option>
+            {eventTriggers.map((trigger) => (
+              <option key={trigger} value={trigger}>
+                {trigger}
+              </option>
             ))}
           </select>
         </div>
@@ -39,9 +43,9 @@ export const CustomerEventSelector: React.FC<CustomerEventSelectorProps> = ({
           <div className="d-flex align-items-center">
             <span className="me-2 text-muted">Delivery</span>
             <div className="form-check form-switch">
-              <input 
-                className="form-check-input" 
-                type="checkbox" 
+              <input
+                className="form-check-input"
+                type="checkbox"
                 checked={selectedOrderType === 'Pickup'}
                 onChange={(e) => onOrderTypeChange(e.target.checked ? 'Pickup' : 'Delivery')}
               />

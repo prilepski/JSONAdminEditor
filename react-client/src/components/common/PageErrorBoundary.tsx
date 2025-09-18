@@ -7,16 +7,13 @@ interface PageErrorBoundaryProps {
   pageName: string;
 }
 
-export const PageErrorBoundary: React.FC<PageErrorBoundaryProps> = ({ 
-  children, 
-  pageName 
-}) => (
+export const PageErrorBoundary: React.FC<PageErrorBoundaryProps> = ({ children, pageName }) => (
   <ErrorBoundary
     FallbackComponent={({ error, resetErrorBoundary }) => (
-      <ErrorFallback 
-        error={error} 
-        resetError={resetErrorBoundary} 
-        componentName={`${pageName} page`} 
+      <ErrorFallback
+        error={error}
+        resetError={resetErrorBoundary}
+        componentName={`${pageName} page`}
       />
     )}
     onError={(error, errorInfo) => {
