@@ -2,27 +2,29 @@ import React from 'react';
 
 interface SkeletonProps {
   loading: boolean;
-  children: React.ReactNode;
   rows?: number;
   height?: string;
+  children: React.ReactNode;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({ 
   loading, 
-  children, 
   rows = 3, 
-  height = '20px' 
+  height = '20px', 
+  children 
 }) => {
   if (!loading) return <>{children}</>;
 
   return (
-    <div className="skeleton-container">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div 
-          key={i}
-          className="loading-skeleton mb-2 rounded"
+    <div data-testid="skeleton">
+      {Array.from({ length: rows }).map((_, index) => (
+        <div
+          key={index}
+          className="placeholder-glow mb-2"
           style={{ height }}
-        />
+        >
+          <div className="placeholder col-12"></div>
+        </div>
       ))}
     </div>
   );
