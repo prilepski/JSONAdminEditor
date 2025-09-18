@@ -4,23 +4,12 @@ import { useContentVariablesQuery, useContentVariablesMutation } from '../hooks/
 import { ValidationError, TableData } from '../types';
 import toast from 'react-hot-toast';
 import { Skeleton } from '../components/Skeleton';
+import { PageHeader } from '../components/common';
 
 export const ContentVariables: React.FC = () => {
   const { data = [], isLoading } = useContentVariablesQuery();
   const saveMutation = useContentVariablesMutation();
-
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-
-  const columnNames = ['Variable Name', 'Variable Value', 'Description'];
-  const columnTypes = {
-    'Variable Name': 'text',
-    'Variable Value': 'text',
-    'Description': 'text'
-  };
-
-
-
-
 
   const handleSave = async (tableData: TableData[]) => {
     setValidationErrors([]);
@@ -38,15 +27,14 @@ export const ContentVariables: React.FC = () => {
         return { success: false, error: result.error };
       }
     } catch (error) {
-      const errorMessage = 'Error saving content variables';
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+      toast.error('Error saving content variables');
+      return { success: false, error: 'Error saving content variables' };
     }
   };
 
   const dictionaryData = {
-    columnNames,
-    columnTypes,
+    columnNames: ['Variable Name', 'Variable Value', 'Description'],
+    columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text', 'Description': 'text' },
     tableData: data,
     filePath: 'content-variables',
     fileName: 'content-variables.json',
@@ -55,19 +43,15 @@ export const ContentVariables: React.FC = () => {
 
   return (
     <>
-      <h1 className="mb-4">
-        <i className="fas fa-tags me-2"></i>Content Variables Management
-      </h1>
-
-      <p className="text-muted mb-4">
-        Manage global content variables that can be used across all notification templates and events.
-      </p>
+      <PageHeader 
+        icon="fa-tags" 
+        title="Content Variables Management"
+        description="Manage global content variables that can be used across all notification templates and events."
+      />
 
       <div className="card">
         <div className="card-header">
-          <h3>
-            <i className="fas fa-edit me-2"></i>Content Variables Editor
-          </h3>
+          <h3><i className="fas fa-edit me-2"></i>Content Variables Editor</h3>
         </div>
         <div className="card-body">
           <Skeleton loading={isLoading && !data.length} rows={5} height="40px">

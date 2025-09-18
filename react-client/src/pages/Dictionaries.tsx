@@ -1,12 +1,12 @@
 import React, {useState} from 'react';
-import {FileType} from '../types';
-import {ValidationError, TableData} from '../types';
+import {FileType, ValidationError, TableData} from '../types';
 import {useDictionaryQuery, useDictionaryMutation, useUploadMutation} from '../hooks/useDictionaryQuery';
 import {DictionarySelector} from '../components/DictionarySelector';
 import {FileUpload} from '../components/FileUpload';
 import {JsonEditor} from '../components/JsonEditor';
 import toast from 'react-hot-toast';
 import {Skeleton} from '../components/Skeleton';
+import { PageHeader } from '../components/common';
 
 export const Dictionaries: React.FC = () => {
     const [selectedFileType, setSelectedFileType] = useState<FileType>(FileType.None);
@@ -24,13 +24,7 @@ export const Dictionaries: React.FC = () => {
         setValidationErrors([]);
     };
 
-    const handleUploadSuccess = (text: string) => {
-        toast.success(text);
-    };
 
-    const handleUploadError = (text: string) => {
-        toast.error(text);
-    };
 
     const handleSave = async (tableData: TableData[]) => {
         if (!dictionaryData) {
@@ -63,11 +57,7 @@ export const Dictionaries: React.FC = () => {
 
     return (
         <>
-            <h1 className="mb-4">
-                <i className="fas fa-cog me-2"></i>
-                Dictionary Management
-            </h1>
-
+            <PageHeader icon="fa-cog" title="Dictionary Management" />
             {error && toast.error(String(error))}
 
             <DictionarySelector
@@ -88,8 +78,8 @@ export const Dictionaries: React.FC = () => {
                             <div className="col-md-6">
                                 <FileUpload
                                     selectedFileType={selectedFileType}
-                                    onUploadSuccess={handleUploadSuccess}
-                                    onUploadError={handleUploadError}
+                                    onUploadSuccess={(text) => toast.success(text)}
+                                    onUploadError={(text) => toast.error(text)}
                                 />
                             </div>
                         </div>

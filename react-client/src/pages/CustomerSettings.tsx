@@ -4,6 +4,7 @@ import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import toast from 'react-hot-toast';
 import { CustomerContentVariable } from '../types/customer';
 import { CustomerSettingsData } from '../types/customerSettings';
+import { PageHeader, CustomerSelector, SaveButton } from '../components/common';
 
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -125,29 +126,17 @@ export const CustomerSettings: React.FC = () => {
 
   return (
     <>
-      <h1 className="mb-4">
-        <i className="fas fa-code me-2"></i>Customer Content Variables
-      </h1>
+      <PageHeader 
+        icon="fa-code" 
+        title="Customer Content Variables"
+        description="Choose a customer to view and edit their specific content variable overrides."
+      />
 
-      {/* Customer Selection */}
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3><i className="fas fa-user-search me-2"></i>Select Customer</h3>
-          <p className="mb-0 text-muted">Choose a customer to view and edit their specific content variable overrides.</p>
-        </div>
-        <div className="card-body">
-          <select
-            className="form-select"
-            value={selectedCustomer}
-            onChange={(e) => setSelectedCustomer(e.target.value)}
-          >
-            <option value="">Select a customer...</option>
-            {customers.map(customer => (
-              <option key={customer} value={customer}>{customer}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <CustomerSelector
+        customers={customers}
+        selectedCustomer={selectedCustomer}
+        onCustomerChange={setSelectedCustomer}
+      />
 
       {/* Editing Section */}
       {showEditingSection && selectedCustomer && (
@@ -170,23 +159,11 @@ export const CustomerSettings: React.FC = () => {
                 >
                   <i className="fas fa-plus me-1"></i>Add Variable
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
+                <SaveButton
                   onClick={handleSave}
-                  disabled={saveMutation.isPending}
-                >
-                  {saveMutation.isPending ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-1"></span>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-save me-1"></i>Save Variables
-                    </>
-                  )}
-                </button>
+                  loading={saveMutation.isPending}
+                  text="Save Variables"
+                />
               </div>
             </div>
 

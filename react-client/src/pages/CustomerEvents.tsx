@@ -4,6 +4,7 @@ import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery
 import toast from 'react-hot-toast';
 import { Template } from '../types/template';
 import { CustomerEventData, EventField, TemplateField, ContentVariable } from '../types/customerEvent';
+import { PageHeader, CustomerSelector, SaveButton, TabNavigation } from '../components/common';
 
 export const CustomerEvents: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -208,30 +209,21 @@ export const CustomerEvents: React.FC = () => {
     return availableTemplates.filter(t => t.channelType === channel);
   };
 
+  const tabs = [
+    { id: 'event-data', label: 'Event Data', icon: 'fa-cog' },
+    { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
+    { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' }
+  ];
+
   return (
     <>
-      <h1 className="mb-4">
-        <i className="fas fa-calendar-alt me-2"></i>Customer Events Management
-      </h1>
+      <PageHeader icon="fa-calendar-alt" title="Customer Events Management" />
 
-      {/* Customer Selection */}
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3><i className="fas fa-user-search me-2"></i>Select Customer</h3>
-        </div>
-        <div className="card-body">
-          <select
-            className="form-select"
-            value={selectedCustomer}
-            onChange={(e) => setSelectedCustomer(e.target.value)}
-          >
-            <option value="">Select a customer...</option>
-            {customers.map(customer => (
-              <option key={customer} value={customer}>{customer}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <CustomerSelector
+        customers={customers}
+        selectedCustomer={selectedCustomer}
+        onCustomerChange={setSelectedCustomer}
+      />
 
       {/* Event Selection */}
       {selectedCustomer && (
@@ -280,54 +272,19 @@ export const CustomerEvents: React.FC = () => {
               <h3 className="mb-0">
                 <i className="fas fa-edit me-2"></i>Edit Event: {selectedEvent} ({selectedOrderType})
               </h3>
-              <button
-                type="button"
-                className="btn btn-primary"
+              <SaveButton
                 onClick={handleSave}
-                disabled={saveMutation.isPending}
-              >
-                {saveMutation.isPending ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-1"></span>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-save me-1"></i>
-                    Save Event
-                  </>
-                )}
-              </button>
+                loading={saveMutation.isPending}
+                text="Save Event"
+              />
             </div>
           </div>
           <div className="card-body">
-            {/* Tab Navigation */}
-            <ul className="nav nav-tabs mb-4">
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'event-data' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('event-data')}
-                >
-                  <i className="fas fa-cog me-2"></i>Event Data
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'templates' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('templates')}
-                >
-                  <i className="fas fa-file-alt me-2"></i>Templates
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === 'content-variables' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('content-variables')}
-                >
-                  <i className="fas fa-code me-2"></i>Content Variables
-                </button>
-              </li>
-            </ul>
+            <TabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
             {/* Event Data Tab */}
             {activeTab === 'event-data' && (
