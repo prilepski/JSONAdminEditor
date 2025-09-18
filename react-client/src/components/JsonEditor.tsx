@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FileType } from '../types';
-import { DictionaryData, ValidationError } from '../types/api';
+import { FileType, DictionaryData, ValidationError, TableData } from '../types';
 import { useChannelOptionsQuery } from '../hooks/useDictionaryQuery';
 
 interface JsonEditorProps {
   dictionaryData?: DictionaryData | null;
   selectedFileType: FileType;
   validationErrors: ValidationError[];
-  onSave: (tableData: Record<string, any>[]) => Promise<{ success: boolean; message?: string; error?: string }>;
+  onSave: (tableData: TableData[]) => Promise<{ success: boolean; message?: string; error?: string }>;
   onClearValidationErrors: () => void;
 }
 
@@ -18,7 +17,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   onSave,
   onClearValidationErrors,
 }) => {
-  const [tableData, setTableData] = useState<Record<string, any>[]>([]);
+  const [tableData, setTableData] = useState<TableData[]>([]);
   const { data: channelOptions = ['Email', 'Sms', 'Voice'] } = useChannelOptionsQuery();
   const [saving, setSaving] = useState(false);
 
@@ -45,7 +44,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   const addNewRow = () => {
     if (!dictionaryData?.columnNames) return;
 
-    const newRow: Record<string, any> = {};
+    const newRow: TableData = {};
     dictionaryData.columnNames.forEach((column) => {
       const columnType = dictionaryData.columnTypes?.[column] || 'text';
       newRow[column] = columnType === 'boolean' ? false : '';
@@ -77,7 +76,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
 
   const handleSave = async () => {
     setSaving(true);
-    const result = await onSave(tableData);
+    await onSave(tableData);
     setSaving(false);
   };
 
@@ -172,7 +171,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
                         ) : column.toLowerCase() === 'channeltype' && selectedFileType === FileType.Templates ? (
                           <select
                             className={inputClass}
-                            value={cellValue}
+                            value={cellValue.toString()}
                             onChange={(e) => updateCell(rowIndex, column, e.target.value)}
                             required
                           >

@@ -29,11 +29,10 @@ public class PreferredCommunicationController : ControllerBase
     }
 
     [HttpPost("save")]
-    public async Task<IActionResult> SavePreferredCommunication([FromBody] dynamic request)
+    public async Task<IActionResult> SavePreferredCommunication([FromBody] List<Dictionary<string, object>> data)
     {
         try
         {
-            var data = request.data;
             var success = await _jsonFileService.SaveJsonFileAsync("data/preferred-communication.json", data);
             
             if (success)

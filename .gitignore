@@ -1,6 +1,7 @@
 /bin
 /obj
 /react-client/node_modules
+/react-client/build
 wwwroot/.DS_Store
 wwwroot/data/.DS_Store
 

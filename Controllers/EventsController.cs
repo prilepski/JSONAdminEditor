@@ -48,7 +48,7 @@ public class EventsController : ControllerBase
         try
         {
             var templates = await _notificationsService.GetAvailableTemplatesAsync();
-            return Ok(templates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName }));
+            return Ok(templates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
         }
         catch (Exception ex)
         {
@@ -98,33 +98,29 @@ public class EventsController : ControllerBase
         }
     }
 
-    [HttpPost("add")]
-    public async Task<IActionResult> AddNewEvent([FromBody] dynamic request)
+    public class EventRequest
     {
-        try
-        {
-            string eventName = request.eventName;
-            var eventData = request.eventData;
-            
-            var success = await _notificationsService.AddNewEventAsync(eventName, eventData);
-            return Ok(new { success });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { success = false, error = ex.Message });
-        }
+        public string EventName { get; set; } = string.Empty;
+        public string? OrderType { get; set; }
+        public Dictionary<string, object> EventData { get; set; } = new();
+        public bool IsNew { get; set; }
     }
 
-    [HttpPost("update")]
-    public async Task<IActionResult> UpdateEventByOrderType([FromBody] dynamic request)
+    [HttpPost("save")]
+    public async Task<IActionResult> SaveEvent([FromBody] EventRequest request)
     {
         try
         {
-            string eventName = request.eventName;
-            string orderType = request.orderType;
-            var eventData = request.eventData;
+            bool success;
+            if (request.IsNew)
+            {
+                success = await _notificationsService.AddNewEventAsync(request.EventName, request.EventData);
+            }
+            else
+            {
+                success = await _notificationsService.UpdateEventByOrderTypeAsync(request.EventName, request.OrderType, request.EventData);
+            }
             
-            var success = await _notificationsService.UpdateEventByOrderTypeAsync(eventName, orderType, eventData);
             return Ok(new { success });
         }
         catch (Exception ex)

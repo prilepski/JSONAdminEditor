@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { JsonEditor } from '../components/JsonEditor';
 import { useContentVariablesQuery, useContentVariablesMutation } from '../hooks/useContentVariableQuery';
-import { ValidationError } from '../types/api';
+import { ValidationError, TableData } from '../types';
 import toast from 'react-hot-toast';
 import { Skeleton } from '../components/Skeleton';
 
@@ -22,7 +22,7 @@ export const ContentVariables: React.FC = () => {
 
 
 
-  const handleSave = async (tableData: Record<string, any>[]) => {
+  const handleSave = async (tableData: TableData[]) => {
     setValidationErrors([]);
     
     try {

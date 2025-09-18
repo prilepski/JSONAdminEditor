@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Template } from '../types/template';
 
 const api = axios.create({
   baseURL: '/api/events',
@@ -16,7 +17,7 @@ export const eventService = {
     return response.data;
   },
 
-  getAvailableTemplates: async (): Promise<Array<{templateId: string, templateName: string}>> => {
+  getAvailableTemplates: async (): Promise<Template[]> => {
     const response = await api.get('/templates');
     return response.data;
   },
@@ -36,13 +37,13 @@ export const eventService = {
     return response.data;
   },
 
-  addNewEvent: async (eventName: string, eventData: any): Promise<boolean> => {
-    const response = await api.post('/add', { eventName, eventData });
-    return response.data.success;
-  },
-
-  updateEventByOrderType: async (eventName: string, orderType: string, eventData: any): Promise<boolean> => {
-    const response = await api.post('/update', { eventName, orderType, eventData });
+  saveEvent: async (eventName: string, orderType: string, eventData: any, isNew: boolean): Promise<boolean> => {
+    const response = await api.post('/save', { 
+      eventName, 
+      orderType, 
+      eventData, 
+      isNew 
+    });
     return response.data.success;
   },
 };

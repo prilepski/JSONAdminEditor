@@ -20,22 +20,10 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       {Array.from({ length: rows }).map((_, i) => (
         <div 
           key={i}
-          className="skeleton-item mb-2"
-          style={{ 
-            height,
-            backgroundColor: '#e9ecef',
-            borderRadius: '4px',
-            animation: 'skeleton-pulse 1.5s ease-in-out infinite'
-          }}
+          className="loading-skeleton mb-2 rounded"
+          style={{ height }}
         />
       ))}
-      <style>{`
-        @keyframes skeleton-pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.4; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

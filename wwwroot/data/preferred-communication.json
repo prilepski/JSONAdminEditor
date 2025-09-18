@@ -1,0 +1,16 @@
+[
+  {
+    "Customer ID": "CUST001",
+    "Preferred Channel": "Email",
+    "Phone": "+1-555-0123",
+    "Email": "john.smith@dell.com",
+    "IsActive": true
+  },
+  {
+    "Customer ID": "CUST002", 
+    "Preferred Channel": "SMS",
+    "Phone": "+1-555-0456",
+    "Email": "jane.doe@microsoft.com",
+    "IsActive": true
+  }
+]

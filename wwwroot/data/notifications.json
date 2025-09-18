@@ -27,7 +27,7 @@
       "Logo": "base64",
       "IsSuppressed": false,
       "Templates": {
-        "Email": "d-48388ac5bd1a4460969ac2ed36c818cc",
+        "Email": "d-bd0b88948dd34009b08434c16b76c1e0",
         "Sms": "Hxad1da069cc42534183daccd644579207",
         "Voice": ""
       },
@@ -101,7 +101,7 @@
       "IsSuppressed": false,
       "Templates": {
         "Email": "d-bd0b88948dd34009b08434c16b76c1e0",
-        "Sms": "",
+        "Sms": "HX80cc578c377e8cc30015278665a01384b",
         "Voice": ""
       },
       "ContentVariables": {
@@ -148,17 +148,11 @@
       }
     }
   ],
-  "ContentVariables": {
-    "cust_name": "$Customer.FriendlyName$",
-    "ait_tracking_num": "$ShipmentNum$",
-    "tracking_url": "www.myait.com/Tracking/$ShipmentNum$",
-    "cust_logo": "base64:DBSDIBDUIBG3209523",
-    "ait_phone_num": "TBD"
-  },
   "PreferredCommunication": [
     {
       "Channel": "email",
       "Priority": 1
     }
-  ]
+  ],
+  "ContentVariables": {}
 }

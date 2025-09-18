@@ -306,9 +306,6 @@ namespace JSONAdminEditor.Services
         public async Task<List<CustomerLookupResult>> SearchCustomersAsync(string searchTerm)
         {
             var results = new List<CustomerLookupResult>();
-            
-            if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
-                return results;
 
             var customersFilePath = Path.Combine(_dataFolder, "dictionaries", "customers.json");
             if (!File.Exists(customersFilePath))
@@ -327,6 +324,21 @@ namespace JSONAdminEditor.Services
                 var customers = System.Text.Json.JsonSerializer.Deserialize<List<Customer>>(jsonContent, options);
                 
                 if (customers == null) return results;
+
+                // If search term is empty, return all customers
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    foreach (var customer in customers)
+                    {
+                        results.Add(new CustomerLookupResult
+                        {
+                            CustomerId = customer.CustomerId ?? "",
+                            CompanyName = customer.CompanyName ?? "",
+                            MatchType = "All"
+                        });
+                    }
+                    return results;
+                }
 
                 // Check if the search term is in the display format "Company Name (Customer ID)"
                 var companyNameFromDisplay = "";
@@ -389,7 +401,7 @@ namespace JSONAdminEditor.Services
                 // Return empty list on error
             }
 
-            return results.Take(10).ToList(); // Limit to 10 results
+            return string.IsNullOrWhiteSpace(searchTerm) ? results : results.Take(10).ToList();
         }
 
         public async Task<bool> ValidateCustomerExistsAsync(string customerName)

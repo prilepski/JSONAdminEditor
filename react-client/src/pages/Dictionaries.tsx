@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {FileType} from '../types';
-import {ValidationError} from '../types/api';
+import {ValidationError, TableData} from '../types';
 import {useDictionaryQuery, useDictionaryMutation, useUploadMutation} from '../hooks/useDictionaryQuery';
 import {DictionarySelector} from '../components/DictionarySelector';
 import {FileUpload} from '../components/FileUpload';
@@ -15,7 +15,7 @@ export const Dictionaries: React.FC = () => {
 
     const {data: dictionaryResponse, isLoading, error} = useDictionaryQuery(selectedFileType);
     const saveMutation = useDictionaryMutation();
-    const uploadMutation = useUploadMutation();
+    useUploadMutation();
 
     const dictionaryData = dictionaryResponse?.success ? dictionaryResponse.data : null;
 
@@ -32,7 +32,7 @@ export const Dictionaries: React.FC = () => {
         toast.error(text);
     };
 
-    const handleSave = async (tableData: Record<string, any>[]) => {
+    const handleSave = async (tableData: TableData[]) => {
         if (!dictionaryData) {
             return {success: false, error: 'No dictionary data available'};
         }

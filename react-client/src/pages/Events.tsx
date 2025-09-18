@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useEventTriggersQuery, useOrderTypesQuery, useTemplatesQuery, useEventQuery, useEventSupportQuery, useEventMutation } from '../hooks/useEventQuery';
 import toast from 'react-hot-toast';
 
+
 interface EventData {
   Event?: string;
   OrderType?: string;
@@ -36,15 +37,15 @@ export const Events: React.FC = () => {
 
 
   const { data: eventSupports = false } = useEventSupportQuery(selectedEvent);
-  const { data: eventInfo, isLoading: eventLoading } = useEventQuery(selectedEvent, selectedOrderType);
+  const { data: eventInfo } = useEventQuery(selectedEvent, selectedOrderType);
   const eventMutation = useEventMutation();
   
   useEffect(() => {
     setEventSupportsByOrderType(eventSupports);
-    if (eventInfo) {
+    if (eventInfo && Object.keys(eventInfo).length > 0) {
       setEventData(eventInfo);
       setIsNewEvent(false);
-    } else if (selectedEvent && eventSupports) {
+    } else if (selectedEvent) {
       setIsNewEvent(true);
       setEventData({
         Event: selectedEvent,
@@ -56,6 +57,9 @@ export const Events: React.FC = () => {
         Templates: { Email: '', Sms: '', Voice: '' },
         ContentVariables: {}
       });
+    } else {
+      setEventData(null);
+      setIsNewEvent(false);
     }
   }, [selectedEvent, selectedOrderType, eventSupports, eventInfo]);
 
@@ -232,7 +236,7 @@ export const Events: React.FC = () => {
                     onChange={(e) => updateTemplateField('Email', e.target.value)}
                   >
                     <option value="">Select template...</option>
-                    {availableTemplates.filter(t => t.templateId.includes('Email')).map(template => (
+                    {availableTemplates.filter(t => t.channelType === 'Email').map(template => (
                       <option key={template.templateId} value={template.templateId}>
                         {template.templateName}
                       </option>
@@ -247,7 +251,7 @@ export const Events: React.FC = () => {
                     onChange={(e) => updateTemplateField('Sms', e.target.value)}
                   >
                     <option value="">Select template...</option>
-                    {availableTemplates.filter(t => t.templateId.includes('Sms')).map(template => (
+                    {availableTemplates.filter(t => t.channelType === 'Sms').map(template => (
                       <option key={template.templateId} value={template.templateId}>
                         {template.templateName}
                       </option>
@@ -262,7 +266,7 @@ export const Events: React.FC = () => {
                     onChange={(e) => updateTemplateField('Voice', e.target.value)}
                   >
                     <option value="">Select template...</option>
-                    {availableTemplates.filter(t => t.templateId.includes('Voice')).map(template => (
+                    {availableTemplates.filter(t => t.channelType === 'Voice').map(template => (
                       <option key={template.templateId} value={template.templateId}>
                         {template.templateName}
                       </option>
@@ -274,8 +278,61 @@ export const Events: React.FC = () => {
 
             {activeTab === 'content-variables' && (
               <div>
-                <p className="text-muted">Content variables for this event...</p>
-                {/* Content variables editor would go here */}
+                <p className="text-muted mb-3">Content variables for this event:</p>
+                {eventData.ContentVariables && Object.entries(eventData.ContentVariables).map(([key, value]) => (
+                  <div key={key} className="row mb-2">
+                    <div className="col-md-4">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={key}
+                        onChange={(e) => {
+                          const newVars = { ...eventData.ContentVariables };
+                          delete newVars[key];
+                          newVars[e.target.value] = value;
+                          updateEventField('ContentVariables', newVars);
+                        }}
+                        placeholder="Variable name"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={value}
+                        onChange={(e) => {
+                          const newVars = { ...eventData.ContentVariables };
+                          newVars[key] = e.target.value;
+                          updateEventField('ContentVariables', newVars);
+                        }}
+                        placeholder="Variable value"
+                      />
+                    </div>
+                    <div className="col-md-2">
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => {
+                          const newVars = { ...eventData.ContentVariables };
+                          delete newVars[key];
+                          updateEventField('ContentVariables', newVars);
+                        }}
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="btn btn-success btn-sm"
+                  onClick={() => {
+                    const newVars = { ...eventData.ContentVariables, '': '' };
+                    updateEventField('ContentVariables', newVars);
+                  }}
+                >
+                  <i className="fas fa-plus me-1"></i>Add Variable
+                </button>
               </div>
             )}
 

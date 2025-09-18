@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { FileType } from '../types';
-import { ApiResponse, DictionaryData, FileUploadViewModel } from '../types/api';
+import { FileType, ApiResponse, DictionaryData, FileUploadRequest, TableData } from '../types';
 
 const api = axios.create({
   baseURL: '/api',
@@ -13,7 +12,7 @@ export const dictionaryService = {
     return response.data;
   },
 
-  save: async (filePath: string, jsonData: Record<string, any>[], fileType: FileType): Promise<ApiResponse> => {
+  save: async (filePath: string, jsonData: TableData[], fileType: FileType): Promise<ApiResponse> => {
     const formData = new FormData();
     formData.append('filePath', filePath);
     formData.append('jsonData', JSON.stringify(jsonData));
@@ -24,7 +23,7 @@ export const dictionaryService = {
     return response.data;
   },
 
-  upload: async (upload: FileUploadViewModel): Promise<ApiResponse> => {
+  upload: async (upload: FileUploadRequest): Promise<ApiResponse> => {
     const formData = new FormData();
     formData.append('Upload.FileType', upload.fileType.toString());
     formData.append('Upload.CustomerName', upload.customerName || '');
@@ -42,8 +41,8 @@ export const dictionaryService = {
       const response = await api.get('/dictionaries/data?fileType=6');
       if (response.data.success && response.data.data?.tableData) {
         return response.data.data.tableData
-          .filter((row: any) => row['IsActive'] === true || row['IsActive'] === 'true')
-          .map((row: any) => row['Channel Name'])
+          .filter((row: TableData) => row['IsActive'] === true || row['IsActive'] === 'true')
+          .map((row: TableData) => row['Channel Name'] as string)
           .filter((name: string) => name && name.trim());
       }
     } catch (error) {

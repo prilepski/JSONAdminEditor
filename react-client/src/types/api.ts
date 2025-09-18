@@ -1,49 +1,12 @@
-// Generated API types - will be replaced by OpenAPI generation
-export interface DictionaryData {
-  filePath: string;
-  fileName: string;
-  columnNames: string[];
-  columnTypes: Record<string, string>;
-  tableData: Record<string, any>[];
-  isValidJson: boolean;
-}
+// Legacy API types - deprecated, use organized types from index
+// This file will be replaced by OpenAPI generation
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  message?: string;
-  error?: string;
-  data?: T;
-  validationErrors?: ValidationError[];
-}
+// Re-export from organized modules for backward compatibility
+export type { 
+  ApiResponse, 
+  ValidationError 
+} from './common';
 
-export interface ValidationError {
-  rowIndex?: number;
-  fieldName: string;
-  message: string;
-}
-
-export interface FileUploadViewModel {
-  fileType: number;
-  customerName?: string;
-  jsonFile?: File;
-}
-
-export interface EventData {
-  Event?: string;
-  OrderType?: string;
-  Phone?: string;
-  Email?: string;
-  Logo?: string;
-  IsSuppressed?: boolean;
-  Templates?: {
-    Email?: string;
-    Sms?: string;
-    Voice?: string;
-  };
-  ContentVariables?: Record<string, string>;
-}
-
-export interface Template {
-  templateId: string;
-  templateName: string;
-}
+export type { 
+  FileUploadRequest as FileUploadViewModel 
+} from './dictionary';

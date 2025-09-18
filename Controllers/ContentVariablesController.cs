@@ -29,11 +29,10 @@ public class ContentVariablesController : ControllerBase
     }
 
     [HttpPost("save")]
-    public async Task<IActionResult> SaveContentVariables([FromBody] dynamic request)
+    public async Task<IActionResult> SaveContentVariables([FromBody] List<Dictionary<string, object>> data)
     {
         try
         {
-            var data = request.data;
             var success = await _notificationsService.UpdateContentVariablesAsync(data);
             
             if (success)

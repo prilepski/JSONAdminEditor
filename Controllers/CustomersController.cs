@@ -34,9 +34,8 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            // Implementation would depend on your customer events storage
-            // For now, return empty object
-            return Ok(new { });
+            var data = await _storageService.GetCustomerDataAsync(customerId + "_events");
+            return Ok(data ?? new Dictionary<string, object>());
         }
         catch (Exception ex)
         {
@@ -45,12 +44,12 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId}/events")]
-    public async Task<IActionResult> SaveCustomerEvents(string customerId, [FromBody] dynamic data)
+    public async Task<IActionResult> SaveCustomerEvents(string customerId, [FromBody] Dictionary<string, object> data)
     {
         try
         {
-            // Implementation would depend on your customer events storage
-            return Ok(new { success = true });
+            var success = await _storageService.SaveCustomerDataAsync(customerId + "_events", data);
+            return Ok(new { success });
         }
         catch (Exception ex)
         {
@@ -63,8 +62,8 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            // Implementation would depend on your customer settings storage
-            return Ok(new { });
+            var data = await _storageService.GetCustomerDataAsync(customerId + "_settings");
+            return Ok(data ?? new Dictionary<string, object>());
         }
         catch (Exception ex)
         {
@@ -73,12 +72,12 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId}/settings")]
-    public async Task<IActionResult> SaveCustomerSettings(string customerId, [FromBody] dynamic data)
+    public async Task<IActionResult> SaveCustomerSettings(string customerId, [FromBody] Dictionary<string, object> data)
     {
         try
         {
-            // Implementation would depend on your customer settings storage
-            return Ok(new { success = true });
+            var success = await _storageService.SaveCustomerDataAsync(customerId + "_settings", data);
+            return Ok(new { success });
         }
         catch (Exception ex)
         {

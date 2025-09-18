@@ -43,9 +43,10 @@ export const useEventMutation = () => {
   
   return useMutation({
     mutationFn: ({ eventName, orderType, eventData, isNew }: { eventName: string; orderType: string; eventData: any; isNew: boolean }) =>
-      isNew ? eventService.addNewEvent(eventName, eventData) : eventService.updateEventByOrderType(eventName, orderType, eventData),
+      eventService.saveEvent(eventName, orderType, eventData, isNew),
     onSuccess: (_, { eventName, orderType }) => {
       queryClient.invalidateQueries({ queryKey: ['event', eventName, orderType] });
+      queryClient.invalidateQueries({ queryKey: ['eventTriggers'] });
     },
   });
 };
