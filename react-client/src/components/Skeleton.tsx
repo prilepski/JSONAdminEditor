@@ -17,8 +17,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
   return (
     <div data-testid="skeleton">
-      {Array.from({ length: rows }).map((_, index) => (
-        <div key={index} className="placeholder-glow mb-2" style={{ height }}>
+      {Array.from({ length: rows }, (_, index) => (
+        <div key={`skeleton-${index}`} className="placeholder-glow mb-2" style={{ height }}>
           <div className="placeholder col-12"></div>
         </div>
       ))}

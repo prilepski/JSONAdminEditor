@@ -19,11 +19,15 @@ export const CardSkeleton: React.FC<CardSkeletonProps> = ({
     )}
     <div className="card-body">
       <div className="placeholder-glow">
-        {Array.from({ length: lines }).map((_, i) => (
-          <div key={i} className="mb-2">
-            <span className={`placeholder col-${Math.floor(Math.random() * 4) + 8}`}></span>
-          </div>
-        ))}
+        {Array.from({ length: lines }, (_, i) => {
+          const widths = [8, 9, 10, 11];
+          const width = widths[i % widths.length];
+          return (
+            <div key={`line-${i}`} className="mb-2">
+              <span className={`placeholder col-${width}`}></span>
+            </div>
+          );
+        })}
       </div>
     </div>
   </div>

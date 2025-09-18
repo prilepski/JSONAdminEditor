@@ -5,6 +5,7 @@ interface SaveButtonProps {
   loading?: boolean;
   disabled?: boolean;
   text?: string;
+  loadingText?: string;
 }
 
 export const SaveButton: React.FC<SaveButtonProps> = ({
@@ -12,6 +13,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   loading = false,
   disabled = false,
   text = 'Save Changes',
+  loadingText = 'Saving...',
 }) => (
   <button
     type="button"
@@ -22,7 +24,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
     {loading ? (
       <>
         <span className="spinner-border spinner-border-sm me-1"></span>
-        Saving...
+        {loadingText}
       </>
     ) : (
       <>

@@ -14,7 +14,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
       <thead>
         <tr>
           {Array.from({ length: columns }).map((_, i) => (
-            <th key={i}>
+            <th key={`header-${i}`}>
               <div className="placeholder-glow">
                 <span className="placeholder col-8"></span>
               </div>
@@ -24,9 +24,9 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
       </thead>
       <tbody>
         {Array.from({ length: rows }).map((_, rowIndex) => (
-          <tr key={rowIndex}>
+          <tr key={`row-${rowIndex}`}>
             {Array.from({ length: columns }).map((_, colIndex) => (
-              <td key={colIndex}>
+              <td key={`cell-${rowIndex}-${colIndex}`}>
                 <div className="placeholder-glow">
                   <span className="placeholder col-10"></span>
                 </div>
