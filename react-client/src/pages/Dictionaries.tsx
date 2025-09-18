@@ -9,8 +9,8 @@ import { DictionarySelector } from '../components/DictionarySelector';
 import { FileUpload } from '../components/FileUpload';
 import { JsonEditor } from '../components/JsonEditor';
 import toast from 'react-hot-toast';
-import { Skeleton } from '../components/Skeleton';
-import { PageHeader } from '../components/common';
+
+import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const Dictionaries: React.FC = () => {
@@ -92,7 +92,9 @@ export const Dictionaries: React.FC = () => {
             </div>
           </div>
           <div className="card-body">
-            <Skeleton loading={isLoading} rows={5} height="40px">
+            {isLoading ? (
+              <TableSkeleton rows={5} columns={4} />
+            ) : (
               <ComponentErrorBoundary componentName="JSON Editor">
                 <JsonEditor
                   dictionaryData={dictionaryData}
@@ -102,7 +104,7 @@ export const Dictionaries: React.FC = () => {
                   onClearValidationErrors={() => setValidationErrors([])}
                 />
               </ComponentErrorBoundary>
-            </Skeleton>
+            )}
           </div>
         </div>
       )}

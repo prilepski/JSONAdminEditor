@@ -6,7 +6,7 @@ import {
 } from '../hooks/usePreferredCommunicationQuery';
 import { ValidationError } from '../types/api';
 import toast from 'react-hot-toast';
-import { Skeleton } from '../components/Skeleton';
+import { TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const PreferredCommunication: React.FC = () => {
@@ -72,7 +72,9 @@ export const PreferredCommunication: React.FC = () => {
           </h3>
         </div>
         <div className="card-body">
-          <Skeleton loading={isLoading && !data.length} rows={5} height="40px">
+          {isLoading && !data.length ? (
+            <TableSkeleton rows={5} columns={5} />
+          ) : (
             <ComponentErrorBoundary componentName="Preferred Communication Editor">
               <JsonEditor
                 dictionaryData={dictionaryData}
@@ -82,7 +84,7 @@ export const PreferredCommunication: React.FC = () => {
                 onClearValidationErrors={() => setValidationErrors([])}
               />
             </ComponentErrorBoundary>
-          </Skeleton>
+          )}
         </div>
       </div>
     </PageErrorBoundary>

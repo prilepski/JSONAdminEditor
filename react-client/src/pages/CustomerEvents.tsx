@@ -12,7 +12,7 @@ import {
   TemplateField,
   ContentVariable,
 } from '../types/customerEvent';
-import { PageHeader, CustomerSelector, SaveButton, TabNavigation } from '../components/common';
+import { PageHeader, CustomerSelector, SaveButton, TabNavigation, LoadingSpinner, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
 import { CustomerEventDataTable } from '../components/events/CustomerEventDataTable';
@@ -28,10 +28,10 @@ export const CustomerEvents: React.FC = () => {
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [contentVariables, setContentVariables] = useState<Record<string, ContentVariable>>({});
 
-  const { data: customers = [] } = useCustomersQuery();
-  const { data: activeEventTriggers = [] } = useEventTriggersQuery();
-  const { data: availableTemplates = [] } = useTemplatesQuery();
-  const { data: customerEventData } = useCustomerEventsQuery(selectedCustomer);
+  const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
+  const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
+  const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
+  const { data: customerEventData, isLoading: eventDataLoading } = useCustomerEventsQuery(selectedCustomer);
   const saveMutation = useCustomerEventsMutation();
 
   useEffect(() => {
@@ -229,29 +229,38 @@ export const CustomerEvents: React.FC = () => {
     { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
   ];
 
+  const isInitialLoading = customersLoading || triggersLoading || templatesLoading;
+  const isEventConfigLoading = selectedCustomer && selectedEvent && eventDataLoading;
+
   return (
     <PageErrorBoundary pageName="Customer Events">
       <PageHeader icon="fa-calendar-alt" title="Customer Events Management" />
 
-      <ComponentErrorBoundary componentName="Customer Selector">
-        <CustomerSelector
-          customers={customers}
-          selectedCustomer={selectedCustomer}
-          onCustomerChange={setSelectedCustomer}
-        />
-      </ComponentErrorBoundary>
+      {isInitialLoading ? (
+        <LoadingSpinner text="Loading customer data..." />
+      ) : (
+        <>
+          <ComponentErrorBoundary componentName="Customer Selector">
+            <CustomerSelector
+              customers={customers}
+              selectedCustomer={selectedCustomer}
+              onCustomerChange={setSelectedCustomer}
+            />
+          </ComponentErrorBoundary>
 
-      {selectedCustomer && (
-        <ComponentErrorBoundary componentName="Event Selector">
-          <CustomerEventSelector
-            selectedCustomer={selectedCustomer}
-            selectedEvent={selectedEvent}
-            selectedOrderType={selectedOrderType}
-            eventTriggers={activeEventTriggers}
-            onEventChange={setSelectedEvent}
-            onOrderTypeChange={setSelectedOrderType}
-          />
-        </ComponentErrorBoundary>
+          {selectedCustomer && (
+            <ComponentErrorBoundary componentName="Event Selector">
+              <CustomerEventSelector
+                selectedCustomer={selectedCustomer}
+                selectedEvent={selectedEvent}
+                selectedOrderType={selectedOrderType}
+                eventTriggers={activeEventTriggers}
+                onEventChange={setSelectedEvent}
+                onOrderTypeChange={setSelectedOrderType}
+              />
+            </ComponentErrorBoundary>
+          )}
+        </>
       )}
 
       {/* Event Editor */}
@@ -267,38 +276,44 @@ export const CustomerEvents: React.FC = () => {
             </div>
           </div>
           <div className="card-body">
-            <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            {isEventConfigLoading ? (
+              <TableSkeleton rows={4} columns={4} />
+            ) : (
+              <>
+                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {activeTab === 'event-data' && (
-              <ComponentErrorBoundary componentName="Event Data Table">
-                <CustomerEventDataTable
-                  eventFields={eventFields}
-                  onUpdateField={updateEventField}
-                  onToggleRedefined={toggleEventFieldRedefined}
-                />
-              </ComponentErrorBoundary>
-            )}
+                {activeTab === 'event-data' && (
+                  <ComponentErrorBoundary componentName="Event Data Table">
+                    <CustomerEventDataTable
+                      eventFields={eventFields}
+                      onUpdateField={updateEventField}
+                      onToggleRedefined={toggleEventFieldRedefined}
+                    />
+                  </ComponentErrorBoundary>
+                )}
 
-            {activeTab === 'templates' && (
-              <ComponentErrorBoundary componentName="Template Table">
-                <CustomerTemplateTable
-                  templateFields={templateFields}
-                  availableTemplates={availableTemplates}
-                  onUpdateTemplate={updateTemplateField}
-                  onToggleRedefined={toggleTemplateRedefined}
-                />
-              </ComponentErrorBoundary>
-            )}
+                {activeTab === 'templates' && (
+                  <ComponentErrorBoundary componentName="Template Table">
+                    <CustomerTemplateTable
+                      templateFields={templateFields}
+                      availableTemplates={availableTemplates}
+                      onUpdateTemplate={updateTemplateField}
+                      onToggleRedefined={toggleTemplateRedefined}
+                    />
+                  </ComponentErrorBoundary>
+                )}
 
-            {activeTab === 'content-variables' && (
-              <ComponentErrorBoundary componentName="Content Variables Table">
-                <CustomerContentVariablesTable
-                  contentVariables={contentVariables}
-                  onAdd={addContentVariable}
-                  onUpdate={updateContentVariable}
-                  onRemove={removeContentVariable}
-                />
-              </ComponentErrorBoundary>
+                {activeTab === 'content-variables' && (
+                  <ComponentErrorBoundary componentName="Content Variables Table">
+                    <CustomerContentVariablesTable
+                      contentVariables={contentVariables}
+                      onAdd={addContentVariable}
+                      onUpdate={updateContentVariable}
+                      onRemove={removeContentVariable}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+              </>
             )}
           </div>
         </div>

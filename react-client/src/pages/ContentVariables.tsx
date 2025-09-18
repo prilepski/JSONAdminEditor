@@ -6,8 +6,8 @@ import {
 } from '../hooks/useContentVariableQuery';
 import { ValidationError, TableData } from '../types';
 import toast from 'react-hot-toast';
-import { Skeleton } from '../components/Skeleton';
-import { PageHeader } from '../components/common';
+
+import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const ContentVariables: React.FC = () => {
@@ -60,7 +60,9 @@ export const ContentVariables: React.FC = () => {
           </h3>
         </div>
         <div className="card-body">
-          <Skeleton loading={isLoading && !data.length} rows={5} height="40px">
+          {isLoading && !data.length ? (
+            <TableSkeleton rows={5} columns={3} />
+          ) : (
             <ComponentErrorBoundary componentName="Content Variables Editor">
               <JsonEditor
                 dictionaryData={dictionaryData}
@@ -70,7 +72,7 @@ export const ContentVariables: React.FC = () => {
                 onClearValidationErrors={() => setValidationErrors([])}
               />
             </ComponentErrorBoundary>
-          </Skeleton>
+          )}
         </div>
       </div>
     </PageErrorBoundary>

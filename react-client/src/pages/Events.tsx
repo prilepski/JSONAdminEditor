@@ -8,7 +8,7 @@ import {
   useEventMutation,
 } from '../hooks/useEventQuery';
 import toast from 'react-hot-toast';
-import { PageHeader, TabNavigation, SaveButton } from '../components/common';
+import { PageHeader, TabNavigation, SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { EventSelector } from '../components/events/EventSelector';
 import { EventDataForm } from '../components/events/EventDataForm';
@@ -36,13 +36,13 @@ export const Events: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('event-data');
   const [isNewEvent, setIsNewEvent] = useState(false);
   const [eventData, setEventData] = useState<EventData | null>(null);
-  const { data: activeEventTriggers = [] } = useEventTriggersQuery();
-  const { data: availableOrderTypes = [] } = useOrderTypesQuery();
-  const { data: availableTemplates = [] } = useTemplatesQuery();
+  const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
+  const { data: availableOrderTypes = [], isLoading: orderTypesLoading } = useOrderTypesQuery();
+  const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
   const [eventSupportsByOrderType, setEventSupportsByOrderType] = useState(false);
 
-  const { data: eventSupports = false } = useEventSupportQuery(selectedEvent);
-  const { data: eventInfo } = useEventQuery(selectedEvent, selectedOrderType);
+  const { data: eventSupports = false, isLoading: supportsLoading } = useEventSupportQuery(selectedEvent);
+  const { data: eventInfo, isLoading: eventLoading } = useEventQuery(selectedEvent, selectedOrderType);
   const eventMutation = useEventMutation();
 
   useEffect(() => {
@@ -115,62 +115,82 @@ export const Events: React.FC = () => {
     { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
   ];
 
+  const isInitialLoading = triggersLoading || orderTypesLoading || templatesLoading;
+  const isEventDataLoading = selectedEvent && (supportsLoading || eventLoading);
+
   return (
     <PageErrorBoundary pageName="Events">
       <PageHeader icon="fa-calendar-alt" title="Event Management" />
 
-      <ComponentErrorBoundary componentName="Event Selector">
-        <EventSelector
-          selectedEvent={selectedEvent}
-          selectedOrderType={selectedOrderType}
-          eventTriggers={activeEventTriggers}
-          orderTypes={availableOrderTypes}
-          eventSupportsByOrderType={eventSupportsByOrderType}
-          onEventChange={setSelectedEvent}
-          onOrderTypeChange={setSelectedOrderType}
-        />
-      </ComponentErrorBoundary>
+      {isInitialLoading ? (
+        <LoadingSpinner text="Loading event data..." />
+      ) : (
+        <ComponentErrorBoundary componentName="Event Selector">
+          <EventSelector
+            selectedEvent={selectedEvent}
+            selectedOrderType={selectedOrderType}
+            eventTriggers={activeEventTriggers}
+            orderTypes={availableOrderTypes}
+            eventSupportsByOrderType={eventSupportsByOrderType}
+            onEventChange={setSelectedEvent}
+            onOrderTypeChange={setSelectedOrderType}
+          />
+        </ComponentErrorBoundary>
+      )}
 
-      {selectedEvent && eventData && (
+      {selectedEvent && (
         <div className="card">
           <div className="card-header">
             <div className="d-flex justify-content-between align-items-center">
               <h3 className="mb-0">
                 <i className="fas fa-edit me-2"></i>Edit Event: {selectedEvent}
               </h3>
-              <SaveButton
-                onClick={handleSaveEventData}
-                loading={eventMutation.isPending}
-                text="Save Changes"
-              />
+              {eventData && (
+                <SaveButton
+                  onClick={handleSaveEventData}
+                  loading={eventMutation.isPending}
+                  text="Save Changes"
+                />
+              )}
             </div>
           </div>
           <div className="card-body">
-            <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            {isEventDataLoading ? (
+              <LoadingSpinner text="Loading event configuration..." />
+            ) : eventData ? (
+              <>
+                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {activeTab === 'event-data' && (
-              <ComponentErrorBoundary componentName="Event Data Form">
-                <EventDataForm eventData={eventData} onUpdate={updateEventField} />
-              </ComponentErrorBoundary>
-            )}
+                {activeTab === 'event-data' && (
+                  <ComponentErrorBoundary componentName="Event Data Form">
+                    <EventDataForm eventData={eventData} onUpdate={updateEventField} />
+                  </ComponentErrorBoundary>
+                )}
 
-            {activeTab === 'templates' && (
-              <ComponentErrorBoundary componentName="Template Selection">
-                <TemplateSelectionForm
-                  templates={eventData.Templates || {}}
-                  availableTemplates={availableTemplates}
-                  onUpdate={updateTemplateField}
-                />
-              </ComponentErrorBoundary>
-            )}
+                {activeTab === 'templates' && (
+                  <ComponentErrorBoundary componentName="Template Selection">
+                    <TemplateSelectionForm
+                      templates={eventData.Templates || {}}
+                      availableTemplates={availableTemplates}
+                      onUpdate={updateTemplateField}
+                    />
+                  </ComponentErrorBoundary>
+                )}
 
-            {activeTab === 'content-variables' && (
-              <ComponentErrorBoundary componentName="Content Variables">
-                <ContentVariablesForm
-                  contentVariables={eventData.ContentVariables || {}}
-                  onUpdate={updateContentVariables}
-                />
-              </ComponentErrorBoundary>
+                {activeTab === 'content-variables' && (
+                  <ComponentErrorBoundary componentName="Content Variables">
+                    <ContentVariablesForm
+                      contentVariables={eventData.ContentVariables || {}}
+                      onUpdate={updateContentVariables}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <i className="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                <p className="text-muted">Select an event to start editing</p>
+              </div>
             )}
           </div>
         </div>

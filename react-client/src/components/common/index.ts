@@ -5,3 +5,6 @@ export { TabNavigation } from './TabNavigation';
 export { PageErrorBoundary } from './PageErrorBoundary';
 export { ComponentErrorBoundary } from './ComponentErrorBoundary';
 export { ErrorFallback } from './ErrorFallback';
+export { LoadingSpinner } from './LoadingSpinner';
+export { TableSkeleton } from './TableSkeleton';
+export { CardSkeleton } from './CardSkeleton';

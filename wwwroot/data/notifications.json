@@ -48,7 +48,7 @@
       "Templates": {
         "Email": "d-72ba199f25aa4108a1b998c26fe7b4b0",
         "Sms": "Hxbdc5900bf4551db403f85f6a2a7c18be",
-        "Voice": ""
+        "Voice": "EH24bb0d84e795df332aa9a4a600f0e3b8"
       },
       "ContentVariables": {
         "sender": "$customerContact.name$",

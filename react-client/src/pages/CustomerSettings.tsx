@@ -8,22 +8,21 @@ import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import toast from 'react-hot-toast';
 import { CustomerContentVariable } from '../types/customer';
 import { CustomerSettingsData } from '../types/customerSettings';
-import { PageHeader, CustomerSelector, SaveButton } from '../components/common';
+import { PageHeader, CustomerSelector, SaveButton, LoadingSpinner, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [contentVariables, setContentVariables] = useState<CustomerContentVariable[]>([]);
-  const [showEditingSection, setShowEditingSection] = useState(false);
 
-  const { data: customers = [] } = useCustomersQuery();
-  const { data: customerSettings } = useCustomerSettingsQuery(selectedCustomer);
-  const { data: globalVariables = [] } = useContentVariablesQuery();
+
+  const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
+  const { data: customerSettings, isLoading: settingsLoading } = useCustomerSettingsQuery(selectedCustomer);
+  const { data: globalVariables = [], isLoading: variablesLoading } = useContentVariablesQuery();
   const saveMutation = useCustomerSettingsMutation();
 
   useEffect(() => {
     if (!selectedCustomer) {
-      setShowEditingSection(false);
       setContentVariables([]);
       return;
     }
@@ -63,7 +62,6 @@ export const CustomerSettings: React.FC = () => {
     });
 
     setContentVariables(variables);
-    setShowEditingSection(true);
   }, [selectedCustomer, customerSettings, globalVariables]);
 
   const handleSave = async () => {
@@ -130,6 +128,9 @@ export const CustomerSettings: React.FC = () => {
     );
   };
 
+  const isInitialLoading = customersLoading || variablesLoading;
+  const isSettingsLoading = selectedCustomer && settingsLoading;
+
   return (
     <PageErrorBoundary pageName="Customer Settings">
       <PageHeader
@@ -138,15 +139,19 @@ export const CustomerSettings: React.FC = () => {
         description="Choose a customer to view and edit their specific content variable overrides."
       />
 
-      <ComponentErrorBoundary componentName="Customer Selector">
-        <CustomerSelector
-          customers={customers}
-          selectedCustomer={selectedCustomer}
-          onCustomerChange={setSelectedCustomer}
-        />
-      </ComponentErrorBoundary>
+      {isInitialLoading ? (
+        <LoadingSpinner text="Loading customer data..." />
+      ) : (
+        <ComponentErrorBoundary componentName="Customer Selector">
+          <CustomerSelector
+            customers={customers}
+            selectedCustomer={selectedCustomer}
+            onCustomerChange={setSelectedCustomer}
+          />
+        </ComponentErrorBoundary>
+      )}
 
-      {showEditingSection && selectedCustomer && (
+      {selectedCustomer && (
         <ComponentErrorBoundary componentName="Customer Variables Editor">
           <div className="card">
             <div className="card-header">
@@ -159,111 +164,116 @@ export const CustomerSettings: React.FC = () => {
               </small>
             </div>
             <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h4>Content Variables Editor</h4>
-                <div>
-                  <button type="button" className="btn btn-success me-2" onClick={addVariable}>
-                    <i className="fas fa-plus me-1"></i>Add Variable
-                  </button>
-                  <SaveButton
-                    onClick={handleSave}
-                    loading={saveMutation.isPending}
-                    text="Save Variables"
-                  />
-                </div>
-              </div>
-
-              {contentVariables.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead className="table-dark">
-                      <tr>
-                        <th style={{ width: '25%' }}>Variable Name</th>
-                        <th style={{ width: '50%' }}>Value</th>
-                        <th style={{ width: '15%' }}>Is Redefined</th>
-                        <th style={{ width: '10%' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {contentVariables.map((variable, index) => (
-                        <tr key={`${variable.name}-${index}`}>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              value={variable.name}
-                              readOnly={!variable.isCustomerSpecific}
-                              onChange={(e) => updateVariable(index, 'name', e.target.value)}
-                            />
-                            {variable.isCustomerSpecific && (
-                              <small className="text-warning">
-                                <i className="fas fa-star me-1"></i>Customer-specific
-                              </small>
-                            )}
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              value={variable.value}
-                              readOnly={!variable.isCustomerSpecific && !variable.isRedefined}
-                              onChange={(e) => updateVariable(index, 'value', e.target.value)}
-                            />
-                            {variable.isRedefined && (
-                              <small className="text-warning">
-                                <i className="fas fa-edit me-1"></i>Overridden
-                              </small>
-                            )}
-                          </td>
-                          <td className="text-center">
-                            {variable.isCustomerSpecific ? (
-                              <span className="text-muted">-</span>
-                            ) : (
-                              <div className="form-check">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  checked={variable.isRedefined}
-                                  onChange={(e) => toggleRedefined(index, e.target.checked)}
-                                />
-                              </div>
-                            )}
-                          </td>
-                          <td className="text-center">
-                            {variable.isCustomerSpecific ? (
-                              <button
-                                type="button"
-                                className="btn btn-danger btn-sm"
-                                onClick={() => removeVariable(index)}
-                              >
-                                <i className="fas fa-trash"></i>
-                              </button>
-                            ) : (
-                              <span className="text-muted">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {isSettingsLoading ? (
+                <TableSkeleton rows={5} columns={4} />
               ) : (
-                <div className="text-center py-4">
-                  <i className="fas fa-code fa-3x text-muted mb-3"></i>
-                  <h5 className="text-muted">No Content Variables</h5>
-                  <p className="text-muted">
-                    No content variables found for this customer. Click "Add Variable" to start
-                    adding variables.
-                  </p>
-                </div>
+                <>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Content Variables Editor</h4>
+                    <div>
+                      <button type="button" className="btn btn-success me-2" onClick={addVariable}>
+                        <i className="fas fa-plus me-1"></i>Add Variable
+                      </button>
+                      <SaveButton
+                        onClick={handleSave}
+                        loading={saveMutation.isPending}
+                        text="Save Variables"
+                      />
+                    </div>
+                  </div>
+
+                  {contentVariables.length > 0 ? (
+                    <div className="table-responsive">
+                      <table className="table table-striped table-hover">
+                        <thead className="table-dark">
+                          <tr>
+                            <th style={{ width: '25%' }}>Variable Name</th>
+                            <th style={{ width: '50%' }}>Value</th>
+                            <th style={{ width: '15%' }}>Is Redefined</th>
+                            <th style={{ width: '10%' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {contentVariables.map((variable, index) => (
+                            <tr key={`${variable.name}-${index}`}>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  value={variable.name}
+                                  readOnly={!variable.isCustomerSpecific}
+                                  onChange={(e) => updateVariable(index, 'name', e.target.value)}
+                                />
+                                {variable.isCustomerSpecific && (
+                                  <small className="text-warning">
+                                    <i className="fas fa-star me-1"></i>Customer-specific
+                                  </small>
+                                )}
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  value={variable.value}
+                                  readOnly={!variable.isCustomerSpecific && !variable.isRedefined}
+                                  onChange={(e) => updateVariable(index, 'value', e.target.value)}
+                                />
+                                {variable.isRedefined && (
+                                  <small className="text-warning">
+                                    <i className="fas fa-edit me-1"></i>Overridden
+                                  </small>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                {variable.isCustomerSpecific ? (
+                                  <span className="text-muted">-</span>
+                                ) : (
+                                  <div className="form-check">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      checked={variable.isRedefined}
+                                      onChange={(e) => toggleRedefined(index, e.target.checked)}
+                                    />
+                                  </div>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                {variable.isCustomerSpecific ? (
+                                  <button
+                                    type="button"
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => removeVariable(index)}
+                                  >
+                                    <i className="fas fa-trash"></i>
+                                  </button>
+                                ) : (
+                                  <span className="text-muted">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <i className="fas fa-code fa-3x text-muted mb-3"></i>
+                      <h5 className="text-muted">No Content Variables</h5>
+                      <p className="text-muted">
+                        No content variables found for this customer. Click "Add Variable" to start
+                        adding variables.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         </ComponentErrorBoundary>
       )}
 
-      {/* Default State */}
-      {!showEditingSection && (
+      {!selectedCustomer && !isInitialLoading && (
         <div className="card">
           <div className="card-body text-center py-4">
             <i className="fas fa-code fa-3x text-muted mb-3"></i>
