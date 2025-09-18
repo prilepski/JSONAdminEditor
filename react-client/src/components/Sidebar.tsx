@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 
 export const Sidebar: React.FC = () => {
   const [globalSettingsOpen, setGlobalSettingsOpen] = useState(true);
@@ -23,19 +23,19 @@ export const Sidebar: React.FC = () => {
             </span>
             <ul className={`nav flex-column submenu ${globalSettingsOpen ? 'show' : ''}`}>
               <li className="nav-item">
-                <a className={`nav-link submenu-link ${isActive('/preferred-communication') ? 'active' : ''}`} href="/preferred-communication">
+                <Link className={`nav-link submenu-link ${isActive('/preferred-communication') ? 'active' : ''}`} to="/preferred-communication">
                   <i className="fas fa-comments me-2"></i>Preferred Communication
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a className={`nav-link submenu-link ${isActive('/content-variables') ? 'active' : ''}`} href="/content-variables">
+                <Link className={`nav-link submenu-link ${isActive('/content-variables') ? 'active' : ''}`} to="/content-variables">
                   <i className="fas fa-tags me-2"></i>Content Variables
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a className={`nav-link submenu-link ${isActive('/events') ? 'active' : ''}`} href="/events">
+                <Link className={`nav-link submenu-link ${isActive('/events') ? 'active' : ''}`} to="/events">
                   <i className="fas fa-calendar-alt me-2"></i>Events
-                </a>
+                </Link>
               </li>
             </ul>
           </li>
@@ -49,21 +49,21 @@ export const Sidebar: React.FC = () => {
             </span>
             <ul className={`nav flex-column submenu ${customerOverridesOpen ? 'show' : ''}`}>
               <li className="nav-item">
-                <a className={`nav-link submenu-link ${isActive('/customer-settings') ? 'active' : ''}`} href="/customer-settings">
+                <Link className={`nav-link submenu-link ${isActive('/customer-settings') ? 'active' : ''}`} to="/customer-settings">
                   <i className="fas fa-code me-2"></i>Customer Content Variables
-                </a>
+                </Link>
               </li>
               <li className="nav-item">
-                <a className={`nav-link submenu-link ${isActive('/customer-events') ? 'active' : ''}`} href="/customer-events">
+                <Link className={`nav-link submenu-link ${isActive('/customer-events') ? 'active' : ''}`} to="/customer-events">
                   <i className="fas fa-calendar-alt me-2"></i>Customer Events
-                </a>
+                </Link>
               </li>
             </ul>
           </li>
           <li className="nav-item">
-            <a className={`nav-link ${isActive('/dictionaries') ? 'active' : ''}`} href="/dictionaries">
+            <Link className={`nav-link ${isActive('/dictionaries') ? 'active' : ''}`} to="/dictionaries">
               <i className="fas fa-cog me-2"></i>Dictionaries
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
