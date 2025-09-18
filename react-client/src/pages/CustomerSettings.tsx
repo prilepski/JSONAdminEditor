@@ -17,7 +17,13 @@ export const CustomerSettings: React.FC = () => {
   const { data: globalVariables = [] } = useContentVariablesQuery();
   const saveMutation = useCustomerSettingsMutation();
 
-  const loadContentVariables = () => {
+  useEffect(() => {
+    if (!selectedCustomer) {
+      setShowEditingSection(false);
+      setContentVariables([]);
+      return;
+    }
+
     const customerVars = customerSettings?.contentVariables || {};
     const variables: CustomerContentVariable[] = [];
 
@@ -51,17 +57,7 @@ export const CustomerSettings: React.FC = () => {
     });
 
     setContentVariables(variables);
-  };
-
-  useEffect(() => {
-    if (selectedCustomer) {
-      loadContentVariables();
-      setShowEditingSection(true);
-    } else {
-      setShowEditingSection(false);
-      setContentVariables([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setShowEditingSection(true);
   }, [selectedCustomer, customerSettings, globalVariables]);
 
 
