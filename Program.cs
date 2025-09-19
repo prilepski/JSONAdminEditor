@@ -1,5 +1,6 @@
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Models;
+using JSONAdminEditor.Middleware;
 using Amazon.S3;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
@@ -17,6 +18,7 @@ builder.Services.Configure<StorageSettings>(
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
+builder.Services.AddAntiforgery();
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -94,6 +96,8 @@ builder.Services.AddSingleton<IAmazonS3>(provider =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

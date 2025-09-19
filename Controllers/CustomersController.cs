@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
+using System.Text.RegularExpressions;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -14,6 +15,13 @@ public class CustomersController : ControllerBase
         _storageService = storageServiceFactory.CreateStorageService();
     }
 
+    private static bool IsValidCustomerId(string customerId)
+    {
+        return !string.IsNullOrWhiteSpace(customerId) && 
+               Regex.IsMatch(customerId, @"^[a-zA-Z0-9_-]+$") && 
+               customerId.Length <= 50;
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetCustomers()
     {
@@ -25,7 +33,7 @@ public class CustomersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving customers" });
         }
     }
 
@@ -34,26 +42,33 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            var data = await _storageService.GetCustomerDataAsync(customerId + "_events");
+            if (!IsValidCustomerId(customerId))
+                return BadRequest(new { error = "Invalid customer ID" });
+                
+            var data = await _storageService.GetCustomerDataAsync($"{customerId}_events");
             return Ok(data ?? new Dictionary<string, object>());
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving customer events" });
         }
     }
 
     [HttpPost("{customerId}/events")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveCustomerEvents(string customerId, [FromBody] Dictionary<string, object> data)
     {
         try
         {
-            var success = await _storageService.SaveCustomerDataAsync(customerId + "_events", data);
+            if (!IsValidCustomerId(customerId))
+                return BadRequest(new { success = false, error = "Invalid customer ID" });
+                
+            var success = await _storageService.SaveCustomerDataAsync($"{customerId}_events", data);
             return Ok(new { success });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = ex.Message });
+            return StatusCode(500, new { success = false, error = "An error occurred while saving customer events" });
         }
     }
 
@@ -62,26 +77,33 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            var data = await _storageService.GetCustomerDataAsync(customerId + "_settings");
+            if (!IsValidCustomerId(customerId))
+                return BadRequest(new { error = "Invalid customer ID" });
+                
+            var data = await _storageService.GetCustomerDataAsync($"{customerId}_settings");
             return Ok(data ?? new Dictionary<string, object>());
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving customer settings" });
         }
     }
 
     [HttpPost("{customerId}/settings")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveCustomerSettings(string customerId, [FromBody] Dictionary<string, object> data)
     {
         try
         {
-            var success = await _storageService.SaveCustomerDataAsync(customerId + "_settings", data);
+            if (!IsValidCustomerId(customerId))
+                return BadRequest(new { success = false, error = "Invalid customer ID" });
+                
+            var success = await _storageService.SaveCustomerDataAsync($"{customerId}_settings", data);
             return Ok(new { success });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = ex.Message });
+            return StatusCode(500, new { success = false, error = "An error occurred while saving customer settings" });
         }
     }
 }

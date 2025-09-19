@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Services;
-using Newtonsoft.Json;
+using JSONAdminEditor.Security;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -78,16 +79,18 @@ public class DictionariesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = ex.Message });
+            return StatusCode(500, new { success = false, error = "An error occurred while loading dictionary data" });
         }
     }
 
     [HttpPost("save")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveDictionary([FromForm] string filePath, [FromForm] string jsonData, [FromForm] int fileType)
     {
         try
         {
-            var tableData = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonData);
+            PathValidator.SanitizePath(filePath);
+            var tableData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonData);
             if (tableData != null && Enum.IsDefined(typeof(FileType), fileType))
             {
                 var selectedFileType = (FileType)fileType;
@@ -115,8 +118,9 @@ public class DictionariesController : ControllerBase
                 
                 if (success)
                 {
-                    // Return success with updated data
-                    var updatedJsonData = await _jsonFileService.LoadJsonFileAsync(filePath);
+                    // Return success with existing data (avoid unnecessary file reload)
+                    var columnNames = GetDefaultColumnsForDictionary(selectedFileType);
+                    var columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType);
                     
                     return Ok(new
                     {
@@ -124,12 +128,12 @@ public class DictionariesController : ControllerBase
                         message = $"{GetDictionaryDisplayName(selectedFileType)} dictionary saved successfully!",
                         data = new
                         {
-                            columnNames = updatedJsonData.ColumnNames,
-                            columnTypes = updatedJsonData.ColumnTypes,
-                            tableData = updatedJsonData.TableData,
-                            filePath = updatedJsonData.FilePath,
-                            fileName = updatedJsonData.FileName,
-                            isValidJson = updatedJsonData.IsValidJson
+                            columnNames = columnNames,
+                            columnTypes = columnTypes,
+                            tableData = tableData,
+                            filePath = filePath,
+                            fileName = GetDictionaryFileName(selectedFileType),
+                            isValidJson = true
                         }
                     });
                 }
@@ -156,12 +160,13 @@ public class DictionariesController : ControllerBase
             return StatusCode(500, new
             {
                 success = false,
-                error = $"Error saving dictionary: {ex.Message}"
+                error = "An error occurred while saving dictionary"
             });
         }
     }
 
     [HttpPost("upload")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadFile([FromForm] FileUploadViewModel upload)
     {
         try
@@ -195,7 +200,7 @@ public class DictionariesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = $"Error uploading file: {ex.Message}" });
+            return StatusCode(500, new { success = false, error = "An error occurred while uploading file" });
         }
     }
 

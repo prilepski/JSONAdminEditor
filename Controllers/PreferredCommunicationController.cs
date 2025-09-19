@@ -24,11 +24,12 @@ public class PreferredCommunicationController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving preferred communication" });
         }
     }
 
     [HttpPost("save")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SavePreferredCommunication([FromBody] List<Dictionary<string, object>> data)
     {
         try
@@ -41,12 +42,12 @@ public class PreferredCommunicationController : ControllerBase
             }
             else
             {
-                return Ok(new { success = false, error = "Failed to save preferred communication" });
+                return BadRequest(new { success = false, error = "Failed to save preferred communication" });
             }
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = ex.Message });
+            return StatusCode(500, new { success = false, error = "An error occurred while saving preferred communication" });
         }
     }
 }

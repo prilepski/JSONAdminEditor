@@ -24,11 +24,12 @@ public class ContentVariablesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving content variables" });
         }
     }
 
     [HttpPost("save")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveContentVariables([FromBody] List<Dictionary<string, object>> data)
     {
         try
@@ -41,12 +42,12 @@ public class ContentVariablesController : ControllerBase
             }
             else
             {
-                return Ok(new { success = false, error = "Failed to save content variables" });
+                return BadRequest(new { success = false, error = "Failed to save content variables" });
             }
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = ex.Message });
+            return StatusCode(500, new { success = false, error = "An error occurred while saving content variables" });
         }
     }
 }

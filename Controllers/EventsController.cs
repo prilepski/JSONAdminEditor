@@ -24,7 +24,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving event triggers" });
         }
     }
 
@@ -38,7 +38,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving order types" });
         }
     }
 
@@ -52,7 +52,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving templates" });
         }
     }
 
@@ -66,7 +66,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while checking event support" });
         }
     }
 
@@ -80,7 +80,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving event data" });
         }
     }
 
@@ -94,7 +94,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = "An error occurred while retrieving event template" });
         }
     }
 
@@ -107,6 +107,7 @@ public class EventsController : ControllerBase
     }
 
     [HttpPost("save")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveEvent([FromBody] EventRequest request)
     {
         try
@@ -118,6 +119,10 @@ public class EventsController : ControllerBase
             }
             else
             {
+                if (string.IsNullOrEmpty(request.OrderType))
+                {
+                    return BadRequest(new { success = false, error = "OrderType is required for updating existing events" });
+                }
                 success = await _notificationsService.UpdateEventByOrderTypeAsync(request.EventName, request.OrderType, request.EventData);
             }
             
@@ -125,7 +130,7 @@ public class EventsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, error = ex.Message });
+            return StatusCode(500, new { success = false, error = "An error occurred while saving event" });
         }
     }
 }
