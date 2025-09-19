@@ -14,6 +14,7 @@ interface JsonEditorProps {
     tableData: TableData[]
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
   onClearValidationErrors: () => void;
+  channelOptions?: string[];
 }
 
 export const JsonEditor: React.FC<JsonEditorProps> = ({
@@ -22,9 +23,11 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   validationErrors,
   onSave,
   onClearValidationErrors,
+  channelOptions: propChannelOptions,
 }) => {
   const [tableData, setTableData] = useState<TableData[]>([]);
-  const { data: channelOptions = ['Email', 'Sms', 'Voice'] } = useChannelOptionsQuery();
+  const { data: defaultChannelOptions = ['Email', 'Sms', 'Voice'] } = useChannelOptionsQuery();
+  const channelOptions = propChannelOptions || defaultChannelOptions;
   const [saving, setSaving] = useState(false);
   const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
 
@@ -52,7 +55,13 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     const newRow: TableData = {};
     dictionaryData.columnNames.forEach((column) => {
       const columnType = dictionaryData.columnTypes?.[column] || 'text';
-      newRow[column] = columnType === 'boolean' ? false : '';
+      if (columnType === 'boolean') {
+        newRow[column] = false;
+      } else if (columnType === 'number' && column === 'Priority') {
+        newRow[column] = 1;
+      } else {
+        newRow[column] = '';
+      }
     });
 
     setTableData([...tableData, newRow]);

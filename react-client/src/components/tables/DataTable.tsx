@@ -65,6 +65,36 @@ export const DataTable: React.FC<DataTableProps> = ({
       );
     }
 
+    if (column === 'Channel' && columnType === 'select') {
+      return (
+        <select
+          className={inputClass}
+          value={cellValue.toString()}
+          onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
+          required
+        >
+          <option value="">Select Channel...</option>
+          {channelOptions.map((channel) => (
+            <option key={channel} value={channel}>
+              {channel}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (columnType === 'number') {
+      return (
+        <input
+          type="number"
+          className={inputClass}
+          value={cellValue.toString()}
+          onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
+          min="1"
+        />
+      );
+    }
+
     return (
       <input
         type="text"

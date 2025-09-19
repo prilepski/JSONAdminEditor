@@ -5,6 +5,7 @@ import {
   usePreferredCommunicationQuery,
   usePreferredCommunicationMutation,
 } from '../hooks/usePreferredCommunicationQuery';
+import { useDictionaryQuery } from '../hooks/useDictionaryQuery';
 import { ValidationError } from '../types/api';
 import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/common';
@@ -12,7 +13,16 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 
 export const PreferredCommunication: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
+  const { data: eventChannelsData } = useDictionaryQuery(6); // FileType.EventChannels = 6
   const saveMutation = usePreferredCommunicationMutation();
+  
+  const channelOptions = eventChannelsData?.data?.tableData?.map((row: any) => {
+    // Try different possible field names
+    return row['Channel Name'] || row['channelName'] || row['Channel'] || row['channel'];
+  }).filter(Boolean) || ['Email', 'SMS', 'Voice'];
+  
+  console.log('Event Channels Data:', eventChannelsData);
+  console.log('Extracted Channel Options:', channelOptions);
 
   const { state, updateField } = useFormState({
     validationErrors: [] as ValidationError[],
@@ -20,13 +30,10 @@ export const PreferredCommunication: React.FC = () => {
 
   const { validationErrors } = state;
 
-  const columnNames = ['Customer ID', 'Preferred Channel', 'Phone', 'Email', 'IsActive'];
+  const columnNames = ['Channel', 'Priority'];
   const columnTypes = {
-    'Customer ID': 'text',
-    'Preferred Channel': 'text',
-    Phone: 'text',
-    Email: 'text',
-    IsActive: 'boolean',
+    Channel: 'select',
+    Priority: 'number',
   };
 
   const handleSave = async (tableData: Record<string, any>[]) => {
@@ -67,7 +74,7 @@ export const PreferredCommunication: React.FC = () => {
       </h1>
 
       <p className="text-muted mb-4">
-        Manage customer preferred communication channels and contact information.
+        Manage communication channel priorities. Channel values must be unique and exist in the Event Channels dictionary.
       </p>
 
       <div className="card">
@@ -87,6 +94,7 @@ export const PreferredCommunication: React.FC = () => {
                 validationErrors={validationErrors}
                 onSave={handleSave}
                 onClearValidationErrors={() => updateField('validationErrors', [])}
+                channelOptions={channelOptions}
               />
             </ComponentErrorBoundary>
           )}
