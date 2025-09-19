@@ -1,8 +1,0 @@
-{
-  "Event": "Ready For Scheduling",
-  "OrderType": "Delivery",
-  "Templates": {
-    "Email": "d-e885a6aeedaf49f7aee598df4e47bc04",
-    "Sms": "HX80cc578c377e8cc30015278665a01384b"
-  }
-}
