@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { FileType } from '../types';
 import { useUploadMutation } from '../hooks/useDictionaryQuery';
+import { useConfirm } from '../hooks/useConfirm';
+import { ConfirmModal } from './common';
 
 interface FileUploadProps {
   selectedFileType: FileType;
@@ -22,27 +24,35 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   onUploadSuccess,
   onUploadError,
 }) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const uploadMutation = useUploadMutation();
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadMutation = useUploadMutation();
+  const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && selectedFileType !== FileType.None) {
-      setSelectedFile(file);
-      setShowConfirmation(true);
+      
+      const confirmed = await confirm({
+        title: 'Replace Dictionary',
+        message: `Warning: The ${dictionaryNames[selectedFileType]} dictionary will be completely replaced with the content of the selected file. This action cannot be undone.`,
+        confirmText: 'Replace Dictionary',
+        cancelText: 'Cancel'
+      });
+      
+      if (confirmed) {
+        await handleUpload(file);
+      } else {
+        resetFileInput();
+      }
     }
   };
 
-  const handleConfirmUpload = async () => {
-    if (!selectedFile) return;
-
-    setShowConfirmation(false);
-
+  const handleUpload = async (file: File) => {
     try {
       const response = await uploadMutation.mutateAsync({
         fileType: selectedFileType,
-        jsonFile: selectedFile,
+        jsonFile: file,
       });
 
       if (response.success) {
@@ -53,19 +63,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     } catch (error) {
       onUploadError('Error uploading file');
     } finally {
-      setSelectedFile(null);
-      // Reset file input
-      const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      resetFileInput();
     }
   };
 
-  const handleCancelUpload = () => {
-    setShowConfirmation(false);
-    setSelectedFile(null);
-    // Reset file input
-    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-    if (fileInput) fileInput.value = '';
+  const resetFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   if (selectedFileType === FileType.None) {
@@ -75,72 +80,28 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <>
       <div className="input-group">
-        <label className="input-group-text" htmlFor="fileInput">
+        <label className="input-group-text">
           <i className="fas fa-upload me-1"></i>Replace Dictionary
         </label>
         <input
           type="file"
           className="form-control"
           accept=".json"
-          id="fileInput"
+          ref={fileInputRef}
           onChange={handleFileSelect}
           disabled={uploadMutation.isPending}
         />
       </div>
 
-      {/* Confirmation Modal */}
-      {showConfirmation && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
-          onClick={(e) => e.target === e.currentTarget && handleCancelUpload()}
-        >
-          <div className="card" style={{ maxWidth: '500px', width: '90%' }}>
-            <div className="card-header bg-warning text-dark">
-              <h5 className="mb-0">
-                <i className="fas fa-exclamation-triangle me-2"></i>Replace Dictionary
-              </h5>
-            </div>
-            <div className="card-body">
-              <p className="mb-3">
-                <strong>Warning:</strong> The{' '}
-                <span className="text-primary">{dictionaryNames[selectedFileType]}</span> dictionary
-                will be completely replaced with the content of the selected file.
-              </p>
-              <p className="mb-3 text-muted">
-                This action cannot be undone. All existing data in this dictionary will be lost.
-              </p>
-              <div className="d-flex justify-content-end gap-2">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handleCancelUpload}
-                  disabled={uploadMutation.isPending}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-warning"
-                  onClick={handleConfirmUpload}
-                  disabled={uploadMutation.isPending}
-                >
-                  {uploadMutation.isPending ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status"></span>
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-upload me-1"></i>Replace Dictionary
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={isOpen}
+        title={options.title}
+        message={options.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+        confirmText={options.confirmText}
+        cancelText={options.cancelText}
+      />
     </>
   );
 };

@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 export function useFormState<T extends Record<string, any>>(initialState: T) {
   const [state, setState] = useState<T>(initialState);
 
-  const updateField = useCallback((field: keyof T, value: any) => {
+  const updateField = useCallback((field: keyof T, value: T[keyof T]) => {
     setState(prev => ({ ...prev, [field]: value }));
   }, []);
 

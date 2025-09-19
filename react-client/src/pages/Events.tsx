@@ -70,7 +70,7 @@ export const Events: React.FC = () => {
       setEventData(null);
       updateField('isNewEvent', false);
     }
-  }, [selectedEvent, selectedOrderType, eventSupports, eventInfo]);
+  }, [selectedEvent, selectedOrderType, eventSupports, eventInfo, updateField]);
 
   const handleSaveEventData = async () => {
     if (!eventData || !selectedEvent) return;

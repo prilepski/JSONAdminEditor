@@ -18,7 +18,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return (
     <div className="d-flex flex-column align-items-center justify-content-center py-4">
       <div className={`spinner-border text-primary ${sizeClasses[size]}`} role="status">
-        <span className="visually-hidden">Loading...</span>
+        <span className="visually-hidden">{text || 'Loading...'}</span>
       </div>
       {text && <p className="mt-2 text-muted mb-0">{text}</p>}
     </div>

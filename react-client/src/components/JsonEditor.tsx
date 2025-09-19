@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FileType, DictionaryData, ValidationError, TableData } from '../types';
 import { useChannelOptionsQuery } from '../hooks/useDictionaryQuery';
+import { useConfirm } from '../hooks/useConfirm';
 import { DataTable } from './tables/DataTable';
 import { SaveButton } from './common/SaveButton';
+import { ConfirmModal } from './common';
 
 interface JsonEditorProps {
   dictionaryData?: DictionaryData | null;
@@ -24,6 +26,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   const [tableData, setTableData] = useState<TableData[]>([]);
   const { data: channelOptions = ['Email', 'Sms', 'Voice'] } = useChannelOptionsQuery();
   const [saving, setSaving] = useState(false);
+  const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
 
   useEffect(() => {
     if (dictionaryData?.tableData) {
@@ -55,8 +58,15 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     setTableData([...tableData, newRow]);
   };
 
-  const deleteRow = (index: number) => {
-    if (window.confirm('Are you sure you want to delete this row?')) {
+  const deleteRow = async (index: number) => {
+    const confirmed = await confirm({
+      title: 'Delete Row',
+      message: 'Are you sure you want to delete this row? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    
+    if (confirmed) {
       const newData = tableData.filter((_, i) => i !== index);
       setTableData(newData);
     }
@@ -133,6 +143,16 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           selectedFileType={selectedFileType}
         />
       )}
+      
+      <ConfirmModal
+        isOpen={isOpen}
+        title={options.title}
+        message={options.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+        confirmText={options.confirmText}
+        cancelText={options.cancelText}
+      />
     </div>
   );
 };

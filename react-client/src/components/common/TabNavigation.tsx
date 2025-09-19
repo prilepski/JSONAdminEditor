@@ -19,7 +19,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ tabs, activeTab, o
         <button
           type="button"
           role="tab"
-          aria-selected={activeTab === tab.id}
+          aria-selected={activeTab === tab.id ? 'true' : 'false'}
           className={`nav-link ${activeTab === tab.id ? 'active' : ''}`}
           onClick={() => onTabChange(tab.id)}
         >

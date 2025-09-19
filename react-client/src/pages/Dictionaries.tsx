@@ -4,7 +4,6 @@ import { FileType, ValidationError, TableData } from '../types';
 import {
   useDictionaryQuery,
   useDictionaryMutation,
-  useUploadMutation,
 } from '../hooks/useDictionaryQuery';
 import { DictionarySelector } from '../components/DictionarySelector';
 import { FileUpload } from '../components/FileUpload';
@@ -24,7 +23,7 @@ export const Dictionaries: React.FC = () => {
 
   const { data: dictionaryResponse, isLoading, error } = useDictionaryQuery(selectedFileType);
   const saveMutation = useDictionaryMutation();
-  useUploadMutation();
+
 
   const dictionaryData = dictionaryResponse?.success ? dictionaryResponse.data : null;
 

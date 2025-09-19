@@ -18,7 +18,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   <button
     type="button"
     className="btn btn-primary"
-    onClick={onClick}
+    onClick={loading ? undefined : onClick}
     disabled={loading || disabled}
   >
     {loading ? (

@@ -1,11 +1,12 @@
-import { useReducer } from 'react';
+import { useReducer, useCallback } from 'react';
+import { ValidationError } from '../types/errors';
 
 interface PageState {
   selectedCustomer: string;
   selectedEvent: string;
   selectedOrderType: string;
   showEditor: boolean;
-  validationErrors: any[];
+  validationErrors: ValidationError[];
 }
 
 type PageAction = 
@@ -13,7 +14,7 @@ type PageAction =
   | { type: 'SET_EVENT'; payload: string }
   | { type: 'SET_ORDER_TYPE'; payload: string }
   | { type: 'TOGGLE_EDITOR'; payload?: boolean }
-  | { type: 'SET_VALIDATION_ERRORS'; payload: any[] }
+  | { type: 'SET_VALIDATION_ERRORS'; payload: ValidationError[] }
   | { type: 'CLEAR_VALIDATION_ERRORS' }
   | { type: 'RESET' };
 
@@ -22,7 +23,7 @@ const initialState: PageState = {
   selectedEvent: '',
   selectedOrderType: '',
   showEditor: false,
-  validationErrors: []
+  validationErrors: [] as ValidationError[]
 };
 
 function pageReducer(state: PageState, action: PageAction): PageState {
@@ -49,14 +50,29 @@ function pageReducer(state: PageState, action: PageAction): PageState {
 export function usePageState() {
   const [state, dispatch] = useReducer(pageReducer, initialState);
 
+  const setCustomer = useCallback((customer: string) => 
+    dispatch({ type: 'SET_CUSTOMER', payload: customer }), []);
+  const setEvent = useCallback((event: string) => 
+    dispatch({ type: 'SET_EVENT', payload: event }), []);
+  const setOrderType = useCallback((orderType: string) => 
+    dispatch({ type: 'SET_ORDER_TYPE', payload: orderType }), []);
+  const toggleEditor = useCallback((show?: boolean) => 
+    dispatch({ type: 'TOGGLE_EDITOR', payload: show }), []);
+  const setValidationErrors = useCallback((errors: ValidationError[]) => 
+    dispatch({ type: 'SET_VALIDATION_ERRORS', payload: errors }), []);
+  const clearValidationErrors = useCallback(() => 
+    dispatch({ type: 'CLEAR_VALIDATION_ERRORS' }), []);
+  const reset = useCallback(() => 
+    dispatch({ type: 'RESET' }), []);
+
   return {
     ...state,
-    setCustomer: (customer: string) => dispatch({ type: 'SET_CUSTOMER', payload: customer }),
-    setEvent: (event: string) => dispatch({ type: 'SET_EVENT', payload: event }),
-    setOrderType: (orderType: string) => dispatch({ type: 'SET_ORDER_TYPE', payload: orderType }),
-    toggleEditor: (show?: boolean) => dispatch({ type: 'TOGGLE_EDITOR', payload: show }),
-    setValidationErrors: (errors: any[]) => dispatch({ type: 'SET_VALIDATION_ERRORS', payload: errors }),
-    clearValidationErrors: () => dispatch({ type: 'CLEAR_VALIDATION_ERRORS' }),
-    reset: () => dispatch({ type: 'RESET' })
+    setCustomer,
+    setEvent,
+    setOrderType,
+    toggleEditor,
+    setValidationErrors,
+    clearValidationErrors,
+    reset
   };
 }

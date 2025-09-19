@@ -8,3 +8,4 @@ export { ErrorFallback } from './ErrorFallback';
 export { LoadingSpinner } from './LoadingSpinner';
 export { TableSkeleton } from './TableSkeleton';
 export { CardSkeleton } from './CardSkeleton';
+export { ConfirmModal } from './ConfirmModal';
