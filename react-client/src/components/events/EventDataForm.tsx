@@ -1,4 +1,5 @@
 import React from 'react';
+import { ToggleButton } from '../common';
 
 interface EventDataFormProps {
   eventData: {
@@ -54,15 +55,13 @@ export const EventDataForm: React.FC<EventDataFormProps> = ({ eventData, onUpdat
       </div>
     </div>
     <div className="mb-3">
-      <div className="form-check">
-        <input
-          type="checkbox"
-          className="form-check-input"
-          checked={eventData.IsSuppressed || false}
-          onChange={(e) => onUpdate('IsSuppressed', e.target.checked)}
-        />
-        <label className="form-check-label">Is Suppressed</label>
-      </div>
+      <ToggleButton
+        checked={eventData.IsSuppressed || false}
+        onChange={(checked) => onUpdate('IsSuppressed', checked)}
+        label="Suppressed"
+        variant="warning"
+        size="sm"
+      />
     </div>
   </div>
 );

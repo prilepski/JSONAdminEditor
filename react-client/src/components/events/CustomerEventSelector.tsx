@@ -1,4 +1,5 @@
 import React from 'react';
+import { ToggleButtonGroup } from '../common';
 
 interface CustomerEventSelectorProps {
   selectedCustomer: string;
@@ -40,18 +41,15 @@ export const CustomerEventSelector: React.FC<CustomerEventSelectorProps> = ({
           </select>
         </div>
         <div className="col-md-6">
-          <div className="d-flex align-items-center">
-            <span className="me-2 text-muted">Delivery</span>
-            <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                checked={selectedOrderType === 'Pickup'}
-                onChange={(e) => onOrderTypeChange(e.target.checked ? 'Pickup' : 'Delivery')}
-              />
-            </div>
-            <span className="ms-2 text-muted">Pickup</span>
-          </div>
+          <ToggleButtonGroup
+            options={[
+              { value: 'Delivery', label: 'Delivery' },
+              { value: 'Pickup', label: 'Pickup' }
+            ]}
+            selected={selectedOrderType}
+            onChange={onOrderTypeChange}
+            size="sm"
+          />
         </div>
       </div>
     </div>
