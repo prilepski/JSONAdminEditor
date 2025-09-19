@@ -12,6 +12,7 @@ import { ContentVariables } from './pages/ContentVariables';
 import { CustomerEvents } from './pages/CustomerEvents';
 import { CustomerSettings } from './pages/CustomerSettings';
 import { PreferredCommunication } from './pages/PreferredCommunication';
+import { AuthProvider, ProtectedRoute, LoginCallback } from './auth';
 
 import './App.css';
 
@@ -20,51 +21,63 @@ function App() {
 
   return (
     <PageErrorBoundary pageName="Application">
-      <QueryClientProvider client={queryClient}>
-        <NiceModal.Provider>
-          <Router>
-            <div className="App">
-              <header>
-                <nav className="navbar navbar-dark bg-primary border-bottom box-shadow mb-3">
-                  <div className="container-fluid">
-                    <Link className="navbar-brand" to="/">
-                      <i className="fas fa-table me-2"></i>
-                      {import.meta.env.VITE_APP_NAME || 'JSON Admin Editor'}
-                    </Link>
-                  </div>
-                </nav>
-              </header>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <NiceModal.Provider>
+            <Router>
+              <div className="App">
+                <Routes>
+                  <Route path="/login/callback" element={<LoginCallback />} />
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <header>
+                          <nav className="navbar navbar-dark bg-primary border-bottom box-shadow mb-3">
+                            <div className="container-fluid">
+                              <Link className="navbar-brand" to="/">
+                                <i className="fas fa-table me-2"></i>
+                                {import.meta.env.VITE_APP_NAME || 'JSON Admin Editor'}
+                              </Link>
+                            </div>
+                          </nav>
+                        </header>
 
-              <div className="container-fluid">
-                <div className="row">
-                  <Sidebar />
+                        <div className="container-fluid">
+                          <div className="row">
+                            <Sidebar />
 
-                  <main className="col-md-10 ms-sm-auto col-lg-10 px-md-4">
-                    <div className="pt-3 pb-3">
-                      <Routes>
-                        <Route path="/" element={<Navigate to="/dictionaries" replace />} />
-                        <Route path="/dictionaries" element={<Dictionaries />} />
-                        <Route path="/events" element={<Events />} />
-                        <Route path="/content-variables" element={<ContentVariables />} />
-                        <Route path="/customer-events" element={<CustomerEvents />} />
-                        <Route path="/customer-settings" element={<CustomerSettings />} />
-                        <Route
-                          path="/preferred-communication"
-                          element={<PreferredCommunication />}
-                        />
-                      </Routes>
-                    </div>
-                  </main>
-                </div>
+                            <main className="col-md-10 ms-sm-auto col-lg-10 px-md-4">
+                              <div className="pt-3 pb-3">
+                                <Routes>
+                                  <Route path="/" element={<Navigate to="/dictionaries" replace />} />
+                                  <Route path="/dictionaries" element={<Dictionaries />} />
+                                  <Route path="/events" element={<Events />} />
+                                  <Route path="/content-variables" element={<ContentVariables />} />
+                                  <Route path="/customer-events" element={<CustomerEvents />} />
+                                  <Route path="/customer-settings" element={<CustomerSettings />} />
+                                  <Route
+                                    path="/preferred-communication"
+                                    element={<PreferredCommunication />}
+                                  />
+                                </Routes>
+                              </div>
+                            </main>
+                          </div>
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
               </div>
-            </div>
-          </Router>
-          <Toaster position="top-right" />
-        </NiceModal.Provider>
-        {import.meta.env.VITE_ENABLE_DEVTOOLS === 'true' && (
-          <ReactQueryDevtools initialIsOpen={false} />
-        )}
-      </QueryClientProvider>
+            </Router>
+            <Toaster position="top-right" />
+          </NiceModal.Provider>
+          {import.meta.env.VITE_ENABLE_DEVTOOLS === 'true' && (
+            <ReactQueryDevtools initialIsOpen={false} />
+          )}
+        </QueryClientProvider>
+      </AuthProvider>
     </PageErrorBoundary>
   );
 }
