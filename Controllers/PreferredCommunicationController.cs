@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -29,12 +30,17 @@ public class PreferredCommunicationController : ControllerBase
     }
 
     [HttpPost("save")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SavePreferredCommunication([FromBody] List<Dictionary<string, object>> data)
+    public async Task<IActionResult> SavePreferredCommunication([FromBody] JsonElement requestData)
     {
         try
         {
-            var success = await _jsonFileService.SaveJsonFileAsync("data/preferred-communication.json", data);
+            var dataProperty = requestData.GetProperty("data");
+            var tableData = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(dataProperty.GetRawText());
+            var convertedData = tableData?.Select(row => 
+                row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
+            ).ToList();
+            
+            var success = await _jsonFileService.SaveJsonFileAsync("data/preferred-communication.json", convertedData);
             
             if (success)
             {
@@ -49,5 +55,18 @@ public class PreferredCommunicationController : ControllerBase
         {
             return StatusCode(500, new { success = false, error = "An error occurred while saving preferred communication" });
         }
+    }
+    
+    private static object GetJsonElementValue(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? "",
+            JsonValueKind.Number => element.TryGetInt32(out var intVal) ? intVal : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => element.ToString()
+        };
     }
 }

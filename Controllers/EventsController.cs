@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -100,30 +101,32 @@ public class EventsController : ControllerBase
 
     public class EventRequest
     {
-        public string EventName { get; set; } = string.Empty;
-        public string? OrderType { get; set; }
-        public Dictionary<string, object> EventData { get; set; } = new();
-        public bool IsNew { get; set; }
+        public string eventName { get; set; } = string.Empty;
+        public string? orderType { get; set; }
+        public Dictionary<string, object> eventData { get; set; } = new();
+        public bool isNew { get; set; }
     }
 
     [HttpPost("save")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveEvent([FromBody] EventRequest request)
+    public async Task<IActionResult> SaveEvent([FromBody] JsonElement requestData)
     {
         try
         {
+            var request = JsonSerializer.Deserialize<EventRequest>(requestData.GetRawText());
+            if (request == null) return BadRequest(new { success = false, error = "Invalid request data" });
+            
             bool success;
-            if (request.IsNew)
+            if (request.isNew)
             {
-                success = await _notificationsService.AddNewEventAsync(request.EventName, request.EventData);
+                success = await _notificationsService.AddNewEventAsync(request.eventName, request.eventData);
             }
             else
             {
-                if (string.IsNullOrEmpty(request.OrderType))
+                if (string.IsNullOrEmpty(request.orderType))
                 {
                     return BadRequest(new { success = false, error = "OrderType is required for updating existing events" });
                 }
-                success = await _notificationsService.UpdateEventByOrderTypeAsync(request.EventName, request.OrderType, request.EventData);
+                success = await _notificationsService.UpdateEventByOrderTypeAsync(request.eventName, request.orderType, request.eventData);
             }
             
             return Ok(new { success });

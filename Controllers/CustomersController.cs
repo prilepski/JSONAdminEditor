@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -55,7 +56,6 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId}/events")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveCustomerEvents(string customerId, [FromBody] Dictionary<string, object> data)
     {
         try
@@ -90,7 +90,6 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId}/settings")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveCustomerSettings(string customerId, [FromBody] Dictionary<string, object> data)
     {
         try

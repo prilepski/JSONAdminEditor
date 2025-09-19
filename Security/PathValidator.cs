@@ -5,11 +5,11 @@ namespace JSONAdminEditor.Security;
 public static class PathValidator
 {
     private static readonly string[] AllowedPaths = {
-        "Data/Templates.json",
-        "Data/EventTriggers.json", 
-        "Data/EventChannels.json",
-        "Data/OrderTypes.json",
-        "Data/Customers.json",
+        "data/dictionaries/templates.json",
+        "data/dictionaries/event-triggers.json", 
+        "data/dictionaries/event-channels.json",
+        "data/dictionaries/order-types.json",
+        "data/dictionaries/customers.json",
         "Data/ContentVariables.json",
         "Data/PreferredCommunication.json"
     };

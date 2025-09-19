@@ -84,20 +84,28 @@ public class DictionariesController : ControllerBase
     }
 
     [HttpPost("save")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SaveDictionary([FromForm] string filePath, [FromForm] string jsonData, [FromForm] int fileType)
     {
         try
         {
             PathValidator.SanitizePath(filePath);
-            var tableData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonData);
-            if (tableData != null && Enum.IsDefined(typeof(FileType), fileType))
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var tableData = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(jsonData, options);
+            
+            // Convert JsonElement to proper values
+            var convertedData = tableData?.Select(row => 
+                row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
+            ).ToList();
+            if (convertedData != null && Enum.IsDefined(typeof(FileType), fileType))
             {
                 var selectedFileType = (FileType)fileType;
                 
                 // Validate uniqueness before saving
                 var fileName = GetDictionaryFileName(selectedFileType);
-                var validationResult = await _validationService.ValidateUniquenessAsync(fileName, tableData);
+                var validationResult = await _validationService.ValidateUniquenessAsync(fileName, convertedData);
                 
                 if (!validationResult.IsValid)
                 {
@@ -114,13 +122,17 @@ public class DictionariesController : ControllerBase
                     });
                 }
                 
-                var success = await _jsonFileService.SaveJsonFileAsync(filePath, tableData);
+                var success = await _jsonFileService.SaveJsonFileAsync(filePath, convertedData);
                 
                 if (success)
                 {
                     // Return success with existing data (avoid unnecessary file reload)
                     var columnNames = GetDefaultColumnsForDictionary(selectedFileType);
                     var columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType);
+                    
+                    // Serialize and deserialize to ensure proper JSON format
+                    var jsonString = JsonSerializer.Serialize(tableData);
+                    var properTableData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString);
                     
                     return Ok(new
                     {
@@ -130,7 +142,7 @@ public class DictionariesController : ControllerBase
                         {
                             columnNames = columnNames,
                             columnTypes = columnTypes,
-                            tableData = tableData,
+                            tableData = convertedData,
                             filePath = filePath,
                             fileName = GetDictionaryFileName(selectedFileType),
                             isValidJson = true
@@ -157,16 +169,17 @@ public class DictionariesController : ControllerBase
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Dictionary save error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return StatusCode(500, new
             {
                 success = false,
-                error = "An error occurred while saving dictionary"
+                error = $"An error occurred while saving dictionary: {ex.Message}"
             });
         }
     }
 
     [HttpPost("upload")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadFile([FromForm] FileUploadViewModel upload)
     {
         try
@@ -266,6 +279,19 @@ public class DictionariesController : ControllerBase
             FileType.OrderTypes => "Order Types",
             FileType.Customers => "Customers",
             _ => "Dictionary"
+        };
+    }
+    
+    private static object GetJsonElementValue(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? "",
+            JsonValueKind.Number => element.TryGetInt32(out var intVal) ? intVal : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => element.ToString()
         };
     }
 }

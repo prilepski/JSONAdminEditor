@@ -21,6 +21,7 @@ export const dictionaryService = {
     formData.append('filePath', filePath);
     formData.append('jsonData', JSON.stringify(jsonData));
     formData.append('fileType', fileType.toString());
+    
     const response = await api.post('/dictionaries/save', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
