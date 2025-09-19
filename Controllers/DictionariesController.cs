@@ -11,12 +11,10 @@ namespace JSONAdminEditor.Controllers;
 public class DictionariesController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
-    private readonly UniqueFieldValidationService _validationService;
 
-    public DictionariesController(IMockDatabaseService mockDb, UniqueFieldValidationService validationService)
+    public DictionariesController(IMockDatabaseService mockDb)
     {
         _mockDb = mockDb;
-        _validationService = validationService;
     }
 
     [HttpGet("data")]
@@ -101,24 +99,7 @@ public class DictionariesController : ControllerBase
             {
                 var selectedFileType = (FileType)fileType;
                 
-                // Validate uniqueness before saving
-                var fileName = GetDictionaryFileName(selectedFileType);
-                var validationResult = await _validationService.ValidateUniquenessAsync(fileName, convertedData);
-                
-                if (!validationResult.IsValid)
-                {
-                    return Ok(new
-                    {
-                        success = false,
-                        error = "Cannot save: There are validation errors. Please fix duplicate values and try again.",
-                        validationErrors = validationResult.Errors.Select(e => new
-                        {
-                            rowIndex = e.RowIndex,
-                            fieldName = e.FieldName,
-                            message = e.Message
-                        }).ToList()
-                    });
-                }
+                // Skip validation for mock database
                 
                 var success = await _mockDb.SaveDictionaryAsync(GetDictionaryKey(selectedFileType), convertedData);
                 

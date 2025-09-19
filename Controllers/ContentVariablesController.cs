@@ -23,7 +23,8 @@ public class ContentVariablesController : ControllerBase
         try
         {
             var data = await _mockDb.GetGlobalDataAsync("content-variables");
-            return Ok(data ?? new List<Dictionary<string, object>>());
+            var listData = data?["data"] as List<Dictionary<string, object>> ?? new List<Dictionary<string, object>>();
+            return Ok(listData);
         }
         catch (Exception ex)
         {

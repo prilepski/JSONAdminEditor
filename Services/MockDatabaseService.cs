@@ -148,19 +148,27 @@ public class MockDatabaseService : IMockDatabaseService
     private void InitializeGlobalData()
     {
         // Content variables
-        _globalData["content-variables"] = new List<Dictionary<string, object>>
+        _globalData["content-variables"] = new Dictionary<string, object>
         {
-            new() { ["Name"] = "company_name", ["Value"] = "$Company.Name$", ["IsActive"] = true },
-            new() { ["Name"] = "customer_phone", ["Value"] = "$Customer.Phone$", ["IsActive"] = true },
-            new() { ["Name"] = "order_id", ["Value"] = "$Order.Id$", ["IsActive"] = true }
+            ["data"] = new List<Dictionary<string, object>>
+            {
+                new() { ["Variable Name"] = "company_name", ["Variable Value"] = "$Company.Name$", ["Description"] = "Company name placeholder" },
+                new() { ["Variable Name"] = "customer_phone", ["Variable Value"] = "$Customer.Phone$", ["Description"] = "Customer phone number" },
+                new() { ["Variable Name"] = "order_id", ["Variable Value"] = "$Order.Id$", ["Description"] = "Order identifier" },
+                new() { ["Variable Name"] = "consignee_email", ["Variable Value"] = "$consignee.email$", ["Description"] = "Consignee email address" },
+                new() { ["Variable Name"] = "consignee_phone", ["Variable Value"] = "$consignee.phone$", ["Description"] = "Consignee phone number" }
+            }
         };
 
         // Preferred communication
-        _globalData["preferred-communication"] = new List<Dictionary<string, object>>
+        _globalData["preferred-communication"] = new Dictionary<string, object>
         {
-            new() { ["Channel"] = "Email", ["IsActive"] = true, ["Priority"] = 1 },
-            new() { ["Channel"] = "SMS", ["IsActive"] = true, ["Priority"] = 2 },
-            new() { ["Channel"] = "Voice", ["IsActive"] = false, ["Priority"] = 3 }
+            ["data"] = new List<Dictionary<string, object>>
+            {
+                new() { ["Customer ID"] = "CUST001", ["Preferred Channel"] = "Email", ["Phone"] = "+1-555-0123", ["Email"] = "customer1@example.com", ["IsActive"] = true },
+                new() { ["Customer ID"] = "CUST002", ["Preferred Channel"] = "SMS", ["Phone"] = "+1-555-0456", ["Email"] = "customer2@example.com", ["IsActive"] = true },
+                new() { ["Customer ID"] = "BJ001", ["Preferred Channel"] = "Email", ["Phone"] = "+1-555-0789", ["Email"] = "customer3@example.com", ["IsActive"] = false }
+            }
         };
 
         // Events/notifications data
