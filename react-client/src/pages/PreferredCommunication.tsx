@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useFormState } from '../hooks/useFormState';
 import { JsonEditor } from '../components/JsonEditor';
 import {
   usePreferredCommunicationQuery,
@@ -12,8 +13,12 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const PreferredCommunication: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
   const saveMutation = usePreferredCommunicationMutation();
-
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  
+  const { state, updateField } = useFormState({
+    validationErrors: [] as ValidationError[]
+  });
+  
+  const { validationErrors } = state;
 
   const columnNames = ['Customer ID', 'Preferred Channel', 'Phone', 'Email', 'IsActive'];
   const columnTypes = {
@@ -25,7 +30,7 @@ export const PreferredCommunication: React.FC = () => {
   };
 
   const handleSave = async (tableData: Record<string, any>[]) => {
-    setValidationErrors([]);
+    updateField('validationErrors', []);
 
     try {
       const result = await saveMutation.mutateAsync(tableData);
@@ -35,7 +40,7 @@ export const PreferredCommunication: React.FC = () => {
       } else {
         toast.error(result.error || 'Failed to save preferred communication');
         if (result.validationErrors) {
-          setValidationErrors(result.validationErrors);
+          updateField('validationErrors', result.validationErrors);
         }
         return { success: false, error: result.error };
       }
@@ -81,7 +86,7 @@ export const PreferredCommunication: React.FC = () => {
                 selectedFileType={1}
                 validationErrors={validationErrors}
                 onSave={handleSave}
-                onClearValidationErrors={() => setValidationErrors([])}
+                onClearValidationErrors={() => updateField('validationErrors', [])}
               />
             </ComponentErrorBoundary>
           )}

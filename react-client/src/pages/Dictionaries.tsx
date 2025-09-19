@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useFormState } from '../hooks/useFormState';
 import { FileType, ValidationError, TableData } from '../types';
 import {
   useDictionaryQuery,
@@ -14,9 +15,12 @@ import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const Dictionaries: React.FC = () => {
-  const [selectedFileType, setSelectedFileType] = useState<FileType>(FileType.None);
-
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const { state, updateField } = useFormState({
+    selectedFileType: FileType.None,
+    validationErrors: [] as ValidationError[]
+  });
+  
+  const { selectedFileType, validationErrors } = state;
 
   const { data: dictionaryResponse, isLoading, error } = useDictionaryQuery(selectedFileType);
   const saveMutation = useDictionaryMutation();
@@ -25,8 +29,8 @@ export const Dictionaries: React.FC = () => {
   const dictionaryData = dictionaryResponse?.success ? dictionaryResponse.data : null;
 
   const handleFileTypeChange = (fileType: FileType) => {
-    setSelectedFileType(fileType);
-    setValidationErrors([]);
+    updateField('selectedFileType', fileType);
+    updateField('validationErrors', []);
   };
 
   const handleSave = async (tableData: TableData[]) => {
@@ -47,7 +51,7 @@ export const Dictionaries: React.FC = () => {
       } else {
         toast.error(result.error || 'Failed to save dictionary');
         if (result.validationErrors) {
-          setValidationErrors(result.validationErrors);
+          updateField('validationErrors', result.validationErrors);
         }
         return { success: false, error: result.error };
       }
@@ -101,7 +105,7 @@ export const Dictionaries: React.FC = () => {
                   selectedFileType={selectedFileType}
                   validationErrors={validationErrors}
                   onSave={handleSave}
-                  onClearValidationErrors={() => setValidationErrors([])}
+                  onClearValidationErrors={() => updateField('validationErrors', [])}
                 />
               </ComponentErrorBoundary>
             )}

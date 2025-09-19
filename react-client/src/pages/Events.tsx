@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useFormState } from '../hooks/useFormState';
 import {
   useEventTriggersQuery,
   useOrderTypesQuery,
@@ -31,27 +32,30 @@ interface EventData {
 }
 
 export const Events: React.FC = () => {
-  const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [selectedOrderType, setSelectedOrderType] = useState<string>('Delivery');
-  const [activeTab, setActiveTab] = useState<string>('event-data');
-  const [isNewEvent, setIsNewEvent] = useState(false);
+  const { state: pageState, updateField } = useFormState({
+    selectedEvent: '',
+    selectedOrderType: 'Delivery',
+    activeTab: 'event-data',
+    isNewEvent: false
+  });
+  
   const [eventData, setEventData] = useState<EventData | null>(null);
+  const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
   const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
   const { data: availableOrderTypes = [], isLoading: orderTypesLoading } = useOrderTypesQuery();
   const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
-  const [eventSupportsByOrderType, setEventSupportsByOrderType] = useState(false);
+
 
   const { data: eventSupports = false, isLoading: supportsLoading } = useEventSupportQuery(selectedEvent);
   const { data: eventInfo, isLoading: eventLoading } = useEventQuery(selectedEvent, selectedOrderType);
   const eventMutation = useEventMutation();
 
   useEffect(() => {
-    setEventSupportsByOrderType(eventSupports);
     if (eventInfo && Object.keys(eventInfo).length > 0) {
       setEventData(eventInfo);
-      setIsNewEvent(false);
+      updateField('isNewEvent', false);
     } else if (selectedEvent) {
-      setIsNewEvent(true);
+      updateField('isNewEvent', true);
       setEventData({
         Event: selectedEvent,
         OrderType: selectedOrderType,
@@ -64,7 +68,7 @@ export const Events: React.FC = () => {
       });
     } else {
       setEventData(null);
-      setIsNewEvent(false);
+      updateField('isNewEvent', false);
     }
   }, [selectedEvent, selectedOrderType, eventSupports, eventInfo]);
 
@@ -81,7 +85,7 @@ export const Events: React.FC = () => {
 
       if (success) {
         toast.success(`Event '${selectedEvent}' ${isNewEvent ? 'added' : 'updated'} successfully!`);
-        setIsNewEvent(false);
+        updateField('isNewEvent', false);
       } else {
         toast.error('Failed to save event data');
       }
@@ -131,9 +135,9 @@ export const Events: React.FC = () => {
             selectedOrderType={selectedOrderType}
             eventTriggers={activeEventTriggers}
             orderTypes={availableOrderTypes}
-            eventSupportsByOrderType={eventSupportsByOrderType}
-            onEventChange={setSelectedEvent}
-            onOrderTypeChange={setSelectedOrderType}
+            eventSupportsByOrderType={eventSupports}
+            onEventChange={(event) => updateField('selectedEvent', event)}
+            onOrderTypeChange={(orderType) => updateField('selectedOrderType', orderType)}
           />
         </ComponentErrorBoundary>
       )}
@@ -159,7 +163,7 @@ export const Events: React.FC = () => {
               <LoadingSpinner text="Loading event configuration..." />
             ) : eventData ? (
               <>
-                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={(tab) => updateField('activeTab', tab)} />
 
                 {activeTab === 'event-data' && (
                   <ComponentErrorBoundary componentName="Event Data Form">

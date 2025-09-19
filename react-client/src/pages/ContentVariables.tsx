@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useFormState } from '../hooks/useFormState';
 import { JsonEditor } from '../components/JsonEditor';
 import {
   useContentVariablesQuery,
@@ -13,10 +14,15 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const ContentVariables: React.FC = () => {
   const { data = [], isLoading } = useContentVariablesQuery();
   const saveMutation = useContentVariablesMutation();
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  
+  const { state, updateField } = useFormState({
+    validationErrors: [] as ValidationError[]
+  });
+  
+  const { validationErrors } = state;
 
   const handleSave = async (tableData: TableData[]) => {
-    setValidationErrors([]);
+    updateField('validationErrors', []);
 
     try {
       const result = await saveMutation.mutateAsync(tableData);
@@ -26,7 +32,7 @@ export const ContentVariables: React.FC = () => {
       } else {
         toast.error(result.error || 'Failed to save content variables');
         if (result.validationErrors) {
-          setValidationErrors(result.validationErrors);
+          updateField('validationErrors', result.validationErrors);
         }
         return { success: false, error: result.error };
       }
@@ -69,7 +75,7 @@ export const ContentVariables: React.FC = () => {
                 selectedFileType={1}
                 validationErrors={validationErrors}
                 onSave={handleSave}
-                onClearValidationErrors={() => setValidationErrors([])}
+                onClearValidationErrors={() => updateField('validationErrors', [])}
               />
             </ComponentErrorBoundary>
           )}

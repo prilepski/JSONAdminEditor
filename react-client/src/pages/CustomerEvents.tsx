@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useFormState } from '../hooks/useFormState';
 import {
   useCustomersQuery,
   useCustomerEventsQuery,
@@ -20,13 +21,18 @@ import { CustomerTemplateTable } from '../components/events/CustomerTemplateTabl
 import { CustomerContentVariablesTable } from '../components/events/CustomerContentVariablesTable';
 
 export const CustomerEvents: React.FC = () => {
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [selectedOrderType, setSelectedOrderType] = useState<string>('Delivery');
-  const [activeTab, setActiveTab] = useState<string>('event-data');
+  const { state, updateField } = useFormState({
+    selectedCustomer: '',
+    selectedEvent: '',
+    selectedOrderType: 'Delivery',
+    activeTab: 'event-data'
+  });
+  
   const [eventFields, setEventFields] = useState<EventField[]>([]);
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [contentVariables, setContentVariables] = useState<Record<string, ContentVariable>>({});
+  
+  const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
   const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
@@ -244,7 +250,7 @@ export const CustomerEvents: React.FC = () => {
             <CustomerSelector
               customers={customers}
               selectedCustomer={selectedCustomer}
-              onCustomerChange={setSelectedCustomer}
+              onCustomerChange={(customer) => updateField('selectedCustomer', customer)}
             />
           </ComponentErrorBoundary>
 
@@ -255,8 +261,8 @@ export const CustomerEvents: React.FC = () => {
                 selectedEvent={selectedEvent}
                 selectedOrderType={selectedOrderType}
                 eventTriggers={activeEventTriggers}
-                onEventChange={setSelectedEvent}
-                onOrderTypeChange={setSelectedOrderType}
+                onEventChange={(event) => updateField('selectedEvent', event)}
+                onOrderTypeChange={(orderType) => updateField('selectedOrderType', orderType)}
               />
             </ComponentErrorBoundary>
           )}
@@ -280,7 +286,7 @@ export const CustomerEvents: React.FC = () => {
               <TableSkeleton rows={4} columns={4} />
             ) : (
               <>
-                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={(tab) => updateField('activeTab', tab)} />
 
                 {activeTab === 'event-data' && (
                   <ComponentErrorBoundary componentName="Event Data Table">
