@@ -77,7 +77,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     const columnType = dictionaryData?.columnTypes?.[column] || 'text';
 
     if (columnType === 'boolean') {
-      newData[rowIndex][column] = value === 'true';
+      newData[rowIndex][column] = typeof value === 'boolean' ? value : value === 'true';
     } else {
       newData[rowIndex][column] = value;
     }

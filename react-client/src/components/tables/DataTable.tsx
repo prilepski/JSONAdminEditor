@@ -36,14 +36,14 @@ export const DataTable: React.FC<DataTableProps> = ({
 
     if (columnType === 'boolean') {
       return (
-        <select
-          className={inputClass}
-          value={cellValue.toString()}
-          onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
-        >
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
+        <div className="form-check">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            checked={cellValue === true || cellValue === 'true'}
+            onChange={(e) => onUpdateCell(rowIndex, column, e.target.checked)}
+          />
+        </div>
       );
     }
 
