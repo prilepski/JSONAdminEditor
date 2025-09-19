@@ -1,28 +1,52 @@
-import { EventData } from './events';
-
-// Customer-specific types
-export interface CustomerContentVariable {
-  name: string;
-  value: string;
-  isRedefined: boolean;
-  isCustomerSpecific: boolean;
-  globalValue?: string;
-}
-
+// Customer data structure based on mock files
 export interface CustomerSettings {
-  contentVariables: Record<string, string>;
-  preferences?: Record<string, unknown>;
+  customerName?: string;
+  customSettings?: {
+    theme?: string;
+    logoUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+  };
+  features?: {
+    enableAdvancedReporting?: boolean;
+    customDashboard?: boolean;
+    maxUsers?: number;
+  };
+  integrations?: {
+    sso?: {
+      enabled?: boolean;
+      provider?: string;
+    };
+    api?: {
+      rateLimit?: number;
+      customEndpoints?: string[];
+    };
+  };
+  ContentVariables?: Record<string, string>;
+  Events?: CustomerEventData[];
 }
 
-// Use EventData as CustomerEventData
-export type CustomerEventData = EventData;
-
-export interface PreferredCommunication {
-  customerId: string;
-  channels: {
-    email: boolean;
-    sms: boolean;
-    voice: boolean;
+export interface CustomerEventData {
+  Event: string;
+  OrderType: string;
+  Phone?: string;
+  Email?: string;
+  Logo?: string;
+  IsSuppressed?: boolean;
+  Templates?: {
+    Email?: string;
+    Sms?: string;
+    Voice?: string;
   };
-  preferences?: Record<string, unknown>;
+  ContentVariables?: Record<string, string>;
+}
+
+export interface CustomerLookupResult {
+  customerId: string;
+  companyName: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  IsActive?: boolean;
 }

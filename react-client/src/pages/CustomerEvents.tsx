@@ -43,9 +43,9 @@ export const CustomerEvents: React.FC = () => {
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
   const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
-  const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
+  const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery(selectedOrderType);
   const { data: customerEventData, isLoading: eventDataLoading } =
-    useCustomerEventsQuery(selectedCustomer);
+    useCustomerEventsQuery(selectedCustomer, selectedOrderType);
   const saveMutation = useCustomerEventsMutation();
 
   useEffect(() => {

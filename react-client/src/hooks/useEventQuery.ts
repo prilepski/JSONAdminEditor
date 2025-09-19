@@ -15,10 +15,10 @@ export const useOrderTypesQuery = () => {
   });
 };
 
-export const useTemplatesQuery = () => {
+export const useTemplatesQuery = (orderType?: string) => {
   return useQuery({
-    queryKey: ['templates'],
-    queryFn: eventService.getAvailableTemplates,
+    queryKey: ['templates', orderType],
+    queryFn: () => eventService.getAvailableTemplates(orderType),
   });
 };
 

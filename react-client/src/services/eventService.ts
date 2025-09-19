@@ -17,8 +17,9 @@ export const eventService = {
     return response.data;
   },
 
-  getAvailableTemplates: async (): Promise<Template[]> => {
-    const response = await api.get('/templates');
+  getAvailableTemplates: async (orderType?: string): Promise<Template[]> => {
+    const url = orderType ? `/templates?orderType=${orderType}` : '/templates';
+    const response = await api.get(url);
     return response.data;
   },
 

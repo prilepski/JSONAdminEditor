@@ -9,11 +9,11 @@ namespace JSONAdminEditor.Controllers;
 [Route("api/[controller]")]
 public class CustomersController : ControllerBase
 {
-    private readonly IStorageService _storageService;
+    private readonly IMockDatabaseService _mockDb;
 
-    public CustomersController(IStorageServiceFactory storageServiceFactory)
+    public CustomersController(IMockDatabaseService mockDb)
     {
-        _storageService = storageServiceFactory.CreateStorageService();
+        _mockDb = mockDb;
     }
 
     private static bool IsValidCustomerId(string customerId)
@@ -28,8 +28,8 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            var customers = await _storageService.SearchCustomersAsync("");
-            var customerIds = customers.Select(c => c.CustomerId).ToList();
+            var customers = await _mockDb.SearchCustomersAsync("");
+            var customerIds = customers.Select(c => c.TryGetValue("customerId", out var id) ? id?.ToString() : "").Where(id => !string.IsNullOrEmpty(id)).ToList();
             return Ok(customerIds);
         }
         catch (Exception ex)
@@ -39,14 +39,14 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("{customerId}/events")]
-    public async Task<IActionResult> GetCustomerEvents(string customerId)
+    public async Task<IActionResult> GetCustomerEvents(string customerId, [FromQuery] string? orderType = null)
     {
         try
         {
             if (!IsValidCustomerId(customerId))
                 return BadRequest(new { error = "Invalid customer ID" });
                 
-            var data = await _storageService.GetCustomerDataAsync($"{customerId}_events");
+            var data = await _mockDb.GetCustomerAsync(customerId);
             return Ok(data ?? new Dictionary<string, object>());
         }
         catch (Exception ex)
@@ -56,15 +56,56 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId}/events")]
-    public async Task<IActionResult> SaveCustomerEvents(string customerId, [FromBody] Dictionary<string, object> data)
+    public async Task<IActionResult> SaveCustomerEvents(string customerId, [FromBody] Dictionary<string, object> eventData)
     {
         try
         {
             if (!IsValidCustomerId(customerId))
                 return BadRequest(new { success = false, error = "Invalid customer ID" });
-                
-            var success = await _storageService.SaveCustomerDataAsync($"{customerId}_events", data);
-            return Ok(new { success });
+            
+            // Get existing customer data
+            var customerData = await _mockDb.GetCustomerAsync(customerId) ?? new Dictionary<string, object>();
+            
+            // Get existing events or create new list
+            var events = new List<Dictionary<string, object>>();
+            if (customerData.TryGetValue("Events", out var eventsObj) && eventsObj is List<Dictionary<string, object>> eventsList)
+            {
+                events = eventsList;
+            }
+            
+            // Find and update existing event or add new one
+            var eventName = eventData.TryGetValue("Event", out var nameObj) ? nameObj?.ToString() : "";
+            var orderType = eventData.TryGetValue("OrderType", out var typeObj) ? typeObj?.ToString() : "";
+            
+            var existingIndex = events.FindIndex(e => 
+                e.TryGetValue("Event", out var existingEvent) && 
+                existingEvent?.ToString() == eventName &&
+                e.TryGetValue("OrderType", out var existingOrderType) &&
+                existingOrderType?.ToString() == orderType);
+            
+            if (existingIndex >= 0)
+            {
+                events[existingIndex] = eventData;
+            }
+            else
+            {
+                events.Add(eventData);
+            }
+            
+            // Update customer data with new events
+            customerData["Events"] = events;
+            
+            var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
+            
+            if (success)
+            {
+                // Return the updated customer data
+                return Ok(new { success = true, data = customerData });
+            }
+            else
+            {
+                return Ok(new { success = false, error = "Failed to save customer events" });
+            }
         }
         catch (Exception ex)
         {
@@ -80,7 +121,7 @@ public class CustomersController : ControllerBase
             if (!IsValidCustomerId(customerId))
                 return BadRequest(new { error = "Invalid customer ID" });
                 
-            var data = await _storageService.GetCustomerDataAsync($"{customerId}_settings");
+            var data = await _mockDb.GetCustomerAsync(customerId);
             return Ok(data ?? new Dictionary<string, object>());
         }
         catch (Exception ex)
@@ -90,15 +131,33 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId}/settings")]
-    public async Task<IActionResult> SaveCustomerSettings(string customerId, [FromBody] Dictionary<string, object> data)
+    public async Task<IActionResult> SaveCustomerSettings(string customerId, [FromBody] Dictionary<string, object> settingsData)
     {
         try
         {
             if (!IsValidCustomerId(customerId))
                 return BadRequest(new { success = false, error = "Invalid customer ID" });
-                
-            var success = await _storageService.SaveCustomerDataAsync($"{customerId}_settings", data);
-            return Ok(new { success });
+            
+            // Get existing customer data
+            var customerData = await _mockDb.GetCustomerAsync(customerId) ?? new Dictionary<string, object>();
+            
+            // Merge settings data into customer data
+            foreach (var kvp in settingsData)
+            {
+                customerData[kvp.Key] = kvp.Value;
+            }
+            
+            var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
+            
+            if (success)
+            {
+                // Return the updated customer data
+                return Ok(new { success = true, data = customerData });
+            }
+            else
+            {
+                return Ok(new { success = false, error = "Failed to save customer settings" });
+            }
         }
         catch (Exception ex)
         {

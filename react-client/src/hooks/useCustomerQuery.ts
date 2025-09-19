@@ -8,10 +8,10 @@ export const useCustomersQuery = () => {
   });
 };
 
-export const useCustomerEventsQuery = (customerId: string) => {
+export const useCustomerEventsQuery = (customerId: string, orderType?: string) => {
   return useQuery({
-    queryKey: ['customerEvents', customerId],
-    queryFn: () => customerService.getCustomerEvents(customerId),
+    queryKey: ['customerEvents', customerId, orderType],
+    queryFn: () => customerService.getCustomerEvents(customerId, orderType),
     enabled: !!customerId,
   });
 };
@@ -30,7 +30,11 @@ export const useCustomerEventsMutation = () => {
   return useMutation({
     mutationFn: ({ customerId, data }: { customerId: string; data: any }) =>
       customerService.saveCustomerEvents(customerId, data),
-    onSuccess: (_, { customerId }) => {
+    onSuccess: (result, { customerId }) => {
+      if (result.success && result.data) {
+        // Update the cache with the returned data
+        queryClient.setQueryData(['customerEvents', customerId], result.data.Events || []);
+      }
       queryClient.invalidateQueries({ queryKey: ['customerEvents', customerId] });
     },
   });
@@ -42,7 +46,11 @@ export const useCustomerSettingsMutation = () => {
   return useMutation({
     mutationFn: ({ customerId, data }: { customerId: string; data: any }) =>
       customerService.saveCustomerSettings(customerId, data),
-    onSuccess: (_, { customerId }) => {
+    onSuccess: (result, { customerId }) => {
+      if (result.success && result.data) {
+        // Update the cache with the returned data
+        queryClient.setQueryData(['customerSettings', customerId], result.data);
+      }
       queryClient.invalidateQueries({ queryKey: ['customerSettings', customerId] });
     },
   });

@@ -8,11 +8,11 @@ namespace JSONAdminEditor.Controllers;
 [Route("api/preferred-communication")]
 public class PreferredCommunicationController : ControllerBase
 {
-    private readonly IJsonFileService _jsonFileService;
+    private readonly IMockDatabaseService _mockDb;
 
-    public PreferredCommunicationController(IJsonFileService jsonFileService)
+    public PreferredCommunicationController(IMockDatabaseService mockDb)
     {
-        _jsonFileService = jsonFileService;
+        _mockDb = mockDb;
     }
 
     [HttpGet]
@@ -20,8 +20,8 @@ public class PreferredCommunicationController : ControllerBase
     {
         try
         {
-            var jsonData = await _jsonFileService.LoadJsonFileAsync("data/preferred-communication.json");
-            return Ok(jsonData.TableData ?? new List<Dictionary<string, object>>());
+            var data = await _mockDb.GetGlobalDataAsync("preferred-communication");
+            return Ok(data ?? new List<Dictionary<string, object>>());
         }
         catch (Exception ex)
         {
@@ -40,7 +40,8 @@ public class PreferredCommunicationController : ControllerBase
                 row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
             ).ToList();
             
-            var success = await _jsonFileService.SaveJsonFileAsync("data/preferred-communication.json", convertedData);
+            var success = await _mockDb.SaveGlobalDataAsync("preferred-communication", new Dictionary<string, object> { ["data"] = convertedData });
+            success = true; // Mock always succeeds
             
             if (success)
             {

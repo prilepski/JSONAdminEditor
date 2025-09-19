@@ -9,10 +9,12 @@ namespace JSONAdminEditor.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly NotificationsService _notificationsService;
+    private readonly IMockDatabaseService _mockDb;
 
-    public EventsController(NotificationsService notificationsService)
+    public EventsController(NotificationsService notificationsService, IMockDatabaseService mockDb)
     {
         _notificationsService = notificationsService;
+        _mockDb = mockDb;
     }
 
     [HttpGet("triggers")]
@@ -44,12 +46,24 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet("templates")]
-    public async Task<IActionResult> GetAvailableTemplates()
+    public async Task<IActionResult> GetAvailableTemplates([FromQuery] string? orderType = null)
     {
         try
         {
             var templates = await _notificationsService.GetAvailableTemplatesAsync();
-            return Ok(templates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
+            var filteredTemplates = templates;
+            
+            if (!string.IsNullOrEmpty(orderType))
+            {
+                // Filter templates that contain the order type OR are generic (don't contain Pickup/Delivery)
+                filteredTemplates = templates.Where(t => 
+                    t.TemplateName.Contains(orderType, StringComparison.OrdinalIgnoreCase) ||
+                    (!t.TemplateName.Contains("Pickup", StringComparison.OrdinalIgnoreCase) && 
+                     !t.TemplateName.Contains("Delivery", StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+            }
+            
+            return Ok(filteredTemplates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
         }
         catch (Exception ex)
         {

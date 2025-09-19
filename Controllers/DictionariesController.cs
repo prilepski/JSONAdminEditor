@@ -10,14 +10,12 @@ namespace JSONAdminEditor.Controllers;
 [Route("api/[controller]")]
 public class DictionariesController : ControllerBase
 {
-    private readonly IStorageService _storageService;
-    private readonly IJsonFileService _jsonFileService;
+    private readonly IMockDatabaseService _mockDb;
     private readonly UniqueFieldValidationService _validationService;
 
-    public DictionariesController(IStorageServiceFactory storageServiceFactory, IJsonFileService jsonFileService, UniqueFieldValidationService validationService)
+    public DictionariesController(IMockDatabaseService mockDb, UniqueFieldValidationService validationService)
     {
-        _storageService = storageServiceFactory.CreateStorageService();
-        _jsonFileService = jsonFileService;
+        _mockDb = mockDb;
         _validationService = validationService;
     }
 
@@ -33,27 +31,27 @@ public class DictionariesController : ControllerBase
                 
                 if (!string.IsNullOrEmpty(filePath))
                 {
-                    var jsonData = await _jsonFileService.LoadJsonFileAsync(filePath);
+                    var tableData = await _mockDb.GetDictionaryAsync(GetDictionaryKey(selectedFileType));
                     
-                    if (jsonData.IsValidJson)
+                    if (tableData != null)
                     {
                         return Ok(new
                         {
                             success = true,
                             data = new
                             {
-                                columnNames = jsonData.ColumnNames,
-                                columnTypes = jsonData.ColumnTypes,
-                                tableData = jsonData.TableData,
-                                filePath = jsonData.FilePath,
-                                fileName = jsonData.FileName,
-                                isValidJson = jsonData.IsValidJson
+                                columnNames = GetDefaultColumnsForDictionary(selectedFileType),
+                                columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
+                                tableData = tableData,
+                                filePath = filePath,
+                                fileName = GetDictionaryFileName(selectedFileType),
+                                isValidJson = true
                             }
                         });
                     }
                     else
                     {
-                        return Ok(new { success = false, error = jsonData.ErrorMessage });
+                        return Ok(new { success = false, error = "Dictionary not found" });
                     }
                 }
                 else
@@ -122,7 +120,7 @@ public class DictionariesController : ControllerBase
                     });
                 }
                 
-                var success = await _jsonFileService.SaveJsonFileAsync(filePath, convertedData);
+                var success = await _mockDb.SaveDictionaryAsync(GetDictionaryKey(selectedFileType), convertedData);
                 
                 if (success)
                 {
@@ -200,7 +198,9 @@ public class DictionariesController : ControllerBase
             }
 
             // Directly overwrite the file
-            var (success, message) = await _storageService.OverwriteFileAsync(upload);
+            // Mock upload - always return success
+            var success = true;
+            var message = "File uploaded successfully";
 
             if (success)
             {
@@ -292,6 +292,19 @@ public class DictionariesController : ControllerBase
             JsonValueKind.False => false,
             JsonValueKind.Null => null,
             _ => element.ToString()
+        };
+    }
+    
+    private static string GetDictionaryKey(FileType fileType)
+    {
+        return fileType switch
+        {
+            FileType.Templates => "templates",
+            FileType.EventTriggers => "event-triggers",
+            FileType.EventChannels => "event-channels",
+            FileType.OrderTypes => "order-types",
+            FileType.Customers => "customers",
+            _ => "unknown"
         };
     }
 }

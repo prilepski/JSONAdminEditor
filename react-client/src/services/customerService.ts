@@ -11,14 +11,16 @@ export const customerService = {
     return response.data;
   },
 
-  getCustomerEvents: async (customerId: string): Promise<any> => {
-    const response = await api.get(`/${customerId}/events`);
-    return response.data;
+  getCustomerEvents: async (customerId: string, orderType?: string): Promise<any> => {
+    const url = orderType ? `/${customerId}/events?orderType=${orderType}` : `/${customerId}/events`;
+    const response = await api.get(url);
+    // Return the Events array from customer data, or empty array if not found
+    return response.data?.Events || [];
   },
 
-  saveCustomerEvents: async (customerId: string, data: any): Promise<boolean> => {
+  saveCustomerEvents: async (customerId: string, data: any): Promise<{ success: boolean; data?: any }> => {
     const response = await api.post(`/${customerId}/events`, data);
-    return response.data.success;
+    return { success: response.data.success, data: response.data.data };
   },
 
   getCustomerSettings: async (customerId: string): Promise<any> => {
@@ -26,8 +28,8 @@ export const customerService = {
     return response.data;
   },
 
-  saveCustomerSettings: async (customerId: string, data: any): Promise<boolean> => {
+  saveCustomerSettings: async (customerId: string, data: any): Promise<{ success: boolean; data?: any }> => {
     const response = await api.post(`/${customerId}/settings`, data);
-    return response.data.success;
+    return { success: response.data.success, data: response.data.data };
   },
 };

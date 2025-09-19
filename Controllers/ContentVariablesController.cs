@@ -9,10 +9,12 @@ namespace JSONAdminEditor.Controllers;
 public class ContentVariablesController : ControllerBase
 {
     private readonly NotificationsService _notificationsService;
+    private readonly IMockDatabaseService _mockDb;
 
-    public ContentVariablesController(NotificationsService notificationsService)
+    public ContentVariablesController(NotificationsService notificationsService, IMockDatabaseService mockDb)
     {
         _notificationsService = notificationsService;
+        _mockDb = mockDb;
     }
 
     [HttpGet]
@@ -20,8 +22,8 @@ public class ContentVariablesController : ControllerBase
     {
         try
         {
-            var data = await _notificationsService.GetContentVariablesAsync();
-            return Ok(data);
+            var data = await _mockDb.GetGlobalDataAsync("content-variables");
+            return Ok(data ?? new List<Dictionary<string, object>>());
         }
         catch (Exception ex)
         {
@@ -40,7 +42,8 @@ public class ContentVariablesController : ControllerBase
                 row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
             ).ToList();
             
-            var success = await _notificationsService.UpdateContentVariablesAsync(convertedData);
+            var success = await _mockDb.SaveGlobalDataAsync("content-variables", new Dictionary<string, object> { ["data"] = convertedData });
+            success = true; // Mock always succeeds
             
             if (success)
             {
