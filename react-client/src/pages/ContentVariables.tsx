@@ -14,11 +14,11 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const ContentVariables: React.FC = () => {
   const { data = [], isLoading } = useContentVariablesQuery();
   const saveMutation = useContentVariablesMutation();
-  
+
   const { state, updateField } = useFormState({
-    validationErrors: [] as ValidationError[]
+    validationErrors: [] as ValidationError[],
   });
-  
+
   const { validationErrors } = state;
 
   const handleSave = async (tableData: TableData[]) => {

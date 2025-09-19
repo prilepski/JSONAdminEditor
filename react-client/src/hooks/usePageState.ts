@@ -9,7 +9,7 @@ interface PageState {
   validationErrors: ValidationError[];
 }
 
-type PageAction = 
+type PageAction =
   | { type: 'SET_CUSTOMER'; payload: string }
   | { type: 'SET_EVENT'; payload: string }
   | { type: 'SET_ORDER_TYPE'; payload: string }
@@ -23,7 +23,7 @@ const initialState: PageState = {
   selectedEvent: '',
   selectedOrderType: '',
   showEditor: false,
-  validationErrors: [] as ValidationError[]
+  validationErrors: [] as ValidationError[],
 };
 
 function pageReducer(state: PageState, action: PageAction): PageState {
@@ -50,20 +50,31 @@ function pageReducer(state: PageState, action: PageAction): PageState {
 export function usePageState() {
   const [state, dispatch] = useReducer(pageReducer, initialState);
 
-  const setCustomer = useCallback((customer: string) => 
-    dispatch({ type: 'SET_CUSTOMER', payload: customer }), []);
-  const setEvent = useCallback((event: string) => 
-    dispatch({ type: 'SET_EVENT', payload: event }), []);
-  const setOrderType = useCallback((orderType: string) => 
-    dispatch({ type: 'SET_ORDER_TYPE', payload: orderType }), []);
-  const toggleEditor = useCallback((show?: boolean) => 
-    dispatch({ type: 'TOGGLE_EDITOR', payload: show }), []);
-  const setValidationErrors = useCallback((errors: ValidationError[]) => 
-    dispatch({ type: 'SET_VALIDATION_ERRORS', payload: errors }), []);
-  const clearValidationErrors = useCallback(() => 
-    dispatch({ type: 'CLEAR_VALIDATION_ERRORS' }), []);
-  const reset = useCallback(() => 
-    dispatch({ type: 'RESET' }), []);
+  const setCustomer = useCallback(
+    (customer: string) => dispatch({ type: 'SET_CUSTOMER', payload: customer }),
+    []
+  );
+  const setEvent = useCallback(
+    (event: string) => dispatch({ type: 'SET_EVENT', payload: event }),
+    []
+  );
+  const setOrderType = useCallback(
+    (orderType: string) => dispatch({ type: 'SET_ORDER_TYPE', payload: orderType }),
+    []
+  );
+  const toggleEditor = useCallback(
+    (show?: boolean) => dispatch({ type: 'TOGGLE_EDITOR', payload: show }),
+    []
+  );
+  const setValidationErrors = useCallback(
+    (errors: ValidationError[]) => dispatch({ type: 'SET_VALIDATION_ERRORS', payload: errors }),
+    []
+  );
+  const clearValidationErrors = useCallback(
+    () => dispatch({ type: 'CLEAR_VALIDATION_ERRORS' }),
+    []
+  );
+  const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
   return {
     ...state,
@@ -73,6 +84,6 @@ export function usePageState() {
     toggleEditor,
     setValidationErrors,
     clearValidationErrors,
-    reset
+    reset,
   };
 }

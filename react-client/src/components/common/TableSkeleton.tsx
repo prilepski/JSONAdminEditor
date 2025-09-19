@@ -5,10 +5,7 @@ interface TableSkeletonProps {
   columns?: number;
 }
 
-export const TableSkeleton: React.FC<TableSkeletonProps> = ({ 
-  rows = 5, 
-  columns = 4 
-}) => (
+export const TableSkeleton: React.FC<TableSkeletonProps> = ({ rows = 5, columns = 4 }) => (
   <div className="table-responsive">
     <table className="table">
       <thead>

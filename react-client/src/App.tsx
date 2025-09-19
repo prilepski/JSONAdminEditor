@@ -17,7 +17,7 @@ import './App.css';
 
 function App() {
   const queryClient = useMemo(() => new QueryClient(), []);
-  
+
   return (
     <PageErrorBoundary pageName="Application">
       <QueryClientProvider client={queryClient}>
@@ -28,7 +28,8 @@ function App() {
                 <nav className="navbar navbar-dark bg-primary border-bottom box-shadow mb-3">
                   <div className="container-fluid">
                     <Link className="navbar-brand" to="/">
-                      <i className="fas fa-table me-2"></i>{import.meta.env.VITE_APP_NAME || 'JSON Admin Editor'}
+                      <i className="fas fa-table me-2"></i>
+                      {import.meta.env.VITE_APP_NAME || 'JSON Admin Editor'}
                     </Link>
                   </div>
                 </nav>
@@ -60,7 +61,9 @@ function App() {
           </Router>
           <Toaster position="top-right" />
         </NiceModal.Provider>
-        {import.meta.env.VITE_ENABLE_DEVTOOLS === 'true' && <ReactQueryDevtools initialIsOpen={false} />}
+        {import.meta.env.VITE_ENABLE_DEVTOOLS === 'true' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
       </QueryClientProvider>
     </PageErrorBoundary>
   );

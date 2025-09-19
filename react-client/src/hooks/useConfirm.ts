@@ -11,14 +11,14 @@ export const useConfirm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({
     title: '',
-    message: ''
+    message: '',
   });
   const [resolvePromise, setResolvePromise] = useState<((value: boolean) => void) | null>(null);
 
   const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
     setOptions(opts);
     setIsOpen(true);
-    
+
     return new Promise((resolve) => {
       setResolvePromise(() => resolve);
     });
@@ -45,6 +45,6 @@ export const useConfirm = () => {
     isOpen,
     options,
     handleConfirm,
-    handleCancel
+    handleCancel,
   };
 };

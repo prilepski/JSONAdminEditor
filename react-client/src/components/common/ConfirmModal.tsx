@@ -17,12 +17,16 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onCancel,
   confirmText = 'Confirm',
-  cancelText = 'Cancel'
+  cancelText = 'Cancel',
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div
+      className="modal show d-block"
+      tabIndex={-1}
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+    >
       <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">

@@ -4,11 +4,11 @@ export function useFormState<T extends Record<string, any>>(initialState: T) {
   const [state, setState] = useState<T>(initialState);
 
   const updateField = useCallback((field: keyof T, value: T[keyof T]) => {
-    setState(prev => ({ ...prev, [field]: value }));
+    setState((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   const updateFields = useCallback((updates: Partial<T>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const resetForm = useCallback(() => {
@@ -20,6 +20,6 @@ export function useFormState<T extends Record<string, any>>(initialState: T) {
     updateField,
     updateFields,
     resetForm,
-    setState
+    setState,
   };
 }

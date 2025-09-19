@@ -8,16 +8,22 @@ import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import toast from 'react-hot-toast';
 import { CustomerContentVariable } from '../types/customer';
 import { CustomerSettingsData } from '../types/customerSettings';
-import { PageHeader, CustomerSelector, SaveButton, LoadingSpinner, TableSkeleton } from '../components/common';
+import {
+  PageHeader,
+  CustomerSelector,
+  SaveButton,
+  LoadingSpinner,
+  TableSkeleton,
+} from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [contentVariables, setContentVariables] = useState<CustomerContentVariable[]>([]);
 
-
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
-  const { data: customerSettings, isLoading: settingsLoading } = useCustomerSettingsQuery(selectedCustomer);
+  const { data: customerSettings, isLoading: settingsLoading } =
+    useCustomerSettingsQuery(selectedCustomer);
   const { data: globalVariables = [], isLoading: variablesLoading } = useContentVariablesQuery();
   const saveMutation = useCustomerSettingsMutation();
 

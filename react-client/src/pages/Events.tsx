@@ -36,18 +36,21 @@ export const Events: React.FC = () => {
     selectedEvent: '',
     selectedOrderType: 'Delivery',
     activeTab: 'event-data',
-    isNewEvent: false
+    isNewEvent: false,
   });
-  
+
   const [eventData, setEventData] = useState<EventData | null>(null);
   const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
   const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
   const { data: availableOrderTypes = [], isLoading: orderTypesLoading } = useOrderTypesQuery();
   const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
 
-
-  const { data: eventSupports = false, isLoading: supportsLoading } = useEventSupportQuery(selectedEvent);
-  const { data: eventInfo, isLoading: eventLoading } = useEventQuery(selectedEvent, selectedOrderType);
+  const { data: eventSupports = false, isLoading: supportsLoading } =
+    useEventSupportQuery(selectedEvent);
+  const { data: eventInfo, isLoading: eventLoading } = useEventQuery(
+    selectedEvent,
+    selectedOrderType
+  );
   const eventMutation = useEventMutation();
 
   useEffect(() => {
@@ -163,7 +166,11 @@ export const Events: React.FC = () => {
               <LoadingSpinner text="Loading event configuration..." />
             ) : eventData ? (
               <>
-                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={(tab) => updateField('activeTab', tab)} />
+                <TabNavigation
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={(tab) => updateField('activeTab', tab)}
+                />
 
                 {activeTab === 'event-data' && (
                   <ComponentErrorBoundary componentName="Event Data Form">

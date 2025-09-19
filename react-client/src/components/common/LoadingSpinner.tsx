@@ -5,14 +5,14 @@ interface LoadingSpinnerProps {
   text?: string;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = 'md', 
-  text = 'Loading...' 
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  size = 'md',
+  text = 'Loading...',
 }) => {
   const sizeClasses = {
     sm: 'spinner-border-sm',
     md: '',
-    lg: 'spinner-border-lg'
+    lg: 'spinner-border-lg',
   };
 
   return (

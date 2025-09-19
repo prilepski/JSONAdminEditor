@@ -6,14 +6,14 @@ export const handleApiError = (error: unknown): ServiceError => {
       ...error,
       message: error.message,
       status: (error as any).response?.status,
-      code: (error as any).code
+      code: (error as any).code,
     };
   }
-  
+
   return {
     name: 'UnknownError',
     message: 'An unknown error occurred',
-    status: 500
+    status: 500,
   };
 };
 

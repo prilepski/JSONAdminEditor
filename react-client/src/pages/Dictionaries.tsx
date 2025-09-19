@@ -1,10 +1,7 @@
 import React from 'react';
 import { useFormState } from '../hooks/useFormState';
 import { FileType, ValidationError, TableData } from '../types';
-import {
-  useDictionaryQuery,
-  useDictionaryMutation,
-} from '../hooks/useDictionaryQuery';
+import { useDictionaryQuery, useDictionaryMutation } from '../hooks/useDictionaryQuery';
 import { DictionarySelector } from '../components/DictionarySelector';
 import { FileUpload } from '../components/FileUpload';
 import { JsonEditor } from '../components/JsonEditor';
@@ -16,14 +13,13 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const Dictionaries: React.FC = () => {
   const { state, updateField } = useFormState({
     selectedFileType: FileType.None,
-    validationErrors: [] as ValidationError[]
+    validationErrors: [] as ValidationError[],
   });
-  
+
   const { selectedFileType, validationErrors } = state;
 
   const { data: dictionaryResponse, isLoading, error } = useDictionaryQuery(selectedFileType);
   const saveMutation = useDictionaryMutation();
-
 
   const dictionaryData = dictionaryResponse?.success ? dictionaryResponse.data : null;
 

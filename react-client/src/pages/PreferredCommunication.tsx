@@ -13,11 +13,11 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const PreferredCommunication: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
   const saveMutation = usePreferredCommunicationMutation();
-  
+
   const { state, updateField } = useFormState({
-    validationErrors: [] as ValidationError[]
+    validationErrors: [] as ValidationError[],
   });
-  
+
   const { validationErrors } = state;
 
   const columnNames = ['Customer ID', 'Preferred Channel', 'Phone', 'Email', 'IsActive'];

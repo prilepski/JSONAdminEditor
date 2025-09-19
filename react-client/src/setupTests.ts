@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
-// Make vi available globally
-Object.assign(global, { vi });
+// Mock jest functions for vitest
+global.jest = {
+  fn: vi.fn,
+  mock: vi.mock,
+  clearAllMocks: vi.clearAllMocks,
+} as any;

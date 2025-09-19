@@ -13,7 +13,14 @@ import {
   TemplateField,
   ContentVariable,
 } from '../types/customerEvent';
-import { PageHeader, CustomerSelector, SaveButton, TabNavigation, LoadingSpinner, TableSkeleton } from '../components/common';
+import {
+  PageHeader,
+  CustomerSelector,
+  SaveButton,
+  TabNavigation,
+  LoadingSpinner,
+  TableSkeleton,
+} from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
 import { CustomerEventDataTable } from '../components/events/CustomerEventDataTable';
@@ -25,19 +32,20 @@ export const CustomerEvents: React.FC = () => {
     selectedCustomer: '',
     selectedEvent: '',
     selectedOrderType: 'Delivery',
-    activeTab: 'event-data'
+    activeTab: 'event-data',
   });
-  
+
   const [eventFields, setEventFields] = useState<EventField[]>([]);
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [contentVariables, setContentVariables] = useState<Record<string, ContentVariable>>({});
-  
+
   const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
   const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
   const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
-  const { data: customerEventData, isLoading: eventDataLoading } = useCustomerEventsQuery(selectedCustomer);
+  const { data: customerEventData, isLoading: eventDataLoading } =
+    useCustomerEventsQuery(selectedCustomer);
   const saveMutation = useCustomerEventsMutation();
 
   useEffect(() => {
@@ -286,7 +294,11 @@ export const CustomerEvents: React.FC = () => {
               <TableSkeleton rows={4} columns={4} />
             ) : (
               <>
-                <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={(tab) => updateField('activeTab', tab)} />
+                <TabNavigation
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={(tab) => updateField('activeTab', tab)}
+                />
 
                 {activeTab === 'event-data' && (
                   <ComponentErrorBoundary componentName="Event Data Table">

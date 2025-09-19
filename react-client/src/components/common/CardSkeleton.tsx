@@ -5,10 +5,7 @@ interface CardSkeletonProps {
   lines?: number;
 }
 
-export const CardSkeleton: React.FC<CardSkeletonProps> = ({ 
-  hasHeader = true, 
-  lines = 3 
-}) => (
+export const CardSkeleton: React.FC<CardSkeletonProps> = ({ hasHeader = true, lines = 3 }) => (
   <div className="card">
     {hasHeader && (
       <div className="card-header">

@@ -24,7 +24,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   onUploadSuccess,
   onUploadError,
 }) => {
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMutation = useUploadMutation();
   const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
@@ -32,14 +31,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && selectedFileType !== FileType.None) {
-      
       const confirmed = await confirm({
         title: 'Replace Dictionary',
         message: `Warning: The ${dictionaryNames[selectedFileType]} dictionary will be completely replaced with the content of the selected file. This action cannot be undone.`,
         confirmText: 'Replace Dictionary',
-        cancelText: 'Cancel'
+        cancelText: 'Cancel',
       });
-      
+
       if (confirmed) {
         await handleUpload(file);
       } else {
@@ -60,7 +58,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       } else {
         onUploadError(response.error || 'Upload failed');
       }
-    } catch (error) {
+    } catch {
       onUploadError('Error uploading file');
     } finally {
       resetFileInput();

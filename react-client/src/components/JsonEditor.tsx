@@ -63,9 +63,9 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
       title: 'Delete Row',
       message: 'Are you sure you want to delete this row? This action cannot be undone.',
       confirmText: 'Delete',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
     });
-    
+
     if (confirmed) {
       const newData = tableData.filter((_, i) => i !== index);
       setTableData(newData);
@@ -143,7 +143,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           selectedFileType={selectedFileType}
         />
       )}
-      
+
       <ConfirmModal
         isOpen={isOpen}
         title={options.title}
