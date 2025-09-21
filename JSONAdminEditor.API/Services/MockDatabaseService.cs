@@ -37,32 +37,6 @@ public class MockDatabaseService : IMockDatabaseService
         _customers["CUST001"] = new Dictionary<string, object>
         {
             ["customerName"] = "DELL",
-            ["customSettings"] = new Dictionary<string, object>
-            {
-                ["theme"] = "corporate-blue",
-                ["logoUrl"] = "/images/dell-logo.png",
-                ["primaryColor"] = "#0073CE",
-                ["secondaryColor"] = "#D2232A"
-            },
-            ["features"] = new Dictionary<string, object>
-            {
-                ["enableAdvancedReporting"] = true,
-                ["customDashboard"] = true,
-                ["maxUsers"] = 500
-            },
-            ["integrations"] = new Dictionary<string, object>
-            {
-                ["sso"] = new Dictionary<string, object>
-                {
-                    ["enabled"] = true,
-                    ["provider"] = "ADFS"
-                },
-                ["api"] = new Dictionary<string, object>
-                {
-                    ["rateLimit"] = 1000,
-                    ["customEndpoints"] = new List<string> { "orders", "inventory", "support" }
-                }
-            },
             ["Events"] = new List<Dictionary<string, object>>(),
             ["ContentVariables"] = new Dictionary<string, object>()
         };
