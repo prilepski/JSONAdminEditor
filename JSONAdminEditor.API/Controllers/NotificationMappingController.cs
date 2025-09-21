@@ -40,7 +40,7 @@ public class NotificationMappingController : ControllerBase
 
             var success = await _mockDb.SaveGlobalDataAsync("notification-mapping", new Dictionary<string, object> { ["data"] = notificationMapping });
 
-            return Ok(ApiResponse.Success("Notification mapping saved successfully!"));
+            return Ok(ApiResponse<string>.SuccessResult("Notification mapping saved successfully!"));
         }
         catch (Exception ex)
         {

@@ -40,7 +40,7 @@ public class AfterHoursController : ControllerBase
 
             var success = await _mockDb.SaveGlobalDataAsync("afterhours", new Dictionary<string, object> { ["data"] = afterHours });
 
-            return Ok(ApiResponse.Success("After hours settings saved successfully!"));
+            return Ok(ApiResponse<string>.SuccessResult("After hours settings saved successfully!"));
         }
         catch (Exception ex)
         {

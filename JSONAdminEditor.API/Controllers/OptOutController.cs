@@ -41,7 +41,7 @@ public class OptOutController : ControllerBase
 
             var success = await _mockDb.SaveGlobalDataAsync("optout", new Dictionary<string, object> { ["data"] = optOut });
 
-            return Ok(ApiResponse.Success("Opt-out settings saved successfully!"));
+            return Ok(ApiResponse<string>.SuccessResult("Opt-out settings saved successfully!"));
         }
         catch (Exception ex)
         {

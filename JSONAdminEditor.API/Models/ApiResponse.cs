@@ -26,24 +26,3 @@ public class ApiResponse<T>
         };
     }
 }
-
-public class ApiResponse : ApiResponse<object>
-{
-    public static ApiResponse Success(string? message = null)
-    {
-        return new ApiResponse
-        {
-            Success = true,
-            Message = message
-        };
-    }
-
-    public static ApiResponse Error(string error)
-    {
-        return new ApiResponse
-        {
-            Success = false,
-            Error = error
-        };
-    }
-}
