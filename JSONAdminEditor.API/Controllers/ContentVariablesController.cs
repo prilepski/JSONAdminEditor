@@ -28,6 +28,9 @@ public class ContentVariablesController : ControllerBase
     [HttpPost("save")]
     public async Task<IActionResult> SaveContentVariables([FromBody] Dictionary<string, string> contentVariables)
     {
+        if (contentVariables == null)
+            return BadRequest(new { success = false, error = "Content variables data is required" });
+            
         var success = await _mockDb.SaveContentVariablesAsync(contentVariables);
         
         if (success)

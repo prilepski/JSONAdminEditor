@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/dictionaries")]
 public class DictionariesController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
@@ -21,181 +21,134 @@ public class DictionariesController : ControllerBase
     [HttpGet("data")]
     public async Task<IActionResult> GetDictionaryData(int fileType)
     {
-        try
-        {
-            if (Enum.IsDefined(typeof(FileType), fileType))
-            {
-                var selectedFileType = (FileType)fileType;
-                var filePath = GetDictionaryFilePath(selectedFileType);
-                
-                if (!string.IsNullOrEmpty(filePath))
-                {
-                    var tableData = await _mockDb.GetDictionaryAsync(GetDictionaryKey(selectedFileType));
-                    
-                    if (tableData != null)
-                    {
-                        return Ok(new
-                        {
-                            success = true,
-                            data = new
-                            {
-                                columnNames = GetDefaultColumnsForDictionary(selectedFileType),
-                                columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                                tableData = tableData,
-                                filePath = filePath,
-                                fileName = GetDictionaryFileName(selectedFileType),
-                                isValidJson = true
-                            }
-                        });
-                    }
-                    else
-                    {
-                        return Ok(new { success = false, error = "Dictionary not found" });
-                    }
-                }
-                else
-                {
-                    // Return empty structure for new dictionary
-                    return Ok(new
-                    {
-                        success = true,
-                        data = new
-                        {
-                            columnNames = GetDefaultColumnsForDictionary(selectedFileType),
-                            columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                            tableData = new List<Dictionary<string, object>>(),
-                            filePath = filePath ?? GetDictionaryFilePath(selectedFileType),
-                            fileName = GetDictionaryFileName(selectedFileType),
-                            isValidJson = true
-                        }
-                    });
-                }
-            }
-            
+        if (!Enum.IsDefined(typeof(FileType), fileType))
             return BadRequest(new { success = false, error = "Invalid file type" });
-        }
-        catch (Exception ex)
+            
+        var selectedFileType = (FileType)fileType;
+        var filePath = GetDictionaryFilePath(selectedFileType);
+        
+        if (!string.IsNullOrEmpty(filePath))
         {
-            return StatusCode(500, new { success = false, error = "An error occurred while loading dictionary data" });
+            var tableData = await _mockDb.GetDictionaryAsync(GetDictionaryKey(selectedFileType));
+            
+            if (tableData != null)
+            {
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        columnNames = GetDefaultColumnsForDictionary(selectedFileType),
+                        columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
+                        tableData = tableData,
+                        filePath = filePath,
+                        fileName = GetDictionaryFileName(selectedFileType),
+                        isValidJson = true
+                    }
+                });
+            }
+            else
+            {
+                return Ok(new { success = false, error = "Dictionary not found" });
+            }
+        }
+        else
+        {
+            // Return empty structure for new dictionary
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    columnNames = GetDefaultColumnsForDictionary(selectedFileType),
+                    columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
+                    tableData = new List<Dictionary<string, object>>(),
+                    filePath = GetDictionaryFilePath(selectedFileType),
+                    fileName = GetDictionaryFileName(selectedFileType),
+                    isValidJson = true
+                }
+            });
         }
     }
 
     [HttpPost("save")]
     public async Task<IActionResult> SaveDictionary([FromForm] string filePath, [FromForm] string jsonData, [FromForm] int fileType)
     {
-        try
-        {
-            PathValidator.SanitizePath(filePath);
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            var tableData = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(jsonData, options);
+        if (string.IsNullOrEmpty(filePath))
+            return BadRequest(new { success = false, error = "File path is required" });
             
-            // Convert JsonElement to proper values
-            var convertedData = tableData?.Select(row => 
-                row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
-            ).ToList();
-            if (convertedData != null && Enum.IsDefined(typeof(FileType), fileType))
-            {
-                var selectedFileType = (FileType)fileType;
-                
-                // Skip validation for mock database
-                
-                var success = await _mockDb.SaveDictionaryAsync(GetDictionaryKey(selectedFileType), convertedData);
-                
-                if (success)
-                {
-                    // Return success with existing data (avoid unnecessary file reload)
-                    var columnNames = GetDefaultColumnsForDictionary(selectedFileType);
-                    var columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType);
-                    
-                    // Serialize and deserialize to ensure proper JSON format
-                    var jsonString = JsonSerializer.Serialize(tableData);
-                    var properTableData = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString);
-                    
-                    return Ok(new
-                    {
-                        success = true,
-                        message = $"{GetDictionaryDisplayName(selectedFileType)} dictionary saved successfully!",
-                        data = new
-                        {
-                            columnNames = columnNames,
-                            columnTypes = columnTypes,
-                            tableData = convertedData,
-                            filePath = filePath,
-                            fileName = GetDictionaryFileName(selectedFileType),
-                            isValidJson = true
-                        }
-                    });
-                }
-                else
-                {
-                    return Ok(new
-                    {
-                        success = false,
-                        error = "Failed to save changes."
-                    });
-                }
-            }
-            else
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    error = "Invalid data format."
-                });
-            }
-        }
-        catch (Exception ex)
+        if (string.IsNullOrEmpty(jsonData))
+            return BadRequest(new { success = false, error = "JSON data is required" });
+            
+        if (!Enum.IsDefined(typeof(FileType), fileType))
+            return BadRequest(new { success = false, error = "Invalid file type" });
+            
+        PathValidator.SanitizePath(filePath);
+        var options = new JsonSerializerOptions
         {
-            Console.WriteLine($"Dictionary save error: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            return StatusCode(500, new
+            PropertyNameCaseInsensitive = true
+        };
+        var tableData = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(jsonData, options);
+        
+        // Convert JsonElement to proper values
+        var convertedData = tableData?.Select(row => 
+            row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
+        ).ToList();
+        
+        if (convertedData == null)
+            return BadRequest(new { success = false, error = "Invalid data format" });
+            
+        var selectedFileType = (FileType)fileType;
+        var success = await _mockDb.SaveDictionaryAsync(GetDictionaryKey(selectedFileType), convertedData);
+        
+        if (success)
+        {
+            return Ok(new
             {
-                success = false,
-                error = $"An error occurred while saving dictionary: {ex.Message}"
+                success = true,
+                message = $"{GetDictionaryDisplayName(selectedFileType)} dictionary saved successfully!",
+                data = new
+                {
+                    columnNames = GetDefaultColumnsForDictionary(selectedFileType),
+                    columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
+                    tableData = convertedData,
+                    filePath = filePath,
+                    fileName = GetDictionaryFileName(selectedFileType),
+                    isValidJson = true
+                }
             });
+        }
+        else
+        {
+            return BadRequest(new { success = false, error = "Failed to save dictionary" });
         }
     }
 
     [HttpPost("upload")]
     public async Task<IActionResult> UploadFile([FromForm] FileUploadViewModel upload)
     {
-        try
+        if (upload == null)
+            return BadRequest(new { success = false, error = "Upload data is required" });
+            
+        if (upload.FileType == FileType.None)
+            return BadRequest(new { success = false, error = "Please select a valid dictionary type" });
+
+        if (upload.JsonFile == null || upload.JsonFile.Length == 0)
+            return BadRequest(new { success = false, error = "Please select a JSON file to upload" });
+
+        if (!upload.JsonFile.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { success = false, error = "Please select a valid JSON file" });
+
+        // Mock upload - always return success
+        var success = true;
+        
+        if (success)
         {
-            if (upload.FileType == FileType.None)
-            {
-                return BadRequest(new { success = false, error = "Please select a valid dictionary type." });
-            }
-
-            if (upload.JsonFile == null || upload.JsonFile.Length == 0)
-            {
-                return BadRequest(new { success = false, error = "Please select a JSON file to upload." });
-            }
-
-            if (!upload.JsonFile.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new { success = false, error = "Please select a valid JSON file." });
-            }
-
-            // Directly overwrite the file
-            // Mock upload - always return success
-            var success = true;
-            var message = "File uploaded successfully";
-
-            if (success)
-            {
-                return Ok(new { success = true, message });
-            }
-            else
-            {
-                return BadRequest(new { success = false, error = message });
-            }
+            return Ok(new { success = true, message = "File uploaded successfully!" });
         }
-        catch (Exception ex)
+        else
         {
-            return StatusCode(500, new { success = false, error = "An error occurred while uploading file" });
+            return BadRequest(new { success = false, error = "Failed to upload file" });
         }
     }
 

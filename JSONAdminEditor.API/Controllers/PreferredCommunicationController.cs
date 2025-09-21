@@ -25,6 +25,9 @@ public class PreferredCommunicationController : ControllerBase
     [HttpPost("save")]
     public async Task<IActionResult> SavePreferredCommunication([FromBody] List<PreferredCommunication> data)
     {
+        if (data == null)
+            return BadRequest(new { success = false, error = "Preferred communication data is required" });
+            
         if (!ModelState.IsValid)
             return BadRequest(new { success = false, error = "Invalid preferred communication data" });
         

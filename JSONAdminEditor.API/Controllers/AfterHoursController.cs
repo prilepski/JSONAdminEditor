@@ -6,7 +6,7 @@ using JSONAdminEditor.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/afterhours")]
+[Route("api/after-hours")]
 public class AfterHoursController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
@@ -19,32 +19,25 @@ public class AfterHoursController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAfterHours()
     {
-        try
-        {
-            var afterHours = await _mockDb.GetAfterHoursAsync();
-            return Ok(afterHours);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving after hours settings" });
-        }
+        var afterHours = await _mockDb.GetAfterHoursAsync();
+        return Ok(afterHours);
     }
 
     [HttpPost("save")]
     public async Task<IActionResult> SaveAfterHours([FromBody] AfterHours afterHours)
     {
-        try
+        if (!ModelState.IsValid)
+            return BadRequest(new { success = false, error = "Invalid after hours data" });
+
+        var success = await _mockDb.SaveAfterHoursAsync(afterHours);
+        
+        if (success)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new { success = false, error = "Invalid after hours data" });
-
-            var success = await _mockDb.SaveAfterHoursAsync(afterHours);
-
-            return Ok(ApiResponse<string>.SuccessResult("After hours settings saved successfully!"));
+            return Ok(new { success = true, message = "After hours settings saved successfully!" });
         }
-        catch (Exception ex)
+        else
         {
-            return StatusCode(500, new { success = false, error = "An error occurred while saving after hours settings" });
+            return BadRequest(new { success = false, error = "Failed to save after hours settings" });
         }
     }
 }

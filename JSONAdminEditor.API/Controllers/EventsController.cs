@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Application.Models;
-using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/events")]
 public class EventsController : ControllerBase
 {
     private readonly NotificationsService _notificationsService;
@@ -21,97 +20,55 @@ public class EventsController : ControllerBase
     [HttpGet("triggers")]
     public async Task<IActionResult> GetActiveEventTriggers()
     {
-        try
-        {
-            var triggers = await _notificationsService.GetActiveEventTriggersAsync();
-            return Ok(triggers);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving event triggers" });
-        }
+        var triggers = await _notificationsService.GetActiveEventTriggersAsync();
+        return Ok(triggers);
     }
 
     [HttpGet("order-types")]
     public async Task<IActionResult> GetAvailableOrderTypes()
     {
-        try
-        {
-            var orderTypes = await _notificationsService.GetAvailableOrderTypesAsync();
-            return Ok(orderTypes);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving order types" });
-        }
+        var orderTypes = await _notificationsService.GetAvailableOrderTypesAsync();
+        return Ok(orderTypes);
     }
 
     [HttpGet("templates")]
     public async Task<IActionResult> GetAvailableTemplates([FromQuery] string? orderType = null)
     {
-        try
+        var templates = await _notificationsService.GetAvailableTemplatesAsync();
+        var filteredTemplates = templates;
+        
+        if (!string.IsNullOrEmpty(orderType))
         {
-            var templates = await _notificationsService.GetAvailableTemplatesAsync();
-            var filteredTemplates = templates;
-            
-            if (!string.IsNullOrEmpty(orderType))
-            {
-                // Filter templates that contain the order type OR are generic (don't contain Pickup/Delivery)
-                filteredTemplates = templates.Where(t => 
-                    t.TemplateName.Contains(orderType, StringComparison.OrdinalIgnoreCase) ||
-                    (!t.TemplateName.Contains("Pickup", StringComparison.OrdinalIgnoreCase) && 
-                     !t.TemplateName.Contains("Delivery", StringComparison.OrdinalIgnoreCase))
-                ).ToList();
-            }
-            
-            return Ok(filteredTemplates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
+            // Filter templates that contain the order type OR are generic (don't contain Pickup/Delivery)
+            filteredTemplates = templates.Where(t => 
+                t.TemplateName.Contains(orderType, StringComparison.OrdinalIgnoreCase) ||
+                (!t.TemplateName.Contains("Pickup", StringComparison.OrdinalIgnoreCase) && 
+                 !t.TemplateName.Contains("Delivery", StringComparison.OrdinalIgnoreCase))
+            ).ToList();
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving templates" });
-        }
+        
+        return Ok(filteredTemplates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
     }
 
     [HttpGet("supports-order-type")]
     public async Task<IActionResult> CheckEventSupportsByOrderType(string eventName)
     {
-        try
-        {
-            var supports = await _notificationsService.CheckEventSupportsByOrderTypeAsync(eventName);
-            return Ok(supports);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while checking event support" });
-        }
+        var supports = await _notificationsService.CheckEventSupportsByOrderTypeAsync(eventName);
+        return Ok(supports);
     }
 
     [HttpGet("data")]
     public async Task<IActionResult> GetEventByNameAndOrderType(string eventName, string orderType)
     {
-        try
-        {
-            var eventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(eventName, orderType);
-            return Ok(eventData);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving event data" });
-        }
+        var eventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(eventName, orderType);
+        return Ok(eventData);
     }
 
     [HttpGet("template")]
     public async Task<IActionResult> GetEventTemplate()
     {
-        try
-        {
-            var template = await _notificationsService.GetEventTemplateAsync();
-            return Ok(template);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving event template" });
-        }
+        var template = await _notificationsService.GetEventTemplateAsync();
+        return Ok(template);
     }
 
     public class EventRequest
@@ -125,32 +82,33 @@ public class EventsController : ControllerBase
     [HttpPost("save")]
     public async Task<IActionResult> SaveEvent([FromBody] EventRequest request)
     {
-        try
+        if (request == null) 
+            return BadRequest(new { success = false, error = "Event request data is required" });
+        
+        if (!ModelState.IsValid)
+            return BadRequest(new { success = false, error = "Invalid event data" });
+        
+        bool success;
+        if (request.isNew)
         {
-            if (request == null) return BadRequest(new { success = false, error = "Invalid request data" });
-            
-            if (!ModelState.IsValid)
-                return BadRequest(new { success = false, error = "Invalid event data" });
-            
-            bool success;
-            if (request.isNew)
-            {
-                success = await _notificationsService.AddNewEventAsync(request.eventName, request.eventData);
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(request.orderType))
-                {
-                    return BadRequest(new { success = false, error = "OrderType is required for updating existing events" });
-                }
-                success = await _notificationsService.UpdateEventByOrderTypeAsync(request.eventName, request.orderType, request.eventData);
-            }
-            
-            return Ok(new { success });
+            success = await _notificationsService.AddNewEventAsync(request.eventName, request.eventData);
         }
-        catch (Exception ex)
+        else
         {
-            return StatusCode(500, new { success = false, error = "An error occurred while saving event" });
+            if (string.IsNullOrEmpty(request.orderType))
+            {
+                return BadRequest(new { success = false, error = "OrderType is required for updating existing events" });
+            }
+            success = await _notificationsService.UpdateEventByOrderTypeAsync(request.eventName, request.orderType, request.eventData);
+        }
+        
+        if (success)
+        {
+            return Ok(new { success = true, message = "Event saved successfully!" });
+        }
+        else
+        {
+            return BadRequest(new { success = false, error = "Failed to save event" });
         }
     }
 }

@@ -6,7 +6,7 @@ using JSONAdminEditor.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/optout")]
+[Route("api/opt-out")]
 public class OptOutController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
@@ -19,32 +19,25 @@ public class OptOutController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetOptOut()
     {
-        try
-        {
-            var optOut = await _mockDb.GetOptOutAsync();
-            return Ok(optOut);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving opt-out settings" });
-        }
+        var optOut = await _mockDb.GetOptOutAsync();
+        return Ok(optOut);
     }
 
     [HttpPost("save")]
     public async Task<IActionResult> SaveOptOut([FromBody] OptOut optOut)
     {
-        try
+        if (!ModelState.IsValid)
+            return BadRequest(new { success = false, error = "Invalid opt-out data" });
+
+        var success = await _mockDb.SaveOptOutAsync(optOut);
+        
+        if (success)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new { success = false, error = "Invalid opt-out data" });
-
-            var success = await _mockDb.SaveOptOutAsync(optOut);
-
-            return Ok(ApiResponse<string>.SuccessResult("Opt-out settings saved successfully!"));
+            return Ok(new { success = true, message = "Opt-out settings saved successfully!" });
         }
-        catch (Exception ex)
+        else
         {
-            return StatusCode(500, new { success = false, error = "An error occurred while saving opt-out settings" });
+            return BadRequest(new { success = false, error = "Failed to save opt-out settings" });
         }
     }
 }

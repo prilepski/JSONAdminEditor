@@ -19,32 +19,25 @@ public class NotificationMappingController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetNotificationMapping()
     {
-        try
-        {
-            var notificationMapping = await _mockDb.GetNotificationMappingAsync();
-            return Ok(notificationMapping);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while retrieving notification mapping" });
-        }
+        var notificationMapping = await _mockDb.GetNotificationMappingAsync();
+        return Ok(notificationMapping);
     }
 
     [HttpPost("save")]
     public async Task<IActionResult> SaveNotificationMapping([FromBody] NotificationMapping notificationMapping)
     {
-        try
+        if (!ModelState.IsValid)
+            return BadRequest(new { success = false, error = "Invalid notification mapping data" });
+
+        var success = await _mockDb.SaveNotificationMappingAsync(notificationMapping);
+        
+        if (success)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new { success = false, error = "Invalid notification mapping data" });
-
-            var success = await _mockDb.SaveNotificationMappingAsync(notificationMapping);
-
-            return Ok(ApiResponse<string>.SuccessResult("Notification mapping saved successfully!"));
+            return Ok(new { success = true, message = "Notification mapping saved successfully!" });
         }
-        catch (Exception ex)
+        else
         {
-            return StatusCode(500, new { success = false, error = "An error occurred while saving notification mapping" });
+            return BadRequest(new { success = false, error = "Failed to save notification mapping" });
         }
     }
 }
