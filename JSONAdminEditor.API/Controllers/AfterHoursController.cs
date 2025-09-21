@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Models;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -39,7 +40,7 @@ public class AfterHoursController : ControllerBase
 
             var success = await _mockDb.SaveGlobalDataAsync("afterhours", new Dictionary<string, object> { ["data"] = afterHours });
 
-            return Ok(new { success = true, message = "After hours settings saved successfully!" });
+            return Ok(ApiResponse.Success("After hours settings saved successfully!"));
         }
         catch (Exception ex)
         {

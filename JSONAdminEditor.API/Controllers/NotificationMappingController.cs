@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Models;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -39,7 +40,7 @@ public class NotificationMappingController : ControllerBase
 
             var success = await _mockDb.SaveGlobalDataAsync("notification-mapping", new Dictionary<string, object> { ["data"] = notificationMapping });
 
-            return Ok(new { success = true, message = "Notification mapping saved successfully!" });
+            return Ok(ApiResponse.Success("Notification mapping saved successfully!"));
         }
         catch (Exception ex)
         {

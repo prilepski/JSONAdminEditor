@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Models;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 
@@ -200,7 +201,7 @@ public class CustomersController : ControllerBase
             
             var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
             
-            return Ok(new { success, data = success ? afterHours : null });
+            return Ok(success ? ApiResponse<AfterHours>.SuccessResult(afterHours, "After hours settings saved successfully!") : ApiResponse<AfterHours>.ErrorResult("Failed to save after hours settings"));
         }
         catch (Exception ex)
         {

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Models;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -40,7 +41,7 @@ public class OptOutController : ControllerBase
 
             var success = await _mockDb.SaveGlobalDataAsync("optout", new Dictionary<string, object> { ["data"] = optOut });
 
-            return Ok(new { success = true, message = "Opt-out settings saved successfully!" });
+            return Ok(ApiResponse.Success("Opt-out settings saved successfully!"));
         }
         catch (Exception ex)
         {
