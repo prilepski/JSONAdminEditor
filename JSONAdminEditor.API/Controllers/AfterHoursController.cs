@@ -21,8 +21,8 @@ public class AfterHoursController : ControllerBase
     {
         try
         {
-            var data = await _mockDb.GetGlobalDataAsync("afterhours");
-            return Ok(data?["data"] ?? null);
+            var afterHours = await _mockDb.GetAfterHoursAsync();
+            return Ok(afterHours);
         }
         catch (Exception ex)
         {
@@ -38,7 +38,7 @@ public class AfterHoursController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, error = "Invalid after hours data" });
 
-            var success = await _mockDb.SaveGlobalDataAsync("afterhours", new Dictionary<string, object> { ["data"] = afterHours });
+            var success = await _mockDb.SaveAfterHoursAsync(afterHours);
 
             return Ok(ApiResponse<string>.SuccessResult("After hours settings saved successfully!"));
         }

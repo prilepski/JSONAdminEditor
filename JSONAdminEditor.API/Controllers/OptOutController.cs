@@ -21,8 +21,7 @@ public class OptOutController : ControllerBase
     {
         try
         {
-            var data = await _mockDb.GetGlobalDataAsync("optout");
-            var optOut = data?["data"] ?? new OptOut();
+            var optOut = await _mockDb.GetOptOutAsync();
             return Ok(optOut);
         }
         catch (Exception ex)
@@ -39,7 +38,7 @@ public class OptOutController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, error = "Invalid opt-out data" });
 
-            var success = await _mockDb.SaveGlobalDataAsync("optout", new Dictionary<string, object> { ["data"] = optOut });
+            var success = await _mockDb.SaveOptOutAsync(optOut);
 
             return Ok(ApiResponse<string>.SuccessResult("Opt-out settings saved successfully!"));
         }

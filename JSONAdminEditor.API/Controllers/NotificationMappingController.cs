@@ -21,8 +21,8 @@ public class NotificationMappingController : ControllerBase
     {
         try
         {
-            var data = await _mockDb.GetGlobalDataAsync("notification-mapping");
-            return Ok(data?["data"] ?? new NotificationMapping());
+            var notificationMapping = await _mockDb.GetNotificationMappingAsync();
+            return Ok(notificationMapping);
         }
         catch (Exception ex)
         {
@@ -38,7 +38,7 @@ public class NotificationMappingController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, error = "Invalid notification mapping data" });
 
-            var success = await _mockDb.SaveGlobalDataAsync("notification-mapping", new Dictionary<string, object> { ["data"] = notificationMapping });
+            var success = await _mockDb.SaveNotificationMappingAsync(notificationMapping);
 
             return Ok(ApiResponse<string>.SuccessResult("Notification mapping saved successfully!"));
         }

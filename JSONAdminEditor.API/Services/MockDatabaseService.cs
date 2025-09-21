@@ -12,10 +12,16 @@ public interface IMockDatabaseService
     Task<List<Dictionary<string, object>>> SearchCustomersAsync(string searchTerm);
     Task<List<Dictionary<string, object>>?> GetDictionaryAsync(string dictionaryType);
     Task<bool> SaveDictionaryAsync(string dictionaryType, List<Dictionary<string, object>> data);
-    Task<Dictionary<string, object>?> GetGlobalDataAsync(string key);
-    Task<bool> SaveGlobalDataAsync(string key, Dictionary<string, object> data);
-    Task<T?> GetGlobalDataAsync<T>(string key) where T : class;
-    Task<bool> SaveGlobalDataAsync<T>(string key, T data) where T : class;
+    Task<NotificationMapping> GetNotificationMappingAsync();
+    Task<bool> SaveNotificationMappingAsync(NotificationMapping notificationMapping);
+    Task<OptOut> GetOptOutAsync();
+    Task<bool> SaveOptOutAsync(OptOut optOut);
+    Task<AfterHours?> GetAfterHoursAsync();
+    Task<bool> SaveAfterHoursAsync(AfterHours afterHours);
+    Task<List<PreferredCommunication>> GetPreferredCommunicationAsync();
+    Task<bool> SavePreferredCommunicationAsync(List<PreferredCommunication> preferredCommunication);
+    Task<Dictionary<string, string>> GetContentVariablesAsync();
+    Task<bool> SaveContentVariablesAsync(Dictionary<string, string> contentVariables);
 }
 
 public class MockDatabaseService : IMockDatabaseService
@@ -244,103 +250,69 @@ public class MockDatabaseService : IMockDatabaseService
         return Task.FromResult(true);
     }
 
-    public Task<Dictionary<string, object>?> GetGlobalDataAsync(string key)
+    public Task<NotificationMapping> GetNotificationMappingAsync()
     {
-        var result = key switch
-        {
-            "optout" => new Dictionary<string, object> { ["data"] = _globalData.OptOut },
-            "afterhours" => new Dictionary<string, object> { ["data"] = _globalData.AfterHours },
-            "notification-mapping" => new Dictionary<string, object> { ["data"] = _globalData },
-            "preferred-communication" => new Dictionary<string, object> { ["data"] = _globalData.PreferredCommunication },
-            "content-variables" => new Dictionary<string, object> { ["data"] = _globalData.ContentVariables.Select(kvp => new Dictionary<string, object> { ["Variable Name"] = kvp.Key, ["Variable Value"] = kvp.Value }).ToList() },
-            _ => null
-        };
-        return Task.FromResult(result);
+        return Task.FromResult(_globalData);
     }
 
-    public Task<bool> SaveGlobalDataAsync(string key, Dictionary<string, object> data)
+    public Task<bool> SaveNotificationMappingAsync(NotificationMapping notificationMapping)
     {
-        try
-        {
-            switch (key)
-            {
-                case "optout":
-                    if (data.TryGetValue("data", out var optOutData))
-                    {
-                        var json = JsonSerializer.Serialize(optOutData);
-                        _globalData.OptOut = JsonSerializer.Deserialize<OptOut>(json) ?? new OptOut();
-                    }
-                    break;
-                case "afterhours":
-                    if (data.TryGetValue("data", out var afterHoursData))
-                    {
-                        var json = JsonSerializer.Serialize(afterHoursData);
-                        _globalData.AfterHours = JsonSerializer.Deserialize<AfterHours>(json);
-                    }
-                    break;
-                case "notification-mapping":
-                    if (data.TryGetValue("data", out var mappingData))
-                    {
-                        var json = JsonSerializer.Serialize(mappingData);
-                        var mapping = JsonSerializer.Deserialize<NotificationMapping>(json);
-                        if (mapping != null)
-                        {
-                            _globalData.EventMappings = mapping.EventMappings;
-                            _globalData.PreferredCommunication = mapping.PreferredCommunication;
-                            _globalData.ContentVariables = mapping.ContentVariables;
-                            _globalData.OptOut = mapping.OptOut;
-                            _globalData.AfterHours = mapping.AfterHours;
-                            _globalData.FromEmail = mapping.FromEmail;
-                            _globalData.Agents = mapping.Agents;
-                        }
-                    }
-                    break;
-            }
-            _logger.LogInformation("Saved global data {Key}", key);
-            return Task.FromResult(true);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to save global data {Key}", key);
-            return Task.FromResult(false);
-        }
+        _globalData.EventMappings = notificationMapping.EventMappings;
+        _globalData.PreferredCommunication = notificationMapping.PreferredCommunication;
+        _globalData.ContentVariables = notificationMapping.ContentVariables;
+        _globalData.OptOut = notificationMapping.OptOut;
+        _globalData.AfterHours = notificationMapping.AfterHours;
+        _globalData.FromEmail = notificationMapping.FromEmail;
+        _globalData.Agents = notificationMapping.Agents;
+        _logger.LogInformation("Saved notification mapping");
+        return Task.FromResult(true);
     }
 
-    public Task<T?> GetGlobalDataAsync<T>(string key) where T : class
+    public Task<OptOut> GetOptOutAsync()
     {
-        if (_globalData.TryGetValue(key, out var data))
-        {
-            try
-            {
-                var json = JsonSerializer.Serialize(data);
-                var result = JsonSerializer.Deserialize<T>(json);
-                return Task.FromResult(result);
-            }
-            catch
-            {
-                return Task.FromResult<T?>(null);
-            }
-        }
-        return Task.FromResult<T?>(null);
+        return Task.FromResult(_globalData.OptOut);
     }
 
-    public Task<bool> SaveGlobalDataAsync<T>(string key, T data) where T : class
+    public Task<bool> SaveOptOutAsync(OptOut optOut)
     {
-        try
-        {
-            var json = JsonSerializer.Serialize(data);
-            var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-            if (dict != null)
-            {
-                _globalData[key] = dict;
-                _logger.LogInformation("Saved global data {Key}", key);
-                return Task.FromResult(true);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to save global data {Key}", key);
-        }
-        return Task.FromResult(false);
+        _globalData.OptOut = optOut;
+        _logger.LogInformation("Saved opt-out settings");
+        return Task.FromResult(true);
+    }
+
+    public Task<AfterHours?> GetAfterHoursAsync()
+    {
+        return Task.FromResult(_globalData.AfterHours);
+    }
+
+    public Task<bool> SaveAfterHoursAsync(AfterHours afterHours)
+    {
+        _globalData.AfterHours = afterHours;
+        _logger.LogInformation("Saved after hours settings");
+        return Task.FromResult(true);
+    }
+
+    public Task<List<PreferredCommunication>> GetPreferredCommunicationAsync()
+    {
+        return Task.FromResult(_globalData.PreferredCommunication);
+    }
+
+    public Task<bool> SavePreferredCommunicationAsync(List<PreferredCommunication> preferredCommunication)
+    {
+        _globalData.PreferredCommunication = preferredCommunication;
+        _logger.LogInformation("Saved preferred communication");
+        return Task.FromResult(true);
+    }
+
+    public Task<Dictionary<string, string>> GetContentVariablesAsync()
+    {
+        return Task.FromResult(_globalData.ContentVariables);
+    }
+
+    public Task<bool> SaveContentVariablesAsync(Dictionary<string, string> contentVariables)
+    {
+        _globalData.ContentVariables = contentVariables;
+        _logger.LogInformation("Saved content variables");
+        return Task.FromResult(true);
     }
 }
