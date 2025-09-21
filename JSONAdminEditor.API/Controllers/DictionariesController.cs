@@ -12,10 +12,12 @@ namespace JSONAdminEditor.Controllers;
 public class DictionariesController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
+    private readonly NotificationsService _notificationsService;
 
-    public DictionariesController(IMockDatabaseService mockDb)
+    public DictionariesController(IMockDatabaseService mockDb, NotificationsService notificationsService)
     {
         _mockDb = mockDb;
+        _notificationsService = notificationsService;
     }
 
     [HttpGet("data")]
@@ -241,5 +243,59 @@ public class DictionariesController : ControllerBase
             FileType.Customers => "customers",
             _ => "unknown"
         };
+    }
+
+    // Event Helper Endpoints
+    [HttpGet("triggers")]
+    public async Task<IActionResult> GetActiveEventTriggers()
+    {
+        var triggers = await _notificationsService.GetActiveEventTriggersAsync();
+        return Ok(triggers);
+    }
+
+    [HttpGet("order-types")]
+    public async Task<IActionResult> GetAvailableOrderTypes()
+    {
+        var orderTypes = await _notificationsService.GetAvailableOrderTypesAsync();
+        return Ok(orderTypes);
+    }
+
+    [HttpGet("templates")]
+    public async Task<IActionResult> GetAvailableTemplates([FromQuery] string? orderType = null)
+    {
+        var templates = await _notificationsService.GetAvailableTemplatesAsync();
+        var filteredTemplates = templates;
+        
+        if (!string.IsNullOrEmpty(orderType))
+        {
+            filteredTemplates = templates.Where(t => 
+                t.TemplateName.Contains(orderType, StringComparison.OrdinalIgnoreCase) ||
+                (!t.TemplateName.Contains("Pickup", StringComparison.OrdinalIgnoreCase) && 
+                 !t.TemplateName.Contains("Delivery", StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+        
+        return Ok(filteredTemplates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
+    }
+
+    [HttpGet("supports-order-type")]
+    public async Task<IActionResult> CheckEventSupportsByOrderType(string eventName)
+    {
+        var supports = await _notificationsService.CheckEventSupportsByOrderTypeAsync(eventName);
+        return Ok(supports);
+    }
+
+    [HttpGet("event-data")]
+    public async Task<IActionResult> GetEventByNameAndOrderType(string eventName, string orderType)
+    {
+        var eventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(eventName, orderType);
+        return Ok(eventData);
+    }
+
+    [HttpGet("event-template")]
+    public async Task<IActionResult> GetEventTemplate()
+    {
+        var template = await _notificationsService.GetEventTemplateAsync();
+        return Ok(template);
     }
 }
