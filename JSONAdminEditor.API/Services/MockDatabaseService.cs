@@ -6,8 +6,8 @@ namespace JSONAdminEditor.Services;
 
 public interface IMockDatabaseService
 {
-    Task<Dictionary<string, object>?> GetCustomerAsync(string customerId);
-    Task<bool> SaveCustomerAsync(string customerId, Dictionary<string, object> customerData);
+    Task<CustomerNotificationMapping?> GetCustomerAsync(string customerId);
+    Task<bool> SaveCustomerAsync(string customerId, CustomerNotificationMapping customerData);
     Task<List<string>> GetCustomerIdsAsync();
     Task<List<Dictionary<string, object>>> SearchCustomersAsync(string searchTerm);
     Task<List<Dictionary<string, object>>?> GetDictionaryAsync(string dictionaryType);
@@ -26,7 +26,7 @@ public interface IMockDatabaseService
 
 public class MockDatabaseService : IMockDatabaseService
 {
-    private readonly ConcurrentDictionary<string, Dictionary<string, object>> _customers = new();
+    private readonly ConcurrentDictionary<string, CustomerNotificationMapping> _customers = new();
     private readonly ConcurrentDictionary<string, List<Dictionary<string, object>>> _dictionaries = new();
     private readonly NotificationMapping _globalData = new();
     private readonly ILogger<MockDatabaseService> _logger;
@@ -39,46 +39,49 @@ public class MockDatabaseService : IMockDatabaseService
 
     private void InitializeMockData()
     {
-        // CUST001 - DELL
-        _customers["CUST001"] = new Dictionary<string, object>
+        // CUST001 - DELL (minimal overrides)
+        _customers["CUST001"] = new CustomerNotificationMapping
         {
-            ["customerName"] = "DELL",
-            ["Events"] = new List<Dictionary<string, object>>(),
-            ["ContentVariables"] = new Dictionary<string, object>()
+            EventMappings = new List<EventMapping>(),
+            ContentVariables = new Dictionary<string, string>()
         };
 
-        // CUST002 - Sample Customer
-        _customers["CUST002"] = new Dictionary<string, object>
+        // CUST002 - Sample Customer (with overrides)
+        _customers["CUST002"] = new CustomerNotificationMapping
         {
-            ["customerName"] = "Sample Corp",
-            ["ContentVariables"] = new Dictionary<string, object>
+            ContentVariables = new Dictionary<string, string>
             {
                 ["cust_name"] = "$Customer.FriendlyName$",
                 ["custom_var"] = "Sample Value"
             },
-            ["Events"] = new List<Dictionary<string, object>>
+            EventMappings = new List<EventMapping>
             {
                 new()
                 {
-                    ["Event"] = "Ready For Scheduling",
-                    ["OrderType"] = "Delivery",
-                    ["Phone"] = "$consignee.phone$",
-                    ["Email"] = "$consignee.email$",
-                    ["Templates"] = new Dictionary<string, object>
+                    Event = "Ready For Scheduling",
+                    OrderType = "Delivery",
+                    Phone = "$consignee.phone$",
+                    Email = "$consignee.email$",
+                    Templates = new Dictionary<Channel, string>
                     {
-                        ["Email"] = "d-e162b3e6181545fead5e643982628504",
-                        ["Sms"] = "HX61a3cb19e35c428d9b1395d8139e94cc"
+                        [Channel.Email] = "d-e162b3e6181545fead5e643982628504",
+                        [Channel.Sms] = "HX61a3cb19e35c428d9b1395d8139e94cc"
                     }
                 }
+            },
+            FromEmail = "notifications@samplecorp.com",
+            PreferredCommunication = new List<PreferredCommunication>
+            {
+                new() { Channel = Channel.Sms, Priority = 1 },
+                new() { Channel = Channel.Email, Priority = 2 }
             }
         };
 
-        // BJ001 - Another sample
-        _customers["BJ001"] = new Dictionary<string, object>
+        // BJ001 - Another sample (minimal overrides)
+        _customers["BJ001"] = new CustomerNotificationMapping
         {
-            ["customerName"] = "BJ Industries",
-            ["Events"] = new List<Dictionary<string, object>>(),
-            ["ContentVariables"] = new Dictionary<string, object>()
+            EventMappings = new List<EventMapping>(),
+            ContentVariables = new Dictionary<string, string>()
         };
 
         InitializeDictionaries();
@@ -139,8 +142,8 @@ public class MockDatabaseService : IMockDatabaseService
         
         _globalData.PreferredCommunication = new List<PreferredCommunication>
         {
-            new() { Channel = "Email", Priority = 1 },
-            new() { Channel = "Sms", Priority = 2 }
+            new() { Channel = Channel.Email, Priority = 1 },
+            new() { Channel = Channel.Sms, Priority = 2 }
         };
         
         _globalData.ContentVariables = new Dictionary<string, string>
@@ -189,16 +192,15 @@ public class MockDatabaseService : IMockDatabaseService
         _globalData.FromEmail = "noreply@company.com";
     }
 
-    public Task<Dictionary<string, object>?> GetCustomerAsync(string customerId)
+    public Task<CustomerNotificationMapping?> GetCustomerAsync(string customerId)
     {
         _customers.TryGetValue(customerId, out var customer);
         return Task.FromResult(customer);
     }
 
-    public Task<bool> SaveCustomerAsync(string customerId, Dictionary<string, object> customerData)
+    public Task<bool> SaveCustomerAsync(string customerId, CustomerNotificationMapping customerData)
     {
         _customers[customerId] = customerData;
-        _logger.LogInformation("Saved customer {CustomerId}", customerId);
         return Task.FromResult(true);
     }
 
@@ -209,30 +211,10 @@ public class MockDatabaseService : IMockDatabaseService
 
     public Task<List<Dictionary<string, object>>> SearchCustomersAsync(string searchTerm)
     {
-        var results = new List<Dictionary<string, object>>();
-        
-        foreach (var kvp in _customers)
-        {
-            var customerId = kvp.Key;
-            var customerData = kvp.Value;
-            var customerName = customerData.TryGetValue("customerName", out var name) ? name?.ToString() : customerId;
-            
-            if (customerId.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                (customerName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true))
-            {
-                results.Add(new Dictionary<string, object>
-                {
-                    ["customerId"] = customerId,
-                    ["companyName"] = customerName ?? customerId,
-                    ["contactPerson"] = "Contact Person",
-                    ["email"] = $"{customerId.ToLower()}@company.com",
-                    ["phone"] = "+1-555-0123",
-                    ["address"] = "123 Business St",
-                    ["IsActive"] = true
-                });
-            }
-        }
-        
+        var results = _dictionaries["customers"]
+            .Where(c => c["companyName"].ToString()!.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       c["customerId"].ToString()!.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .ToList();
         return Task.FromResult(results);
     }
 
@@ -245,7 +227,6 @@ public class MockDatabaseService : IMockDatabaseService
     public Task<bool> SaveDictionaryAsync(string dictionaryType, List<Dictionary<string, object>> data)
     {
         _dictionaries[dictionaryType] = data;
-        _logger.LogInformation("Saved dictionary {DictionaryType}", dictionaryType);
         return Task.FromResult(true);
     }
 
@@ -263,7 +244,6 @@ public class MockDatabaseService : IMockDatabaseService
         _globalData.AfterHours = notificationMapping.AfterHours;
         _globalData.FromEmail = notificationMapping.FromEmail;
         _globalData.Agents = notificationMapping.Agents;
-        _logger.LogInformation("Saved notification mapping");
         return Task.FromResult(true);
     }
 
@@ -275,7 +255,6 @@ public class MockDatabaseService : IMockDatabaseService
     public Task<bool> SaveOptOutAsync(OptOut optOut)
     {
         _globalData.OptOut = optOut;
-        _logger.LogInformation("Saved opt-out settings");
         return Task.FromResult(true);
     }
 
@@ -287,7 +266,6 @@ public class MockDatabaseService : IMockDatabaseService
     public Task<bool> SaveAfterHoursAsync(AfterHours afterHours)
     {
         _globalData.AfterHours = afterHours;
-        _logger.LogInformation("Saved after hours settings");
         return Task.FromResult(true);
     }
 
@@ -299,7 +277,6 @@ public class MockDatabaseService : IMockDatabaseService
     public Task<bool> SavePreferredCommunicationAsync(List<PreferredCommunication> preferredCommunication)
     {
         _globalData.PreferredCommunication = preferredCommunication;
-        _logger.LogInformation("Saved preferred communication");
         return Task.FromResult(true);
     }
 
@@ -311,7 +288,6 @@ public class MockDatabaseService : IMockDatabaseService
     public Task<bool> SaveContentVariablesAsync(Dictionary<string, string> contentVariables)
     {
         _globalData.ContentVariables = contentVariables;
-        _logger.LogInformation("Saved content variables");
         return Task.FromResult(true);
     }
 }

@@ -38,13 +38,7 @@ public class CustomerEventsController : ControllerBase
         if (customerData == null)
             return NotFound(new { error = "Customer not found" });
 
-        if (customerData.TryGetValue("Events", out var eventsObj) && 
-            eventsObj is List<EventMapping> events)
-        {
-            return Ok(events);
-        }
-
-        return Ok(new List<EventMapping>());
+        return Ok(customerData.EventMappings);
     }
 
     [HttpGet("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
@@ -61,20 +55,14 @@ public class CustomerEventsController : ControllerBase
         if (customerData == null)
             return NotFound(new { error = "Customer not found" });
 
-        if (customerData.TryGetValue("Events", out var eventsObj) && 
-            eventsObj is List<EventMapping> events)
-        {
-            var eventMapping = events.FirstOrDefault(e => 
-                e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
-                e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+        var eventMapping = customerData.EventMappings.FirstOrDefault(e => 
+            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
+            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
-            if (eventMapping == null)
-                return NotFound(new { error = "Event mapping not found" });
+        if (eventMapping == null)
+            return NotFound(new { error = "Event mapping not found" });
 
-            return Ok(eventMapping);
-        }
-
-        return NotFound(new { error = "Event mapping not found" });
+        return Ok(eventMapping);
     }
 
     [HttpPut("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
@@ -99,32 +87,23 @@ public class CustomerEventsController : ControllerBase
         if (customerData == null)
             return NotFound(new { success = false, error = "Customer not found" });
 
-        // Get existing events or create new list
-        var events = new List<EventMapping>();
-        if (customerData.TryGetValue("Events", out var eventsObj) && 
-            eventsObj is List<EventMapping> existingEvents)
-        {
-            events = existingEvents;
-        }
-
         // Ensure the event mapping has correct event name and order type
         eventMapping.Event = eventName;
         eventMapping.OrderType = orderType;
 
-        var existingIndex = events.FindIndex(e => 
+        var existingIndex = customerData.EventMappings.FindIndex(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
         if (existingIndex >= 0)
         {
-            events[existingIndex] = eventMapping;
+            customerData.EventMappings[existingIndex] = eventMapping;
         }
         else
         {
-            events.Add(eventMapping);
+            customerData.EventMappings.Add(eventMapping);
         }
 
-        customerData["Events"] = events;
         var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
 
         if (success)
@@ -151,30 +130,23 @@ public class CustomerEventsController : ControllerBase
         if (customerData == null)
             return NotFound(new { success = false, error = "Customer not found" });
 
-        if (customerData.TryGetValue("Events", out var eventsObj) && 
-            eventsObj is List<EventMapping> events)
+        var existingIndex = customerData.EventMappings.FindIndex(e => 
+            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
+            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+
+        if (existingIndex < 0)
+            return NotFound(new { success = false, error = "Event mapping not found" });
+
+        customerData.EventMappings.RemoveAt(existingIndex);
+        var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
+
+        if (success)
         {
-            var existingIndex = events.FindIndex(e => 
-                e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
-                e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
-
-            if (existingIndex < 0)
-                return NotFound(new { success = false, error = "Event mapping not found" });
-
-            events.RemoveAt(existingIndex);
-            customerData["Events"] = events;
-            var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
-
-            if (success)
-            {
-                return Ok(new { success = true, message = "Customer event mapping deleted successfully!" });
-            }
-            else
-            {
-                return BadRequest(new { success = false, error = "Failed to delete customer event mapping" });
-            }
+            return Ok(new { success = true, message = "Customer event mapping deleted successfully!" });
         }
-
-        return NotFound(new { success = false, error = "Event mapping not found" });
+        else
+        {
+            return BadRequest(new { success = false, error = "Failed to delete customer event mapping" });
+        }
     }
 }

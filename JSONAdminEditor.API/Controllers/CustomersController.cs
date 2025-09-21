@@ -29,17 +29,16 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<string>>> GetCustomers()
     {
-        var customers = await _mockDb.SearchCustomersAsync("");
-        var customerIds = customers.Select(c => c.TryGetValue("customerId", out var id) ? id?.ToString() : "").Where(id => !string.IsNullOrEmpty(id)).ToList();
+        var customerIds = await _mockDb.GetCustomerIdsAsync();
         return Ok(customerIds);
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
-    [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
+    [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<Dictionary<string, object>>> GetCustomerConfig(string customerId)
+    public async Task<ActionResult<CustomerNotificationMapping>> GetCustomerConfig(string customerId)
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
@@ -58,7 +57,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(404)]
     [ProducesResponseType(422)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> UpdateCustomerConfig(string customerId, [FromBody] Dictionary<string, object> customerData)
+    public async Task<IActionResult> UpdateCustomerConfig(string customerId, [FromBody] CustomerNotificationMapping customerData)
     {
         if (!IsValidCustomerId(customerId))
             return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });
@@ -92,13 +91,7 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return NotFound(new { error = "Customer not found" });
             
-        if (customerData.TryGetValue("PreferredCommunication", out var prefCommObj) && 
-            prefCommObj is List<PreferredCommunication> prefComm)
-        {
-            return Ok(prefComm);
-        }
-        
-        return Ok(new List<PreferredCommunication>());
+        return Ok(customerData.PreferredCommunication);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/preferred-communication")]
@@ -123,7 +116,7 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return NotFound(new { success = false, error = "Customer not found" });
         
-        customerData["PreferredCommunication"] = data;
+        customerData.PreferredCommunication = data;
         var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
         
         if (success)
@@ -150,14 +143,8 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return NotFound(new { error = "Customer not found" });
             
-        if (customerData.TryGetValue("ContentVariables", out var cvObj) && 
-            cvObj is Dictionary<string, string> contentVars)
-        {
-            var listData = contentVars.Select(kvp => new { key = kvp.Key, value = kvp.Value }).ToList();
-            return Ok(listData);
-        }
-        
-        return Ok(new List<object>());
+        var listData = customerData.ContentVariables.Select(kvp => new { key = kvp.Key, value = kvp.Value }).ToList();
+        return Ok(listData);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/content-variables")]
@@ -178,7 +165,7 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return NotFound(new { success = false, error = "Customer not found" });
         
-        customerData["ContentVariables"] = contentVariables;
+        customerData.ContentVariables = contentVariables;
         var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
         
         if (success)
@@ -201,12 +188,11 @@ public class CustomersController : ControllerBase
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
             
-        var customer = await _mockDb.GetCustomerAsync(customerId);
-        if (customer == null)
+        var customerData = await _mockDb.GetCustomerAsync(customerId);
+        if (customerData == null)
             return NotFound(new { error = "Customer not found" });
             
-        var afterHours = await _mockDb.GetAfterHoursAsync();
-        return Ok(afterHours);
+        return Ok(customerData.AfterHours);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/after-hours")]
@@ -231,16 +217,16 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return NotFound(new { success = false, error = "Customer not found" });
         
-        customerData["AfterHours"] = afterHours;
+        customerData.AfterHours = afterHours;
         var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
         
         if (success)
         {
-            return Ok(new { success = true, message = "Customer after hours settings updated successfully!" });
+            return Ok(new { success = true, message = "Customer after hours updated successfully!" });
         }
         else
         {
-            return BadRequest(new { success = false, error = "Failed to update customer after hours settings" });
+            return BadRequest(new { success = false, error = "Failed to update customer after hours" });
         }
     }
 
@@ -249,7 +235,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<string>> GetCustomerFromEmail(string customerId)
+    public async Task<ActionResult<string?>> GetCustomerFromEmail(string customerId)
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
@@ -258,8 +244,7 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return NotFound(new { error = "Customer not found" });
             
-        var fromEmail = customerData.TryGetValue("FromEmail", out var emailObj) ? emailObj?.ToString() : "";
-        return Ok(fromEmail ?? "");
+        return Ok(customerData.FromEmail);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/from-email")]
@@ -273,14 +258,11 @@ public class CustomersController : ControllerBase
         if (!IsValidCustomerId(customerId))
             return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });
         
-        if (string.IsNullOrEmpty(fromEmail))
-            return BadRequest(new { success = false, error = "From email is required" });
-        
         var customerData = await _mockDb.GetCustomerAsync(customerId);
         if (customerData == null)
             return NotFound(new { success = false, error = "Customer not found" });
         
-        customerData["FromEmail"] = fromEmail;
+        customerData.FromEmail = fromEmail;
         var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
         
         if (success)
