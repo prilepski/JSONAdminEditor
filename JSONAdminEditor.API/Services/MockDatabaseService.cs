@@ -22,7 +22,7 @@ public class MockDatabaseService : IMockDatabaseService
 {
     private readonly ConcurrentDictionary<string, Dictionary<string, object>> _customers = new();
     private readonly ConcurrentDictionary<string, List<Dictionary<string, object>>> _dictionaries = new();
-    private readonly Dictionary<string, object> _globalData = new();
+    private readonly NotificationMapping _globalData = new();
     private readonly ILogger<MockDatabaseService> _logger;
 
     public MockDatabaseService(ILogger<MockDatabaseService> logger)
@@ -124,91 +124,64 @@ public class MockDatabaseService : IMockDatabaseService
 
     private void InitializeGlobalData()
     {
-        // Content variables
-        _globalData["content-variables"] = new Dictionary<string, object>
+        _globalData.EventMappings = new List<EventMapping>
         {
-            ["data"] = new List<Dictionary<string, object>>
+            new() { Event = "Ready For Scheduling", OrderType = "Delivery", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-48388ac5bd1a4460969ac2ed36c818cc", [Channel.Sms] = "Hxad1da069cc42534183daccd644579207" } },
+            new() { Event = "Ready For Scheduling", OrderType = "Pickup", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-e162b3e6181545fead5e643982628504", [Channel.Sms] = "HX61a3cb19e35c428d9b1395d8139e94cc" } },
+            new() { Event = "Appointment Scheduled", OrderType = "ALL", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-bd0b88948dd34009b08434c16b76c1e0" } }
+        };
+        
+        _globalData.PreferredCommunication = new List<PreferredCommunication>
+        {
+            new() { Channel = "Email", Priority = 1 },
+            new() { Channel = "Sms", Priority = 2 }
+        };
+        
+        _globalData.ContentVariables = new Dictionary<string, string>
+        {
+            ["company_name"] = "$Company.Name$",
+            ["customer_phone"] = "$Customer.Phone$",
+            ["order_id"] = "$Order.Id$",
+            ["consignee_email"] = "$consignee.email$",
+            ["consignee_phone"] = "$consignee.phone$"
+        };
+        
+        _globalData.OptOut = new OptOut
+        {
+            ["en"] = new Dictionary<string, OptOutLocale>
             {
-                new() { ["Variable Name"] = "company_name", ["Variable Value"] = "$Company.Name$", ["Description"] = "Company name placeholder" },
-                new() { ["Variable Name"] = "customer_phone", ["Variable Value"] = "$Customer.Phone$", ["Description"] = "Customer phone number" },
-                new() { ["Variable Name"] = "order_id", ["Variable Value"] = "$Order.Id$", ["Description"] = "Order identifier" },
-                new() { ["Variable Name"] = "consignee_email", ["Variable Value"] = "$consignee.email$", ["Description"] = "Consignee email address" },
-                new() { ["Variable Name"] = "consignee_phone", ["Variable Value"] = "$consignee.phone$", ["Description"] = "Consignee phone number" }
+                ["US"] = new OptOutLocale
+                {
+                    OptOutKeywords = "STOP, QUIT, CANCEL",
+                    OptInKeywords = "START, YES",
+                    HelpKeywords = "HELP, INFO",
+                    OptOutFooter = "Reply STOP to opt out",
+                    OptOutPhrase = "You have been unsubscribed",
+                    OptInPhrase = "You have been subscribed",
+                    OptInMessage = "Welcome! You will receive notifications",
+                    HelpPhrase = "For help, contact support"
+                }
             }
         };
-
-        // Preferred communication
-        _globalData["preferred-communication"] = new Dictionary<string, object>
+        
+        _globalData.AfterHours = new AfterHours
         {
-            ["data"] = new List<Dictionary<string, object>>
+            RestrictedHoursPeriod = new RestrictedHoursPeriod
             {
-                new() { ["Customer ID"] = "CUST001", ["Preferred Channel"] = "Email", ["Phone"] = "+1-555-0123", ["Email"] = "customer1@example.com", ["IsActive"] = true },
-                new() { ["Customer ID"] = "CUST002", ["Preferred Channel"] = "SMS", ["Phone"] = "+1-555-0456", ["Email"] = "customer2@example.com", ["IsActive"] = true },
-                new() { ["Customer ID"] = "BJ001", ["Preferred Channel"] = "Email", ["Phone"] = "+1-555-0789", ["Email"] = "customer3@example.com", ["IsActive"] = false }
-            }
-        };
-
-        // NotificationMapping global data
-        var notificationMapping = new NotificationMapping
-        {
-            EventMappings = new List<EventMapping>
-            {
-                new() { Event = "Ready For Scheduling", OrderType = "Delivery", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-48388ac5bd1a4460969ac2ed36c818cc", [Channel.Sms] = "Hxad1da069cc42534183daccd644579207" } },
-                new() { Event = "Ready For Scheduling", OrderType = "Pickup", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-e162b3e6181545fead5e643982628504", [Channel.Sms] = "HX61a3cb19e35c428d9b1395d8139e94cc" } },
-                new() { Event = "Appointment Scheduled", OrderType = "ALL", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-bd0b88948dd34009b08434c16b76c1e0" } }
+                Start = "22:00",
+                End = "08:00"
             },
-            FromEmail = "noreply@company.com"
-        };
-        _globalData["events"] = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(notificationMapping)) ?? new Dictionary<string, object>();
-
-        // OptOut global data
-        _globalData["optout"] = new Dictionary<string, object>
-        {
-            ["data"] = new Dictionary<string, Dictionary<string, object>>
+            RestrictedDays = new List<DayOfWeek> { DayOfWeek.Sunday, DayOfWeek.Saturday },
+            ExceptionOfValidation = new ExceptionOfValidation
             {
-                ["en"] = new Dictionary<string, object>
+                Events = new List<EventBase>
                 {
-                    ["US"] = new Dictionary<string, object>
-                    {
-                        ["optOutKeywords"] = "STOP, QUIT, CANCEL",
-                        ["optInKeywords"] = "START, YES",
-                        ["helpKeywords"] = "HELP, INFO",
-                        ["optOutFooter"] = "Reply STOP to opt out",
-                        ["optOutPhrase"] = "You have been unsubscribed",
-                        ["optInPhrase"] = "You have been subscribed",
-                        ["optInMessage"] = "Welcome! You will receive notifications",
-                        ["helpPhrase"] = "For help, contact support"
-                    }
+                    new() { Name = "Emergency Alert", Type = "Critical" }
                 }
             }
         };
-
-        // Global AfterHours data
-        _globalData["afterhours"] = new Dictionary<string, object>
-        {
-            ["data"] = new Dictionary<string, object>
-            {
-                ["RestrictedHoursPeriod"] = new Dictionary<string, object>
-                {
-                    ["Start"] = "22:00",
-                    ["End"] = "08:00"
-                },
-                ["RestrictedDays"] = new List<int> { 0, 6 }, // Sunday, Saturday
-                ["ExceptionOfValidation"] = new Dictionary<string, object>
-                {
-                    ["Events"] = new List<Dictionary<string, object>>
-                    {
-                        new() { ["Name"] = "Emergency Alert", ["Type"] = "Critical" }
-                    }
-                }
-            }
-        };
-
-        // NotificationMapping global data - use the same structure as events
-        _globalData["notification-mapping"] = new Dictionary<string, object>
-        {
-            ["data"] = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(notificationMapping)) ?? new Dictionary<string, object>()
-        };
+        
+        _globalData.FromEmail = "noreply@company.com";
     }
 
     public Task<Dictionary<string, object>?> GetCustomerAsync(string customerId)
@@ -273,15 +246,64 @@ public class MockDatabaseService : IMockDatabaseService
 
     public Task<Dictionary<string, object>?> GetGlobalDataAsync(string key)
     {
-        _globalData.TryGetValue(key, out var data);
-        return Task.FromResult(data as Dictionary<string, object>);
+        var result = key switch
+        {
+            "optout" => new Dictionary<string, object> { ["data"] = _globalData.OptOut },
+            "afterhours" => new Dictionary<string, object> { ["data"] = _globalData.AfterHours },
+            "notification-mapping" => new Dictionary<string, object> { ["data"] = _globalData },
+            "preferred-communication" => new Dictionary<string, object> { ["data"] = _globalData.PreferredCommunication },
+            "content-variables" => new Dictionary<string, object> { ["data"] = _globalData.ContentVariables.Select(kvp => new Dictionary<string, object> { ["Variable Name"] = kvp.Key, ["Variable Value"] = kvp.Value }).ToList() },
+            _ => null
+        };
+        return Task.FromResult(result);
     }
 
     public Task<bool> SaveGlobalDataAsync(string key, Dictionary<string, object> data)
     {
-        _globalData[key] = data;
-        _logger.LogInformation("Saved global data {Key}", key);
-        return Task.FromResult(true);
+        try
+        {
+            switch (key)
+            {
+                case "optout":
+                    if (data.TryGetValue("data", out var optOutData))
+                    {
+                        var json = JsonSerializer.Serialize(optOutData);
+                        _globalData.OptOut = JsonSerializer.Deserialize<OptOut>(json) ?? new OptOut();
+                    }
+                    break;
+                case "afterhours":
+                    if (data.TryGetValue("data", out var afterHoursData))
+                    {
+                        var json = JsonSerializer.Serialize(afterHoursData);
+                        _globalData.AfterHours = JsonSerializer.Deserialize<AfterHours>(json);
+                    }
+                    break;
+                case "notification-mapping":
+                    if (data.TryGetValue("data", out var mappingData))
+                    {
+                        var json = JsonSerializer.Serialize(mappingData);
+                        var mapping = JsonSerializer.Deserialize<NotificationMapping>(json);
+                        if (mapping != null)
+                        {
+                            _globalData.EventMappings = mapping.EventMappings;
+                            _globalData.PreferredCommunication = mapping.PreferredCommunication;
+                            _globalData.ContentVariables = mapping.ContentVariables;
+                            _globalData.OptOut = mapping.OptOut;
+                            _globalData.AfterHours = mapping.AfterHours;
+                            _globalData.FromEmail = mapping.FromEmail;
+                            _globalData.Agents = mapping.Agents;
+                        }
+                    }
+                    break;
+            }
+            _logger.LogInformation("Saved global data {Key}", key);
+            return Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save global data {Key}", key);
+            return Task.FromResult(false);
+        }
     }
 
     public Task<T?> GetGlobalDataAsync<T>(string key) where T : class
