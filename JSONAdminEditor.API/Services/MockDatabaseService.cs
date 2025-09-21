@@ -148,13 +148,18 @@ public class MockDatabaseService : IMockDatabaseService
             }
         };
 
-        // Events/notifications data
-        _globalData["events"] = new List<Dictionary<string, object>>
+        // NotificationMapping global data
+        var notificationMapping = new NotificationMapping
         {
-            new() { ["Event"] = "Ready For Scheduling", ["OrderType"] = "Delivery", ["Phone"] = "$consignee.phone$", ["Email"] = "$consignee.email$", ["Templates"] = new Dictionary<string, object> { ["Email"] = "d-48388ac5bd1a4460969ac2ed36c818cc", ["Sms"] = "Hxad1da069cc42534183daccd644579207" } },
-            new() { ["Event"] = "Ready For Scheduling", ["OrderType"] = "Pickup", ["Phone"] = "$consignee.phone$", ["Email"] = "$consignee.email$", ["Templates"] = new Dictionary<string, object> { ["Email"] = "d-e162b3e6181545fead5e643982628504", ["Sms"] = "HX61a3cb19e35c428d9b1395d8139e94cc" } },
-            new() { ["Event"] = "Appointment Scheduled", ["OrderType"] = "ALL", ["Phone"] = "$consignee.phone$", ["Email"] = "$consignee.email$", ["Templates"] = new Dictionary<string, object> { ["Email"] = "d-bd0b88948dd34009b08434c16b76c1e0" } }
+            EventMappings = new List<EventMapping>
+            {
+                new() { Event = "Ready For Scheduling", OrderType = "Delivery", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-48388ac5bd1a4460969ac2ed36c818cc", [Channel.Sms] = "Hxad1da069cc42534183daccd644579207" } },
+                new() { Event = "Ready For Scheduling", OrderType = "Pickup", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-e162b3e6181545fead5e643982628504", [Channel.Sms] = "HX61a3cb19e35c428d9b1395d8139e94cc" } },
+                new() { Event = "Appointment Scheduled", OrderType = "ALL", Phone = "$consignee.phone$", Email = "$consignee.email$", Templates = new Dictionary<Channel, string> { [Channel.Email] = "d-bd0b88948dd34009b08434c16b76c1e0" } }
+            },
+            FromEmail = "noreply@company.com"
         };
+        _globalData["events"] = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(notificationMapping)) ?? new Dictionary<string, object>();
 
         // OptOut global data
         _globalData["optout"] = new Dictionary<string, object>
@@ -199,18 +204,10 @@ public class MockDatabaseService : IMockDatabaseService
             }
         };
 
-        // NotificationMapping global data
+        // NotificationMapping global data - use the same structure as events
         _globalData["notification-mapping"] = new Dictionary<string, object>
         {
-            ["data"] = new Dictionary<string, object>
-            {
-                ["PreferredCommunication"] = new List<Dictionary<string, object>>(),
-                ["ContentVariables"] = new Dictionary<string, object>(),
-                ["EventMappings"] = new List<Dictionary<string, object>>(),
-                ["OptOut"] = new Dictionary<string, object>(),
-                ["FromEmail"] = "noreply@company.com",
-                ["Agents"] = new Dictionary<string, object>()
-            }
+            ["data"] = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(notificationMapping)) ?? new Dictionary<string, object>()
         };
     }
 
