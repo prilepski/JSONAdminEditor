@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using JSONAdminEditor.Application.Models;
 
 namespace JSONAdminEditor.Services;
 
@@ -13,6 +14,8 @@ public interface IMockDatabaseService
     Task<bool> SaveDictionaryAsync(string dictionaryType, List<Dictionary<string, object>> data);
     Task<Dictionary<string, object>?> GetGlobalDataAsync(string key);
     Task<bool> SaveGlobalDataAsync(string key, Dictionary<string, object> data);
+    Task<T?> GetGlobalDataAsync<T>(string key) where T : class;
+    Task<bool> SaveGlobalDataAsync<T>(string key, T data) where T : class;
 }
 
 public class MockDatabaseService : IMockDatabaseService
@@ -178,6 +181,63 @@ public class MockDatabaseService : IMockDatabaseService
             new() { ["Event"] = "Ready For Scheduling", ["OrderType"] = "Pickup", ["Phone"] = "$consignee.phone$", ["Email"] = "$consignee.email$", ["Templates"] = new Dictionary<string, object> { ["Email"] = "d-e162b3e6181545fead5e643982628504", ["Sms"] = "HX61a3cb19e35c428d9b1395d8139e94cc" } },
             new() { ["Event"] = "Appointment Scheduled", ["OrderType"] = "ALL", ["Phone"] = "$consignee.phone$", ["Email"] = "$consignee.email$", ["Templates"] = new Dictionary<string, object> { ["Email"] = "d-bd0b88948dd34009b08434c16b76c1e0" } }
         };
+
+        // OptOut global data
+        _globalData["optout"] = new Dictionary<string, object>
+        {
+            ["data"] = new Dictionary<string, Dictionary<string, object>>
+            {
+                ["en"] = new Dictionary<string, object>
+                {
+                    ["US"] = new Dictionary<string, object>
+                    {
+                        ["optOutKeywords"] = "STOP, QUIT, CANCEL",
+                        ["optInKeywords"] = "START, YES",
+                        ["helpKeywords"] = "HELP, INFO",
+                        ["optOutFooter"] = "Reply STOP to opt out",
+                        ["optOutPhrase"] = "You have been unsubscribed",
+                        ["optInPhrase"] = "You have been subscribed",
+                        ["optInMessage"] = "Welcome! You will receive notifications",
+                        ["helpPhrase"] = "For help, contact support"
+                    }
+                }
+            }
+        };
+
+        // Global AfterHours data
+        _globalData["afterhours"] = new Dictionary<string, object>
+        {
+            ["data"] = new Dictionary<string, object>
+            {
+                ["RestrictedHoursPeriod"] = new Dictionary<string, object>
+                {
+                    ["Start"] = "22:00",
+                    ["End"] = "08:00"
+                },
+                ["RestrictedDays"] = new List<int> { 0, 6 }, // Sunday, Saturday
+                ["ExceptionOfValidation"] = new Dictionary<string, object>
+                {
+                    ["Events"] = new List<Dictionary<string, object>>
+                    {
+                        new() { ["Name"] = "Emergency Alert", ["Type"] = "Critical" }
+                    }
+                }
+            }
+        };
+
+        // NotificationMapping global data
+        _globalData["notification-mapping"] = new Dictionary<string, object>
+        {
+            ["data"] = new Dictionary<string, object>
+            {
+                ["PreferredCommunication"] = new List<Dictionary<string, object>>(),
+                ["ContentVariables"] = new Dictionary<string, object>(),
+                ["EventMappings"] = new List<Dictionary<string, object>>(),
+                ["OptOut"] = new Dictionary<string, object>(),
+                ["FromEmail"] = "noreply@company.com",
+                ["Agents"] = new Dictionary<string, object>()
+            }
+        };
     }
 
     public Task<Dictionary<string, object>?> GetCustomerAsync(string customerId)
@@ -251,5 +311,43 @@ public class MockDatabaseService : IMockDatabaseService
         _globalData[key] = data;
         _logger.LogInformation("Saved global data {Key}", key);
         return Task.FromResult(true);
+    }
+
+    public Task<T?> GetGlobalDataAsync<T>(string key) where T : class
+    {
+        if (_globalData.TryGetValue(key, out var data))
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(data);
+                var result = JsonSerializer.Deserialize<T>(json);
+                return Task.FromResult(result);
+            }
+            catch
+            {
+                return Task.FromResult<T?>(null);
+            }
+        }
+        return Task.FromResult<T?>(null);
+    }
+
+    public Task<bool> SaveGlobalDataAsync<T>(string key, T data) where T : class
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(data);
+            var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+            if (dict != null)
+            {
+                _globalData[key] = dict;
+                _logger.LogInformation("Saved global data {Key}", key);
+                return Task.FromResult(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save global data {Key}", key);
+        }
+        return Task.FromResult(false);
     }
 }

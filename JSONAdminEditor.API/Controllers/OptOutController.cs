@@ -21,7 +21,8 @@ public class OptOutController : ControllerBase
         try
         {
             var data = await _mockDb.GetGlobalDataAsync("optout");
-            return Ok(data ?? new OptOut());
+            var optOut = data?["data"] ?? new OptOut();
+            return Ok(optOut);
         }
         catch (Exception ex)
         {
