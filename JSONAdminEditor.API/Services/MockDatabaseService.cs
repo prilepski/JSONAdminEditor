@@ -9,9 +9,17 @@ public interface IMockDatabaseService
     Task<CustomerNotificationMapping?> GetCustomerAsync(string customerId);
     Task<bool> SaveCustomerAsync(string customerId, CustomerNotificationMapping customerData);
     Task<List<string>> GetCustomerIdsAsync();
-    Task<List<Dictionary<string, object>>> SearchCustomersAsync(string searchTerm);
-    Task<List<Dictionary<string, object>>?> GetDictionaryAsync(string dictionaryType);
-    Task<bool> SaveDictionaryAsync(string dictionaryType, List<Dictionary<string, object>> data);
+    Task<List<Customer>> SearchCustomersAsync(string searchTerm);
+    Task<List<Template>> GetTemplatesAsync();
+    Task<bool> SaveTemplatesAsync(List<Template> templates);
+    Task<List<EventTrigger>> GetEventTriggersAsync();
+    Task<bool> SaveEventTriggersAsync(List<EventTrigger> eventTriggers);
+    Task<List<EventChannel>> GetEventChannelsAsync();
+    Task<bool> SaveEventChannelsAsync(List<EventChannel> eventChannels);
+    Task<List<OrderType>> GetOrderTypesAsync();
+    Task<bool> SaveOrderTypesAsync(List<OrderType> orderTypes);
+    Task<List<Customer>> GetCustomersAsync();
+    Task<bool> SaveCustomersAsync(List<Customer> customers);
     Task<NotificationMapping> GetNotificationMappingAsync();
     Task<bool> SaveNotificationMappingAsync(NotificationMapping notificationMapping);
     Task<OptOut> GetOptOutAsync();
@@ -27,7 +35,11 @@ public interface IMockDatabaseService
 public class MockDatabaseService : IMockDatabaseService
 {
     private readonly ConcurrentDictionary<string, CustomerNotificationMapping> _customers = new();
-    private readonly ConcurrentDictionary<string, List<Dictionary<string, object>>> _dictionaries = new();
+    private readonly List<Template> _templates = new();
+    private readonly List<EventTrigger> _eventTriggers = new();
+    private readonly List<EventChannel> _eventChannels = new();
+    private readonly List<OrderType> _orderTypes = new();
+    private readonly List<Customer> _customerList = new();
     private readonly NotificationMapping _globalData = new();
     private readonly ILogger<MockDatabaseService> _logger;
 
@@ -84,51 +96,46 @@ public class MockDatabaseService : IMockDatabaseService
             ContentVariables = new Dictionary<string, string>()
         };
 
-        InitializeDictionaries();
+        InitializeReferenceData();
         InitializeGlobalData();
     }
 
-    private void InitializeDictionaries()
+    private void InitializeReferenceData()
     {
-        // Templates dictionary
-        _dictionaries["templates"] = new List<Dictionary<string, object>>
+        _templates.AddRange(new[]
         {
-            new() { ["templateId"] = "d-e162b3e6181545fead5e643982628504", ["templateName"] = "Ready For Scheduling - Pickup", ["channelType"] = "Email" },
-            new() { ["templateId"] = "HX61a3cb19e35c428d9b1395d8139e94cc", ["templateName"] = "Ready For Scheduling - Pickup", ["channelType"] = "Sms" },
-            new() { ["templateId"] = "d-48388ac5bd1a4460969ac2ed36c818cc", ["templateName"] = "Ready For Scheduling - Delivery", ["channelType"] = "Email" },
-            new() { ["templateId"] = "Hxad1da069cc42534183daccd644579207", ["templateName"] = "Ready For Scheduling - Delivery", ["channelType"] = "Sms" }
-        };
+            new Template { TemplateId = "d-e162b3e6181545fead5e643982628504", TemplateName = "Ready For Scheduling - Pickup", ChannelType = "Email" },
+            new Template { TemplateId = "HX61a3cb19e35c428d9b1395d8139e94cc", TemplateName = "Ready For Scheduling - Pickup", ChannelType = "Sms" },
+            new Template { TemplateId = "d-48388ac5bd1a4460969ac2ed36c818cc", TemplateName = "Ready For Scheduling - Delivery", ChannelType = "Email" },
+            new Template { TemplateId = "Hxad1da069cc42534183daccd644579207", TemplateName = "Ready For Scheduling - Delivery", ChannelType = "Sms" }
+        });
 
-        // Event triggers dictionary
-        _dictionaries["event-triggers"] = new List<Dictionary<string, object>>
+        _eventTriggers.AddRange(new[]
         {
-            new() { ["Event Name"] = "Ready For Scheduling", ["IsActive"] = true },
-            new() { ["Event Name"] = "Appointment Scheduled", ["IsActive"] = true },
-            new() { ["Event Name"] = "Next Stop Update", ["IsActive"] = false }
-        };
+            new EventTrigger { EventName = "Ready For Scheduling", IsActive = true },
+            new EventTrigger { EventName = "Appointment Scheduled", IsActive = true },
+            new EventTrigger { EventName = "Next Stop Update", IsActive = false }
+        });
 
-        // Event channels dictionary
-        _dictionaries["event-channels"] = new List<Dictionary<string, object>>
+        _eventChannels.AddRange(new[]
         {
-            new() { ["Channel Name"] = "Email", ["IsActive"] = true },
-            new() { ["Channel Name"] = "SMS", ["IsActive"] = true },
-            new() { ["Channel Name"] = "Voice", ["IsActive"] = false }
-        };
+            new EventChannel { ChannelName = "Email", IsActive = true },
+            new EventChannel { ChannelName = "SMS", IsActive = true },
+            new EventChannel { ChannelName = "Voice", IsActive = false }
+        });
 
-        // Order types dictionary
-        _dictionaries["order-types"] = new List<Dictionary<string, object>>
+        _orderTypes.AddRange(new[]
         {
-            new() { ["Order Type"] = "Delivery" },
-            new() { ["Order Type"] = "Pickup" }
-        };
+            new OrderType { Name = "Delivery" },
+            new OrderType { Name = "Pickup" }
+        });
 
-        // Customers dictionary
-        _dictionaries["customers"] = new List<Dictionary<string, object>>
+        _customerList.AddRange(new[]
         {
-            new() { ["customerId"] = "CUST001", ["companyName"] = "DELL", ["contactPerson"] = "John Doe", ["email"] = "john@dell.com", ["phone"] = "+1-555-0123", ["address"] = "123 Dell Way", ["IsActive"] = true },
-            new() { ["customerId"] = "CUST002", ["companyName"] = "Sample Corp", ["contactPerson"] = "Jane Smith", ["email"] = "jane@sample.com", ["phone"] = "+1-555-0456", ["address"] = "456 Sample St", ["IsActive"] = true },
-            new() { ["customerId"] = "BJ001", ["companyName"] = "BJ Industries", ["contactPerson"] = "Bob Johnson", ["email"] = "bob@bj.com", ["phone"] = "+1-555-0789", ["address"] = "789 BJ Blvd", ["IsActive"] = true }
-        };
+            new Customer { CustomerId = "CUST001", CompanyName = "DELL", ContactPerson = "John Doe", Email = "john@dell.com", Phone = "+1-555-0123", Address = "123 Dell Way", IsActive = true },
+            new Customer { CustomerId = "CUST002", CompanyName = "Sample Corp", ContactPerson = "Jane Smith", Email = "jane@sample.com", Phone = "+1-555-0456", Address = "456 Sample St", IsActive = true },
+            new Customer { CustomerId = "BJ001", CompanyName = "BJ Industries", ContactPerson = "Bob Johnson", Email = "bob@bj.com", Phone = "+1-555-0789", Address = "789 BJ Blvd", IsActive = true }
+        });
     }
 
     private void InitializeGlobalData()
@@ -209,24 +216,72 @@ public class MockDatabaseService : IMockDatabaseService
         return Task.FromResult(_customers.Keys.ToList());
     }
 
-    public Task<List<Dictionary<string, object>>> SearchCustomersAsync(string searchTerm)
+    public Task<List<Customer>> SearchCustomersAsync(string searchTerm)
     {
-        var results = _dictionaries["customers"]
-            .Where(c => c["companyName"].ToString()!.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                       c["customerId"].ToString()!.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        var results = _customerList
+            .Where(c => c.CompanyName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       c.CustomerId.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
             .ToList();
         return Task.FromResult(results);
     }
 
-    public Task<List<Dictionary<string, object>>?> GetDictionaryAsync(string dictionaryType)
+    public Task<List<Template>> GetTemplatesAsync()
     {
-        _dictionaries.TryGetValue(dictionaryType, out var dictionary);
-        return Task.FromResult(dictionary);
+        return Task.FromResult(_templates.ToList());
     }
 
-    public Task<bool> SaveDictionaryAsync(string dictionaryType, List<Dictionary<string, object>> data)
+    public Task<bool> SaveTemplatesAsync(List<Template> templates)
     {
-        _dictionaries[dictionaryType] = data;
+        _templates.Clear();
+        _templates.AddRange(templates);
+        return Task.FromResult(true);
+    }
+
+    public Task<List<EventTrigger>> GetEventTriggersAsync()
+    {
+        return Task.FromResult(_eventTriggers.ToList());
+    }
+
+    public Task<bool> SaveEventTriggersAsync(List<EventTrigger> eventTriggers)
+    {
+        _eventTriggers.Clear();
+        _eventTriggers.AddRange(eventTriggers);
+        return Task.FromResult(true);
+    }
+
+    public Task<List<EventChannel>> GetEventChannelsAsync()
+    {
+        return Task.FromResult(_eventChannels.ToList());
+    }
+
+    public Task<bool> SaveEventChannelsAsync(List<EventChannel> eventChannels)
+    {
+        _eventChannels.Clear();
+        _eventChannels.AddRange(eventChannels);
+        return Task.FromResult(true);
+    }
+
+    public Task<List<OrderType>> GetOrderTypesAsync()
+    {
+        return Task.FromResult(_orderTypes.ToList());
+    }
+
+    public Task<bool> SaveOrderTypesAsync(List<OrderType> orderTypes)
+    {
+        _orderTypes.Clear();
+        _orderTypes.AddRange(orderTypes);
+        return Task.FromResult(true);
+    }
+
+    public Task<List<Customer>> GetCustomersAsync()
+    {
+        return Task.FromResult(_customerList.ToList());
+    }
+
+    public Task<bool> SaveCustomersAsync(List<Customer> customers)
+    {
+        _customerList.Clear();
+        _customerList.AddRange(customers);
         return Task.FromResult(true);
     }
 

@@ -27,50 +27,21 @@ public class DictionariesController : ControllerBase
             return BadRequest(new { success = false, error = "Invalid file type" });
             
         var selectedFileType = (FileType)fileType;
-        var filePath = GetDictionaryFilePath(selectedFileType);
+        var tableData = await GetTypedDictionaryData(selectedFileType);
         
-        if (!string.IsNullOrEmpty(filePath))
+        return Ok(new
         {
-            var tableData = await _mockDb.GetDictionaryAsync(GetDictionaryKey(selectedFileType));
-            
-            if (tableData != null)
+            success = true,
+            data = new
             {
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        columnNames = GetDefaultColumnsForDictionary(selectedFileType),
-                        columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                        tableData = tableData,
-                        filePath = filePath,
-                        fileName = GetDictionaryFileName(selectedFileType),
-                        isValidJson = true
-                    }
-                });
+                columnNames = GetDefaultColumnsForDictionary(selectedFileType),
+                columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
+                tableData = tableData,
+                filePath = GetDictionaryFilePath(selectedFileType),
+                fileName = GetDictionaryFileName(selectedFileType),
+                isValidJson = true
             }
-            else
-            {
-                return Ok(new { success = false, error = "Dictionary not found" });
-            }
-        }
-        else
-        {
-            // Return empty structure for new dictionary
-            return Ok(new
-            {
-                success = true,
-                data = new
-                {
-                    columnNames = GetDefaultColumnsForDictionary(selectedFileType),
-                    columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                    tableData = new List<Dictionary<string, object>>(),
-                    filePath = GetDictionaryFilePath(selectedFileType),
-                    fileName = GetDictionaryFileName(selectedFileType),
-                    isValidJson = true
-                }
-            });
-        }
+        });
     }
 
     [HttpPost("save")]
@@ -85,26 +56,12 @@ public class DictionariesController : ControllerBase
         if (!Enum.IsDefined(typeof(FileType), fileType))
             return BadRequest(new { success = false, error = "Invalid file type" });
             
-        PathValidator.SanitizePath(filePath);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        var tableData = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(jsonData, options);
-        
-        // Convert JsonElement to proper values
-        var convertedData = tableData?.Select(row => 
-            row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
-        ).ToList();
-        
-        if (convertedData == null)
-            return BadRequest(new { success = false, error = "Invalid data format" });
-            
         var selectedFileType = (FileType)fileType;
-        var success = await _mockDb.SaveDictionaryAsync(GetDictionaryKey(selectedFileType), convertedData);
+        var success = await SaveTypedDictionaryData(selectedFileType, jsonData);
         
         if (success)
         {
+            var tableData = await GetTypedDictionaryData(selectedFileType);
             return Ok(new
             {
                 success = true,
@@ -113,7 +70,7 @@ public class DictionariesController : ControllerBase
                 {
                     columnNames = GetDefaultColumnsForDictionary(selectedFileType),
                     columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                    tableData = convertedData,
+                    tableData = tableData,
                     filePath = filePath,
                     fileName = GetDictionaryFileName(selectedFileType),
                     isValidJson = true
@@ -232,16 +189,31 @@ public class DictionariesController : ControllerBase
         };
     }
     
-    private static string GetDictionaryKey(FileType fileType)
+    private async Task<object> GetTypedDictionaryData(FileType fileType)
     {
         return fileType switch
         {
-            FileType.Templates => "templates",
-            FileType.EventTriggers => "event-triggers",
-            FileType.EventChannels => "event-channels",
-            FileType.OrderTypes => "order-types",
-            FileType.Customers => "customers",
-            _ => "unknown"
+            FileType.Templates => await _mockDb.GetTemplatesAsync(),
+            FileType.EventTriggers => await _mockDb.GetEventTriggersAsync(),
+            FileType.EventChannels => await _mockDb.GetEventChannelsAsync(),
+            FileType.OrderTypes => await _mockDb.GetOrderTypesAsync(),
+            FileType.Customers => await _mockDb.GetCustomersAsync(),
+            _ => new List<object>()
+        };
+    }
+
+    private async Task<bool> SaveTypedDictionaryData(FileType fileType, string jsonData)
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        
+        return fileType switch
+        {
+            FileType.Templates => await _mockDb.SaveTemplatesAsync(JsonSerializer.Deserialize<List<Template>>(jsonData, options) ?? new()),
+            FileType.EventTriggers => await _mockDb.SaveEventTriggersAsync(JsonSerializer.Deserialize<List<EventTrigger>>(jsonData, options) ?? new()),
+            FileType.EventChannels => await _mockDb.SaveEventChannelsAsync(JsonSerializer.Deserialize<List<EventChannel>>(jsonData, options) ?? new()),
+            FileType.OrderTypes => await _mockDb.SaveOrderTypesAsync(JsonSerializer.Deserialize<List<OrderType>>(jsonData, options) ?? new()),
+            FileType.Customers => await _mockDb.SaveCustomersAsync(JsonSerializer.Deserialize<List<Customer>>(jsonData, options) ?? new()),
+            _ => false
         };
     }
 
@@ -256,14 +228,14 @@ public class DictionariesController : ControllerBase
     [HttpGet("order-types")]
     public async Task<IActionResult> GetAvailableOrderTypes()
     {
-        var orderTypes = await _notificationsService.GetAvailableOrderTypesAsync();
-        return Ok(orderTypes);
+        var orderTypes = await _mockDb.GetOrderTypesAsync();
+        return Ok(orderTypes.Select(ot => ot.Name));
     }
 
     [HttpGet("templates")]
     public async Task<IActionResult> GetAvailableTemplates([FromQuery] string? orderType = null)
     {
-        var templates = await _notificationsService.GetAvailableTemplatesAsync();
+        var templates = await _mockDb.GetTemplatesAsync();
         var filteredTemplates = templates;
         
         if (!string.IsNullOrEmpty(orderType))
