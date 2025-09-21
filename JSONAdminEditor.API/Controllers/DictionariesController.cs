@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Services;
-using JSONAdminEditor.Security;
 using JSONAdminEditor.Application.Models;
 using System.Text.Json;
 
@@ -9,6 +8,7 @@ namespace JSONAdminEditor.Controllers;
 
 [ApiController]
 [Route("api/dictionaries")]
+[Produces("application/json")]
 public class DictionariesController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
@@ -20,219 +20,191 @@ public class DictionariesController : ControllerBase
         _notificationsService = notificationsService;
     }
 
-    [HttpGet("data")]
-    public async Task<IActionResult> GetDictionaryData(int fileType)
+    // Templates endpoints
+    [HttpGet("templates")]
+    [ProducesResponseType(200, Type = typeof(List<Template>))]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<List<Template>>> GetTemplates()
     {
-        if (!Enum.IsDefined(typeof(FileType), fileType))
-            return BadRequest(new { success = false, error = "Invalid file type" });
-            
-        var selectedFileType = (FileType)fileType;
-        var tableData = await GetTypedDictionaryData(selectedFileType);
-        
-        return Ok(new
-        {
-            success = true,
-            data = new
-            {
-                columnNames = GetDefaultColumnsForDictionary(selectedFileType),
-                columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                tableData = tableData,
-                filePath = GetDictionaryFilePath(selectedFileType),
-                fileName = GetDictionaryFileName(selectedFileType),
-                isValidJson = true
-            }
-        });
+        var templates = await _mockDb.GetTemplatesAsync();
+        return Ok(templates);
     }
 
-    [HttpPost("save")]
-    public async Task<IActionResult> SaveDictionary([FromForm] string filePath, [FromForm] string jsonData, [FromForm] int fileType)
+    [HttpPut("templates")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateTemplates([FromBody] List<Template> templates)
     {
-        if (string.IsNullOrEmpty(filePath))
-            return BadRequest(new { success = false, error = "File path is required" });
-            
-        if (string.IsNullOrEmpty(jsonData))
-            return BadRequest(new { success = false, error = "JSON data is required" });
-            
-        if (!Enum.IsDefined(typeof(FileType), fileType))
-            return BadRequest(new { success = false, error = "Invalid file type" });
-            
-        var selectedFileType = (FileType)fileType;
-        var success = await SaveTypedDictionaryData(selectedFileType, jsonData);
-        
-        if (success)
-        {
-            var tableData = await GetTypedDictionaryData(selectedFileType);
-            return Ok(new
-            {
-                success = true,
-                message = $"{GetDictionaryDisplayName(selectedFileType)} dictionary saved successfully!",
-                data = new
-                {
-                    columnNames = GetDefaultColumnsForDictionary(selectedFileType),
-                    columnTypes = GetDefaultColumnTypesForDictionary(selectedFileType),
-                    tableData = tableData,
-                    filePath = filePath,
-                    fileName = GetDictionaryFileName(selectedFileType),
-                    isValidJson = true
-                }
-            });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to save dictionary" });
-        }
+        if (templates == null)
+            return BadRequest("Templates data is required");
+
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid templates data");
+
+        await _mockDb.SaveTemplatesAsync(templates);
+        return NoContent();
     }
 
+    // Event Triggers endpoints
+    [HttpGet("event-triggers")]
+    [ProducesResponseType(200, Type = typeof(List<EventTrigger>))]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<List<EventTrigger>>> GetEventTriggers()
+    {
+        var eventTriggers = await _mockDb.GetEventTriggersAsync();
+        return Ok(eventTriggers);
+    }
+
+    [HttpPut("event-triggers")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateEventTriggers([FromBody] List<EventTrigger> eventTriggers)
+    {
+        if (eventTriggers == null)
+            return BadRequest("Event triggers data is required");
+
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid event triggers data");
+
+        await _mockDb.SaveEventTriggersAsync(eventTriggers);
+        return NoContent();
+    }
+
+    // Event Channels endpoints
+    [HttpGet("event-channels")]
+    [ProducesResponseType(200, Type = typeof(List<EventChannel>))]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
+    {
+        var eventChannels = await _mockDb.GetEventChannelsAsync();
+        return Ok(eventChannels);
+    }
+
+    [HttpPut("event-channels")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateEventChannels([FromBody] List<EventChannel> eventChannels)
+    {
+        if (eventChannels == null)
+            return BadRequest("Event channels data is required");
+
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid event channels data");
+
+        await _mockDb.SaveEventChannelsAsync(eventChannels);
+        return NoContent();
+    }
+
+    // Order Types endpoints
+    [HttpGet("order-types")]
+    [ProducesResponseType(200, Type = typeof(List<OrderType>))]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
+    {
+        var orderTypes = await _mockDb.GetOrderTypesAsync();
+        return Ok(orderTypes);
+    }
+
+    [HttpPut("order-types")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateOrderTypes([FromBody] List<OrderType> orderTypes)
+    {
+        if (orderTypes == null)
+            return BadRequest("Order types data is required");
+
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid order types data");
+
+        await _mockDb.SaveOrderTypesAsync(orderTypes);
+        return NoContent();
+    }
+
+    // Customers endpoints
+    [HttpGet("customers")]
+    [ProducesResponseType(200, Type = typeof(List<Customer>))]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<List<Customer>>> GetCustomers()
+    {
+        var customers = await _mockDb.GetCustomersAsync();
+        return Ok(customers);
+    }
+
+    [HttpPut("customers")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateCustomers([FromBody] List<Customer> customers)
+    {
+        if (customers == null)
+            return BadRequest("Customers data is required");
+
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid customers data");
+
+        await _mockDb.SaveCustomersAsync(customers);
+        return NoContent();
+    }
+
+    // File Upload endpoint (generic for all dictionary types)
     [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> UploadFile([FromForm] FileUploadViewModel upload)
     {
         if (upload == null)
-            return BadRequest(new { success = false, error = "Upload data is required" });
+            return BadRequest("Upload data is required");
             
         if (upload.FileType == FileType.None)
-            return BadRequest(new { success = false, error = "Please select a valid dictionary type" });
+            return BadRequest("Please select a valid dictionary type");
 
         if (upload.JsonFile == null || upload.JsonFile.Length == 0)
-            return BadRequest(new { success = false, error = "Please select a JSON file to upload" });
+            return BadRequest("Please select a JSON file to upload");
 
         if (!upload.JsonFile.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            return BadRequest(new { success = false, error = "Please select a valid JSON file" });
+            return BadRequest("Please select a valid JSON file");
 
-        // Mock upload - always return success
-        var success = true;
+        using var stream = upload.JsonFile.OpenReadStream();
+        using var reader = new StreamReader(stream);
+        var jsonContent = await reader.ReadToEndAsync();
         
-        if (success)
-        {
-            return Ok(new { success = true, message = "File uploaded successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to upload file" });
-        }
+        await SaveTypedDictionaryData(upload.FileType, jsonContent);
+        return NoContent();
     }
 
-    private string GetDictionaryFilePath(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.Templates => "data/dictionaries/templates.json",
-            FileType.EventTriggers => "data/dictionaries/event-triggers.json",
-            FileType.EventChannels => "data/dictionaries/event-channels.json",
-            FileType.OrderTypes => "data/dictionaries/order-types.json",
-            FileType.Customers => "data/dictionaries/customers.json",
-            _ => string.Empty
-        };
-    }
-    
-    private string GetDictionaryFileName(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.Templates => "templates.json",
-            FileType.EventTriggers => "event-triggers.json",
-            FileType.EventChannels => "event-channels.json",
-            FileType.OrderTypes => "order-types.json",
-            FileType.Customers => "customers.json",
-            _ => "unknown.json"
-        };
-    }
-    
-    private List<string> GetDefaultColumnsForDictionary(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.Templates => new List<string> { "templateId", "templateName", "channelType" },
-            FileType.EventTriggers => new List<string> { "Event Name", "IsActive" },
-            FileType.EventChannels => new List<string> { "Channel Name", "IsActive" },
-            FileType.OrderTypes => new List<string> { "Order Type" },
-            FileType.Customers => new List<string> { "customerId", "companyName", "contactPerson", "email", "phone", "address", "IsActive" },
-            _ => new List<string> { "id", "name" }
-        };
-    }
-    
-    private Dictionary<string, string> GetDefaultColumnTypesForDictionary(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.Templates => new Dictionary<string, string> { { "templateId", "text" }, { "templateName", "text" }, { "channelType", "text" } },
-            FileType.EventTriggers => new Dictionary<string, string> { { "Event Name", "text" }, { "IsActive", "boolean" } },
-            FileType.EventChannels => new Dictionary<string, string> { { "Channel Name", "text" }, { "IsActive", "boolean" } },
-            FileType.OrderTypes => new Dictionary<string, string> { { "Order Type", "text" } },
-            FileType.Customers => new Dictionary<string, string> { { "customerId", "text" }, { "companyName", "text" }, { "contactPerson", "text" }, { "email", "text" }, { "phone", "text" }, { "address", "text" }, { "IsActive", "boolean" } },
-            _ => new Dictionary<string, string> { { "id", "text" }, { "name", "text" } }
-        };
-    }
-    
-    private string GetDictionaryDisplayName(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.Templates => "Notification Templates",
-            FileType.EventTriggers => "Event Triggers",
-            FileType.EventChannels => "Event Channels",
-            FileType.OrderTypes => "Order Types",
-            FileType.Customers => "Customers",
-            _ => "Dictionary"
-        };
-    }
-    
-    private static object GetJsonElementValue(JsonElement element)
-    {
-        return element.ValueKind switch
-        {
-            JsonValueKind.String => element.GetString() ?? "",
-            JsonValueKind.Number => element.TryGetInt32(out var intVal) ? intVal : element.GetDouble(),
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            JsonValueKind.Null => null,
-            _ => element.ToString()
-        };
-    }
-    
-    private async Task<object> GetTypedDictionaryData(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.Templates => await _mockDb.GetTemplatesAsync(),
-            FileType.EventTriggers => await _mockDb.GetEventTriggersAsync(),
-            FileType.EventChannels => await _mockDb.GetEventChannelsAsync(),
-            FileType.OrderTypes => await _mockDb.GetOrderTypesAsync(),
-            FileType.Customers => await _mockDb.GetCustomersAsync(),
-            _ => new List<object>()
-        };
-    }
-
-    private async Task<bool> SaveTypedDictionaryData(FileType fileType, string jsonData)
-    {
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        
-        return fileType switch
-        {
-            FileType.Templates => await _mockDb.SaveTemplatesAsync(JsonSerializer.Deserialize<List<Template>>(jsonData, options) ?? new()),
-            FileType.EventTriggers => await _mockDb.SaveEventTriggersAsync(JsonSerializer.Deserialize<List<EventTrigger>>(jsonData, options) ?? new()),
-            FileType.EventChannels => await _mockDb.SaveEventChannelsAsync(JsonSerializer.Deserialize<List<EventChannel>>(jsonData, options) ?? new()),
-            FileType.OrderTypes => await _mockDb.SaveOrderTypesAsync(JsonSerializer.Deserialize<List<OrderType>>(jsonData, options) ?? new()),
-            FileType.Customers => await _mockDb.SaveCustomersAsync(JsonSerializer.Deserialize<List<Customer>>(jsonData, options) ?? new()),
-            _ => false
-        };
-    }
-
-    // Event Helper Endpoints
+    // Helper methods for event helper endpoints (keeping existing functionality)
     [HttpGet("triggers")]
+    [ProducesResponseType(200, Type = typeof(List<EventTrigger>))]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetActiveEventTriggers()
     {
         var triggers = await _notificationsService.GetActiveEventTriggersAsync();
         return Ok(triggers);
     }
 
-    [HttpGet("order-types")]
+    [HttpGet("available-order-types")]
+    [ProducesResponseType(200, Type = typeof(List<string>))]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetAvailableOrderTypes()
     {
         var orderTypes = await _mockDb.GetOrderTypesAsync();
         return Ok(orderTypes.Select(ot => ot.Name));
     }
 
-    [HttpGet("templates")]
+    [HttpGet("available-templates")]
+    [ProducesResponseType(200, Type = typeof(List<object>))]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetAvailableTemplates([FromQuery] string? orderType = null)
     {
         var templates = await _mockDb.GetTemplatesAsync();
@@ -251,6 +223,9 @@ public class DictionariesController : ControllerBase
     }
 
     [HttpGet("supports-order-type")]
+    [ProducesResponseType(200, Type = typeof(bool))]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> CheckEventSupportsByOrderType(string eventName)
     {
         var supports = await _notificationsService.CheckEventSupportsByOrderTypeAsync(eventName);
@@ -258,6 +233,9 @@ public class DictionariesController : ControllerBase
     }
 
     [HttpGet("event-data")]
+    [ProducesResponseType(200, Type = typeof(object))]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetEventByNameAndOrderType(string eventName, string orderType)
     {
         var eventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(eventName, orderType);
@@ -265,9 +243,35 @@ public class DictionariesController : ControllerBase
     }
 
     [HttpGet("event-template")]
+    [ProducesResponseType(200, Type = typeof(object))]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> GetEventTemplate()
     {
         var template = await _notificationsService.GetEventTemplateAsync();
         return Ok(template);
+    }
+
+    private async Task SaveTypedDictionaryData(FileType fileType, string jsonData)
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        
+        switch (fileType)
+        {
+            case FileType.Templates:
+                await _mockDb.SaveTemplatesAsync(JsonSerializer.Deserialize<List<Template>>(jsonData, options) ?? new());
+                break;
+            case FileType.EventTriggers:
+                await _mockDb.SaveEventTriggersAsync(JsonSerializer.Deserialize<List<EventTrigger>>(jsonData, options) ?? new());
+                break;
+            case FileType.EventChannels:
+                await _mockDb.SaveEventChannelsAsync(JsonSerializer.Deserialize<List<EventChannel>>(jsonData, options) ?? new());
+                break;
+            case FileType.OrderTypes:
+                await _mockDb.SaveOrderTypesAsync(JsonSerializer.Deserialize<List<OrderType>>(jsonData, options) ?? new());
+                break;
+            case FileType.Customers:
+                await _mockDb.SaveCustomersAsync(JsonSerializer.Deserialize<List<Customer>>(jsonData, options) ?? new());
+                break;
+        }
     }
 }
