@@ -5,7 +5,7 @@ using JSONAdminEditor.Application.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/content-variables")]
+[Route("api/config/content-variables")]
 public class ContentVariablesController : ControllerBase
 {
     private readonly NotificationsService _notificationsService;

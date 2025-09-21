@@ -5,7 +5,7 @@ using JSONAdminEditor.Application.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/preferred-communication")]
+[Route("api/config/preferred-communication")]
 public class PreferredCommunicationController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;

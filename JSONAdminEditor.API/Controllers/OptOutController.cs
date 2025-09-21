@@ -6,7 +6,7 @@ using JSONAdminEditor.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/opt-out")]
+[Route("api/config/opt-out")]
 public class OptOutController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;

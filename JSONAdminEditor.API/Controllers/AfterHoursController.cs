@@ -6,7 +6,7 @@ using JSONAdminEditor.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/after-hours")]
+[Route("api/config/after-hours")]
 public class AfterHoursController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;

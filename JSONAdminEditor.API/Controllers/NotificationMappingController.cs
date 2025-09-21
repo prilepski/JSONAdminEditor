@@ -6,7 +6,7 @@ using JSONAdminEditor.Models;
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
-[Route("api/notification-mapping")]
+[Route("api/config")]
 public class NotificationMappingController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
