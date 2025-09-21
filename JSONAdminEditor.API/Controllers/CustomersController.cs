@@ -12,10 +12,12 @@ namespace JSONAdminEditor.Controllers;
 public class CustomersController : ControllerBase
 {
     private readonly IMockDatabaseService _mockDb;
+    private readonly IDataMigrationService _migrationService;
 
-    public CustomersController(IMockDatabaseService mockDb)
+    public CustomersController(IMockDatabaseService mockDb, IDataMigrationService migrationService)
     {
         _mockDb = mockDb;
+        _migrationService = migrationService;
     }
 
     private static bool IsValidCustomerId(string customerId)
@@ -176,8 +178,12 @@ public class CustomersController : ControllerBase
                 return BadRequest(new { error = "Invalid customer ID" });
                 
             var data = await _mockDb.GetCustomerAsync(customerId);
-            var afterHours = data?.TryGetValue("AfterHours", out var ah) == true ? ah : null;
-            return Ok(afterHours);
+            if (data?.TryGetValue("AfterHours", out var ah) == true && ah is Dictionary<string, object> ahDict)
+            {
+                var afterHours = _migrationService.MigrateToModel<AfterHours>(ahDict);
+                return Ok(afterHours);
+            }
+            return Ok(null);
         }
         catch (Exception ex)
         {
@@ -197,7 +203,7 @@ public class CustomersController : ControllerBase
                 return BadRequest(new { success = false, error = "Invalid after hours data" });
             
             var customerData = await _mockDb.GetCustomerAsync(customerId) ?? new Dictionary<string, object>();
-            customerData["AfterHours"] = afterHours;
+            customerData["AfterHours"] = _migrationService.MigrateFromModel(afterHours);
             
             var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
             

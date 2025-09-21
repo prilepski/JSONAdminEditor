@@ -35,6 +35,8 @@ builder.Services.AddScoped<IJsonFileService, JsonFileService>();
 builder.Services.AddScoped<UniqueFieldValidationService>();
 builder.Services.AddScoped<NotificationsService>();
 builder.Services.AddSingleton<IMockDatabaseService, MockDatabaseService>();
+builder.Services.AddScoped<IDataMigrationService, DataMigrationService>();
+builder.Services.AddScoped<IBackwardCompatibilityService, BackwardCompatibilityService>();
 
 // Configure AWS S3 client (always register to satisfy dependency injection)
 var storageSettings = builder.Configuration.GetSection("StorageSettings").Get<StorageSettings>();
