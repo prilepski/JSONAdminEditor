@@ -1,6 +1,7 @@
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Middleware;
+using JSONAdminEditor.API.Middleware;
 using Amazon.S3;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
@@ -99,7 +100,7 @@ builder.Services.AddSingleton<IAmazonS3>(provider =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

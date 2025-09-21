@@ -177,7 +177,6 @@ public class MockDatabaseService : IMockDatabaseService
                 Start = "22:00",
                 End = "08:00"
             },
-            RestrictedDays = new List<DayOfWeek> { DayOfWeek.Sunday, DayOfWeek.Saturday },
             ExceptionOfValidation = new ExceptionOfValidation
             {
                 Events = new List<EventBase>
