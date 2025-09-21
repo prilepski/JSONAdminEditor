@@ -183,74 +183,6 @@ public class DictionariesController : ControllerBase
         return NoContent();
     }
 
-    // Helper methods for event helper endpoints (keeping existing functionality)
-    [HttpGet("triggers")]
-    [ProducesResponseType(200, Type = typeof(List<EventTrigger>))]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> GetActiveEventTriggers()
-    {
-        var triggers = await _notificationsService.GetActiveEventTriggersAsync();
-        return Ok(triggers);
-    }
-
-    [HttpGet("available-order-types")]
-    [ProducesResponseType(200, Type = typeof(List<string>))]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> GetAvailableOrderTypes()
-    {
-        var orderTypes = await _mockDb.GetOrderTypesAsync();
-        return Ok(orderTypes.Select(ot => ot.Name));
-    }
-
-    [HttpGet("available-templates")]
-    [ProducesResponseType(200, Type = typeof(List<object>))]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> GetAvailableTemplates([FromQuery] string? orderType = null)
-    {
-        var templates = await _mockDb.GetTemplatesAsync();
-        var filteredTemplates = templates;
-        
-        if (!string.IsNullOrEmpty(orderType))
-        {
-            filteredTemplates = templates.Where(t => 
-                t.TemplateName.Contains(orderType, StringComparison.OrdinalIgnoreCase) ||
-                (!t.TemplateName.Contains("Pickup", StringComparison.OrdinalIgnoreCase) && 
-                 !t.TemplateName.Contains("Delivery", StringComparison.OrdinalIgnoreCase))
-            ).ToList();
-        }
-        
-        return Ok(filteredTemplates.Select(t => new { templateId = t.TemplateId, templateName = t.TemplateName, channelType = t.ChannelType }));
-    }
-
-    [HttpGet("supports-order-type")]
-    [ProducesResponseType(200, Type = typeof(bool))]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> CheckEventSupportsByOrderType(string eventName)
-    {
-        var supports = await _notificationsService.CheckEventSupportsByOrderTypeAsync(eventName);
-        return Ok(supports);
-    }
-
-    [HttpGet("event-data")]
-    [ProducesResponseType(200, Type = typeof(object))]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> GetEventByNameAndOrderType(string eventName, string orderType)
-    {
-        var eventData = await _notificationsService.GetEventByNameAndOrderTypeAsync(eventName, orderType);
-        return Ok(eventData);
-    }
-
-    [HttpGet("event-template")]
-    [ProducesResponseType(200, Type = typeof(object))]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> GetEventTemplate()
-    {
-        var template = await _notificationsService.GetEventTemplateAsync();
-        return Ok(template);
-    }
-
     private async Task SaveTypedDictionaryData(FileType fileType, string jsonData)
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -258,19 +190,24 @@ public class DictionariesController : ControllerBase
         switch (fileType)
         {
             case FileType.Templates:
-                await _mockDb.SaveTemplatesAsync(JsonSerializer.Deserialize<List<Template>>(jsonData, options) ?? new());
+                var templates = JsonSerializer.Deserialize<List<Template>>(jsonData, options);
+                if (templates != null) await _mockDb.SaveTemplatesAsync(templates);
                 break;
             case FileType.EventTriggers:
-                await _mockDb.SaveEventTriggersAsync(JsonSerializer.Deserialize<List<EventTrigger>>(jsonData, options) ?? new());
+                var eventTriggers = JsonSerializer.Deserialize<List<EventTrigger>>(jsonData, options);
+                if (eventTriggers != null) await _mockDb.SaveEventTriggersAsync(eventTriggers);
                 break;
             case FileType.EventChannels:
-                await _mockDb.SaveEventChannelsAsync(JsonSerializer.Deserialize<List<EventChannel>>(jsonData, options) ?? new());
+                var eventChannels = JsonSerializer.Deserialize<List<EventChannel>>(jsonData, options);
+                if (eventChannels != null) await _mockDb.SaveEventChannelsAsync(eventChannels);
                 break;
             case FileType.OrderTypes:
-                await _mockDb.SaveOrderTypesAsync(JsonSerializer.Deserialize<List<OrderType>>(jsonData, options) ?? new());
+                var orderTypes = JsonSerializer.Deserialize<List<OrderType>>(jsonData, options);
+                if (orderTypes != null) await _mockDb.SaveOrderTypesAsync(orderTypes);
                 break;
             case FileType.Customers:
-                await _mockDb.SaveCustomersAsync(JsonSerializer.Deserialize<List<Customer>>(jsonData, options) ?? new());
+                var customers = JsonSerializer.Deserialize<List<Customer>>(jsonData, options);
+                if (customers != null) await _mockDb.SaveCustomersAsync(customers);
                 break;
         }
     }
