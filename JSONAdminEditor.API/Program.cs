@@ -5,6 +5,8 @@ using JSONAdminEditor.API.Middleware;
 using Amazon.S3;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
+using JSONAdminEditor.API;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +20,20 @@ builder.Services.Configure<StorageSettings>(
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddRazorPages();
-builder.Services.AddAntiforgery();
 
-// Add Swagger/OpenAPI
+// Add modern Microsoft OpenAPI support
+builder.Services.AddOpenApi("v1", options =>
+{
+    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
+    options.AddDocumentTransformer<OpenApiDocumentTransformer>();
+});
+
+// Add API Explorer for OpenAPI
 builder.Services.AddEndpointsApiExplorer();
+
+// Add familiar Swagger UI
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<OpenApiDocumentTransformer>();
 
 // Register storage services
 builder.Services.AddScoped<FileManagementService>();
@@ -104,12 +114,18 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
+    app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "JSON Admin Editor API v1");
+        options.RoutePrefix = "swagger";
+        options.DisplayRequestDuration();
+        options.EnableDeepLinking();
+        options.EnableFilter();
+        options.ShowExtensions();
+        options.EnableValidator();
+    });
 }
 
 app.UseRouting();
@@ -124,9 +140,5 @@ app.MapControllers();
 
 // Serve React app for SPA routes
 app.MapFallbackToFile("index.html");
-
-app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
 
 app.Run();
