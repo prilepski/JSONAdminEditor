@@ -1,4 +1,5 @@
 using JSONAdminEditor.Models;
+using JSONAdminEditor.Application.Models;
 using System.Text.Json;
 
 namespace JSONAdminEditor.Services
@@ -519,6 +520,42 @@ namespace JSONAdminEditor.Services
             {
                 return null;
             }
+        }
+
+        public async Task<bool> AddNewEventAsync(string eventName, EventMapping eventData)
+        {
+            var eventDict = new Dictionary<string, object>
+            {
+                ["Event"] = eventData.Event,
+                ["OrderType"] = eventData.OrderType,
+                ["Phone"] = eventData.Phone,
+                ["Email"] = eventData.Email,
+                ["Templates"] = eventData.Templates.ToDictionary(kvp => kvp.Key.ToString(), kvp => kvp.Value),
+                ["IsSuppressed"] = eventData.IsSuppressed,
+                ["PreferredCommunication"] = eventData.PreferredCommunication,
+                ["ContentVariables"] = eventData.ContentVariables,
+                ["TriggerConditions"] = eventData.TriggerConditions,
+                ["ContentVariablesOverrides"] = eventData.ContentVariablesOverrides
+            };
+            return await AddNewEventAsync(eventName, eventDict);
+        }
+
+        public async Task<bool> UpdateEventByOrderTypeAsync(string eventName, string? orderType, EventMapping eventData)
+        {
+            var eventDict = new Dictionary<string, object>
+            {
+                ["Event"] = eventData.Event,
+                ["OrderType"] = eventData.OrderType,
+                ["Phone"] = eventData.Phone,
+                ["Email"] = eventData.Email,
+                ["Templates"] = eventData.Templates.ToDictionary(kvp => kvp.Key.ToString(), kvp => kvp.Value),
+                ["IsSuppressed"] = eventData.IsSuppressed,
+                ["PreferredCommunication"] = eventData.PreferredCommunication,
+                ["ContentVariables"] = eventData.ContentVariables,
+                ["TriggerConditions"] = eventData.TriggerConditions,
+                ["ContentVariablesOverrides"] = eventData.ContentVariablesOverrides
+            };
+            return await UpdateEventByOrderTypeAsync(eventName, orderType, eventDict);
         }
 
         public async Task<bool> AddNewEventAsync(string eventName, Dictionary<string, object> eventData)

@@ -32,17 +32,14 @@ public class PreferredCommunicationController : ControllerBase
     }
 
     [HttpPost("save")]
-    public async Task<IActionResult> SavePreferredCommunication([FromBody] JsonElement requestData)
+    public async Task<IActionResult> SavePreferredCommunication([FromBody] List<PreferredCommunication> data)
     {
         try
         {
-            var dataProperty = requestData.GetProperty("data");
-            var tableData = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(dataProperty.GetRawText());
-            var convertedData = tableData?.Select(row => 
-                row.ToDictionary(kvp => kvp.Key, kvp => GetJsonElementValue(kvp.Value))
-            ).ToList();
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, error = "Invalid preferred communication data" });
             
-            var success = await _mockDb.SaveGlobalDataAsync("preferred-communication", new Dictionary<string, object> { ["data"] = convertedData });
+            var success = await _mockDb.SaveGlobalDataAsync("preferred-communication", new Dictionary<string, object> { ["data"] = data });
             success = true; // Mock always succeeds
             
             if (success)

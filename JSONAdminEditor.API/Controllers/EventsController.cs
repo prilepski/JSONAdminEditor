@@ -118,17 +118,19 @@ public class EventsController : ControllerBase
     {
         public string eventName { get; set; } = string.Empty;
         public string? orderType { get; set; }
-        public Dictionary<string, object> eventData { get; set; } = new();
+        public EventMapping eventData { get; set; } = new();
         public bool isNew { get; set; }
     }
 
     [HttpPost("save")]
-    public async Task<IActionResult> SaveEvent([FromBody] JsonElement requestData)
+    public async Task<IActionResult> SaveEvent([FromBody] EventRequest request)
     {
         try
         {
-            var request = JsonSerializer.Deserialize<EventRequest>(requestData.GetRawText());
             if (request == null) return BadRequest(new { success = false, error = "Invalid request data" });
+            
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, error = "Invalid event data" });
             
             bool success;
             if (request.isNew)

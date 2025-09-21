@@ -165,4 +165,46 @@ public class CustomersController : ControllerBase
             return StatusCode(500, new { success = false, error = "An error occurred while saving customer settings" });
         }
     }
+
+    [HttpGet("{customerId}/afterhours")]
+    public async Task<IActionResult> GetCustomerAfterHours(string customerId)
+    {
+        try
+        {
+            if (!IsValidCustomerId(customerId))
+                return BadRequest(new { error = "Invalid customer ID" });
+                
+            var data = await _mockDb.GetCustomerAsync(customerId);
+            var afterHours = data?.TryGetValue("AfterHours", out var ah) == true ? ah : null;
+            return Ok(afterHours);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred while retrieving after hours settings" });
+        }
+    }
+
+    [HttpPost("{customerId}/afterhours")]
+    public async Task<IActionResult> SaveCustomerAfterHours(string customerId, [FromBody] AfterHours afterHours)
+    {
+        try
+        {
+            if (!IsValidCustomerId(customerId))
+                return BadRequest(new { success = false, error = "Invalid customer ID" });
+            
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, error = "Invalid after hours data" });
+            
+            var customerData = await _mockDb.GetCustomerAsync(customerId) ?? new Dictionary<string, object>();
+            customerData["AfterHours"] = afterHours;
+            
+            var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
+            
+            return Ok(new { success, data = success ? afterHours : null });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, error = "An error occurred while saving after hours settings" });
+        }
+    }
 }
