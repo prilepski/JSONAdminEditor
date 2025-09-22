@@ -30,7 +30,10 @@ export const dictionaryService = {
     const response = await api.get<Template[] | EventTrigger[] | EventChannel[] | OrderType[] | Customer[]>(`/dictionaries/${endpoint}`);
     const tableData = response.data || [];
     const columnNames = tableData.length > 0 ? Object.keys(tableData[0]) : [];
-    const columnTypes = columnNames.reduce((acc, col) => ({ ...acc, [col]: 'string' }), {});
+    const columnTypes = columnNames.reduce((acc, col) => {
+      const isActiveCol = col.toLowerCase() === 'isactive';
+      return { ...acc, [col]: isActiveCol ? 'boolean' : 'string' };
+    }, {});
     
     return { 
       success: true, 
