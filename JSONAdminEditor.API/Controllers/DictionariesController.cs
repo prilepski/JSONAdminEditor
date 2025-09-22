@@ -12,13 +12,13 @@ namespace JSONAdminEditor.Controllers;
 [Produces("application/json")]
 public class DictionariesController : ControllerBase
 {
-    private readonly IMockDatabaseService _mockDb;
-    private readonly NotificationsService _notificationsService;
+    private readonly IFileContentService _fileContentService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public DictionariesController(IMockDatabaseService mockDb, NotificationsService notificationsService)
+    public DictionariesController(NotificationsService notificationsService, IFileContentService fileContentService)
     {
-        _mockDb = mockDb;
-        _notificationsService = notificationsService;
+        _fileContentService = fileContentService;
+        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
     // Templates endpoints
@@ -27,8 +27,7 @@ public class DictionariesController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Template>>> GetTemplates()
     {
-        var templates = await _mockDb.GetTemplatesAsync();
-        return Ok(templates);
+        return await GetDictionaryData<Template>(GetFilePathForType(FileType.Templates));
     }
 
     [HttpPut("templates")]
@@ -38,14 +37,7 @@ public class DictionariesController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateTemplates([FromBody] List<Template> templates)
     {
-        if (templates == null)
-            return BadRequest("Templates data is required");
-
-        if (!ModelState.IsValid)
-            return BadRequest("Invalid templates data");
-
-        await _mockDb.SaveTemplatesAsync(templates);
-        return NoContent();
+        return await SaveDictionaryData(templates, GetFilePathForType(FileType.Templates), "Templates");
     }
 
     // Event Triggers endpoints
@@ -54,8 +46,7 @@ public class DictionariesController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventTrigger>>> GetEventTriggers()
     {
-        var eventTriggers = await _mockDb.GetEventTriggersAsync();
-        return Ok(eventTriggers);
+        return await GetDictionaryData<EventTrigger>(GetFilePathForType(FileType.EventTriggers));
     }
 
     [HttpPut("event-triggers")]
@@ -65,94 +56,77 @@ public class DictionariesController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateEventTriggers([FromBody] List<EventTrigger> eventTriggers)
     {
-        if (eventTriggers == null)
-            return BadRequest("Event triggers data is required");
-
-        if (!ModelState.IsValid)
-            return BadRequest("Invalid event triggers data");
-
-        await _mockDb.SaveEventTriggersAsync(eventTriggers);
-        return NoContent();
+        return await SaveDictionaryData(eventTriggers, GetFilePathForType(FileType.EventTriggers), "Event triggers");
     }
 
-    // Event Channels endpoints
     [HttpGet("event-channels")]
-    [ProducesResponseType(200, Type = typeof(List<EventChannel>))]
-    [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
     {
-        var eventChannels = await _mockDb.GetEventChannelsAsync();
-        return Ok(eventChannels);
+        return await GetDictionaryData<EventChannel>(GetFilePathForType(FileType.EventChannels));
     }
 
     [HttpPut("event-channels")]
-    [Consumes("application/json")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateEventChannels([FromBody] List<EventChannel> eventChannels)
     {
-        if (eventChannels == null)
-            return BadRequest("Event channels data is required");
-
-        if (!ModelState.IsValid)
-            return BadRequest("Invalid event channels data");
-
-        await _mockDb.SaveEventChannelsAsync(eventChannels);
-        return NoContent();
+        return await SaveDictionaryData(eventChannels, GetFilePathForType(FileType.EventChannels), "Event channels");
     }
 
-    // Order Types endpoints
     [HttpGet("order-types")]
-    [ProducesResponseType(200, Type = typeof(List<OrderType>))]
-    [ProducesResponseType(500)]
     public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
     {
-        var orderTypes = await _mockDb.GetOrderTypesAsync();
-        return Ok(orderTypes);
+        return await GetDictionaryData<OrderType>(GetFilePathForType(FileType.OrderTypes));
     }
 
     [HttpPut("order-types")]
-    [Consumes("application/json")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateOrderTypes([FromBody] List<OrderType> orderTypes)
     {
-        if (orderTypes == null)
-            return BadRequest("Order types data is required");
-
-        if (!ModelState.IsValid)
-            return BadRequest("Invalid order types data");
-
-        await _mockDb.SaveOrderTypesAsync(orderTypes);
-        return NoContent();
+        return await SaveDictionaryData(orderTypes, GetFilePathForType(FileType.OrderTypes), "Order types");
     }
 
-    // Customers endpoints
     [HttpGet("customers")]
-    [ProducesResponseType(200, Type = typeof(List<Customer>))]
-    [ProducesResponseType(500)]
     public async Task<ActionResult<List<Customer>>> GetCustomers()
     {
-        var customers = await _mockDb.GetCustomersAsync();
-        return Ok(customers);
+        return await GetDictionaryData<Customer>(GetFilePathForType(FileType.Customers));
     }
 
     [HttpPut("customers")]
-    [Consumes("application/json")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomers([FromBody] List<Customer> customers)
     {
-        if (customers == null)
-            return BadRequest("Customers data is required");
+        return await SaveDictionaryData(customers, GetFilePathForType(FileType.Customers), "Customers");
+    }
+
+    [HttpGet("logo-url")]
+    public async Task<ActionResult<List<LogoUrl>>> GetLogoUrlMappings()
+    {
+        return await GetDictionaryData<LogoUrl>(GetFilePathForType(FileType.LogoUrlMappings));
+    }
+
+    [HttpPut("logo-url")]
+    public async Task<IActionResult> UpdateLogoUrlMappings([FromBody] List<LogoUrl> logoUrlMappings)
+    {
+        return await SaveDictionaryData(logoUrlMappings, GetFilePathForType(FileType.LogoUrlMappings), "Logo URL mappings");
+    }
+
+    private async Task<ActionResult<List<T>>> GetDictionaryData<T>(string filePath)
+    {
+        var content = await _fileContentService.ReadFileAsync(filePath);
+        if (string.IsNullOrEmpty(content))
+            return Ok(new List<T>());
+
+        var data = JsonSerializer.Deserialize<List<T>>(content, _jsonOptions);
+        return Ok(data ?? new List<T>());
+    }
+
+    private async Task<IActionResult> SaveDictionaryData<T>(List<T> data, string filePath, string dataType)
+    {
+        if (data == null)
+            return BadRequest($"{dataType} data is required");
 
         if (!ModelState.IsValid)
-            return BadRequest("Invalid customers data");
+            return BadRequest($"Invalid {dataType.ToLower()} data");
 
-        await _mockDb.SaveCustomersAsync(customers);
+        var json = JsonSerializer.Serialize(data, _jsonOptions);
+        await _fileContentService.WriteFileAsync(filePath, json);
         return NoContent();
     }
 
@@ -186,30 +160,17 @@ public class DictionariesController : ControllerBase
 
     private async Task SaveTypedDictionaryData(FileType fileType, string jsonData)
     {
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        
-        switch (fileType)
-        {
-            case FileType.Templates:
-                var templates = JsonSerializer.Deserialize<List<Template>>(jsonData, options);
-                if (templates != null) await _mockDb.SaveTemplatesAsync(templates);
-                break;
-            case FileType.EventTriggers:
-                var eventTriggers = JsonSerializer.Deserialize<List<EventTrigger>>(jsonData, options);
-                if (eventTriggers != null) await _mockDb.SaveEventTriggersAsync(eventTriggers);
-                break;
-            case FileType.EventChannels:
-                var eventChannels = JsonSerializer.Deserialize<List<EventChannel>>(jsonData, options);
-                if (eventChannels != null) await _mockDb.SaveEventChannelsAsync(eventChannels);
-                break;
-            case FileType.OrderTypes:
-                var orderTypes = JsonSerializer.Deserialize<List<OrderType>>(jsonData, options);
-                if (orderTypes != null) await _mockDb.SaveOrderTypesAsync(orderTypes);
-                break;
-            case FileType.Customers:
-                var customers = JsonSerializer.Deserialize<List<Customer>>(jsonData, options);
-                if (customers != null) await _mockDb.SaveCustomersAsync(customers);
-                break;
-        }
+        await _fileContentService.WriteFileAsync(GetFilePathForType(fileType), jsonData);
     }
+
+    private string GetFilePathForType(FileType fileType) => fileType switch
+    {
+        FileType.Templates => "data/dictionaries/templates.json",
+        FileType.EventTriggers => "data/dictionaries/event-triggers.json",
+        FileType.EventChannels => "data/dictionaries/event-channels.json",
+        FileType.OrderTypes => "data/dictionaries/order-types.json",
+        FileType.Customers => "data/dictionaries/customers.json",
+        FileType.LogoUrlMappings => "data/dictionaries/logo-url-mappings.json",
+        _ => throw new ArgumentException($"Unknown file type: {fileType}")
+    };
 }

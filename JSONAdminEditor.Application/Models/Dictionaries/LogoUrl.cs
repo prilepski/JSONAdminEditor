@@ -2,7 +2,7 @@
 
 namespace JSONAdminEditor.Application.Models.Dictionaries;
 
-public class LogoUrlMapping
+public class LogoUrl
 {
     [JsonPropertyName("fileName")]
     public string FileName { get; set; }

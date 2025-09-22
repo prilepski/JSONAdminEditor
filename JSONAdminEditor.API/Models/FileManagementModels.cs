@@ -10,7 +10,8 @@ namespace JSONAdminEditor.Models
         CustomerSettings = 4,
         EventTriggers = 5,
         EventChannels = 6,
-        OrderTypes = 7
+        OrderTypes = 7,
+        LogoUrlMappings = 8
     }
 
     public class FileManagementViewModel
