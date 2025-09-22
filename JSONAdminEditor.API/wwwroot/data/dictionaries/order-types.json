@@ -1,11 +1,11 @@
 [
   {
-    "Order Type": "ALL"
+    "Name": "ALL"
   },
   {
-    "Order Type": "Delivery"
+    "Name": "Delivery"
   },
   {
-    "Order Type": "Pickup"
+    "Name": "Pickup"
   }
 ]

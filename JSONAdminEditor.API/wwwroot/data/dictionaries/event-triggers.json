@@ -1,36 +1,36 @@
 [
   {
-    "Event Name": "Ready For Scheduling",
+    "EventName": "Ready For Scheduling",
     "ByOrderType": true,
     "IsActive": true
   },
   {
-    "Event Name": "Next Stop Update",
+    "EventName": "Next Stop Update",
     "ByOrderType": true,
     "IsActive": true
   },
   {
-    "Event Name": "Scheduling Reminder 24",
+    "EventName": "Scheduling Reminder 24",
     "ByOrderType": true,
     "IsActive": true
   },
   {
-    "Event Name": "Scheduling Reminder 48",
+    "EventName": "Scheduling Reminder 48",
     "ByOrderType": true,
     "IsActive": true
   },
   {
-    "Event Name": "Scheduling Reminder 72",
+    "EventName": "Scheduling Reminder 72",
     "ByOrderType": true,
     "IsActive": true
   },
   {
-    "Event Name": "Appointment Scheduled",
+    "EventName": "Appointment Scheduled",
     "ByOrderType": true,
     "IsActive": true
   },
   {
-    "Event Name": "jjjjj",
+    "EventName": "jjjjj",
     "ByOrderType": false,
     "IsActive": false
   }

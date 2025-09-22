@@ -1,18 +1,18 @@
 [
   {
-    "Channel Name": "Email",
+    "ChannelName": "Email",
     "IsActive": true
   },
   {
-    "Channel Name": "Sms",
+    "ChannelName": "Sms",
     "IsActive": true
   },
   {
-    "Channel Name": "Voice",
+    "ChannelName": "Voice",
     "IsActive": true
   },
   {
-    "Channel Name": "doves",
+    "ChannelName": "doves",
     "IsActive": false
   }
 ]
