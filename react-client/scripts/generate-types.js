@@ -1,9 +1,9 @@
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 try {
   console.log('Generating TypeScript types from OpenAPI spec...');
   
-  execSync('npx openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/types/api.ts', {
+  execSync('npx openapi-typescript http://localhost:8080/openapi/v1.json -o src/generated/api.ts', {
     stdio: 'inherit'
   });
   
