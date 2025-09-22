@@ -4,7 +4,9 @@ import {
   usePreferredCommunicationQuery,
   usePreferredCommunicationMutation,
 } from '../hooks/usePreferredCommunicationQuery';
+import { useQuery } from '@tanstack/react-query';
 import { components } from '../generated/api';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
@@ -16,19 +18,27 @@ export const PreferredCommunication: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
   const saveMutation = usePreferredCommunicationMutation();
   
-  const channelOptions: Channel[] = ['Email', 'Sms', 'Voice'];
+  const { data: eventChannels = [] } = useQuery({
+    queryKey: ['eventChannels'],
+    queryFn: async () => {
+      const response = await axios.get('/api/dictionaries/event-channels');
+      return response.data;
+    }
+  });
+  
+  const channelOptions = eventChannels.map((ch: any) => ch.channelName).filter(Boolean);
 
-  const columnNames = ['channel', 'priority'];
+  const columnNames = ['Channel', 'Priority'];
   const columnTypes = {
-    channel: 'select',
-    priority: 'number',
+    Channel: 'select',
+    Priority: 'number',
   };
 
   const handleSave = async (tableData: Record<string, any>[]) => {
     try {
       const preferredCommData: PreferredCommunication[] = tableData.map(row => ({
-        channel: row.channel as Channel,
-        priority: Number(row.priority)
+        channel: row.Channel as Channel,
+        priority: Number(row.Priority)
       }));
       
       await saveMutation.mutateAsync(preferredCommData);
@@ -40,10 +50,15 @@ export const PreferredCommunication: React.FC = () => {
     }
   };
 
+  const tableData = data.map(item => ({
+    Channel: item.channel,
+    Priority: item.priority
+  }));
+
   const dictionaryData = {
     columnNames,
     columnTypes,
-    tableData: data,
+    tableData,
     filePath: 'preferred-communication',
     fileName: 'preferred-communication.json',
     isValidJson: true,

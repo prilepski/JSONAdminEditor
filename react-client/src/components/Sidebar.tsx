@@ -15,7 +15,7 @@ export const Sidebar: React.FC = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <span
-              className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events']) ? 'parent-active' : ''}`}
+              className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events', '/after-hours']) ? 'parent-active' : ''}`}
               onClick={() => setGlobalSettingsOpen(!globalSettingsOpen)}
             >
               <i className="fas fa-globe me-2"></i>Global Settings
@@ -44,6 +44,14 @@ export const Sidebar: React.FC = () => {
                   to="/events"
                 >
                   <i className="fas fa-calendar-alt me-2"></i>Events
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/after-hours') ? 'active' : ''}`}
+                  to="/after-hours"
+                >
+                  <i className="fas fa-clock me-2"></i>After Hours
                 </Link>
               </li>
             </ul>

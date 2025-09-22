@@ -50,7 +50,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     if (column.toLowerCase() === 'channeltype' && selectedFileType === 1) {
       return (
         <select
-          className={inputClass}
+          className="form-select form-select-sm"
           value={cellValue.toString()}
           onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
           required
@@ -68,12 +68,17 @@ export const DataTable: React.FC<DataTableProps> = ({
     if (column === 'Channel' && columnType === 'select') {
       return (
         <select
-          className={inputClass}
+          className="form-select form-select-sm"
           value={cellValue.toString()}
           onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
           required
         >
           <option value="">Select Channel...</option>
+          {cellValue && !channelOptions.includes(cellValue.toString()) && (
+            <option key={cellValue} value={cellValue}>
+              {cellValue}
+            </option>
+          )}
           {channelOptions.map((channel) => (
             <option key={channel} value={channel}>
               {channel}

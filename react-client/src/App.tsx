@@ -12,6 +12,7 @@ import { ContentVariables } from './pages/ContentVariables';
 import { CustomerEvents } from './pages/CustomerEvents';
 import { CustomerSettings } from './pages/CustomerSettings';
 import { PreferredCommunication } from './pages/PreferredCommunication';
+import { AfterHours } from './pages/AfterHours';
 import { AuthProvider, ProtectedRoute, LoginCallback } from './auth';
 
 import './App.css';
@@ -60,6 +61,7 @@ function App() {
                                     path="/preferred-communication"
                                     element={<PreferredCommunication />}
                                   />
+                                  <Route path="/after-hours" element={<AfterHours />} />
                                 </Routes>
                               </div>
                             </main>
