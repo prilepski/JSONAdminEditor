@@ -1,7 +1,7 @@
 using JSONAdminEditor.Models;
 using System.Text.RegularExpressions;
 using System.Text.Json;
-using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Application.Models.Dictionaries;
 
 namespace JSONAdminEditor.Services
 {

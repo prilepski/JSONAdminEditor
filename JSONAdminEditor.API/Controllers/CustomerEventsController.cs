@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-using JSONAdminEditor.Services;
-using System.Text.RegularExpressions;
+using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Application.Models.Structure;
+using JSONAdminEditor.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -72,7 +73,7 @@ public class CustomerEventsController : ControllerBase
     [ProducesResponseType(404)]
     [ProducesResponseType(422)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> UpdateCustomerEvent(string customerId, string eventName, string orderType, [FromBody] EventMapping eventMapping)
+    public async Task<IActionResult> UpdateCustomerEvent(string customerId, string eventName, string orderType, [FromBody] CustomerEventMapping eventMapping)
     {
         if (!IsValidCustomerId(customerId))
             return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });

@@ -1,7 +1,7 @@
 using JSONAdminEditor.Models;
-using JSONAdminEditor.Application.Models;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Structure;
+using JSONAdminEditor.Application.Models.Dictionaries;
 
 namespace JSONAdminEditor.Services
 {
@@ -177,7 +177,6 @@ namespace JSONAdminEditor.Services
                 eventToUpdate.PreferredCommunication = eventData.PreferredCommunication;
                 eventToUpdate.ContentVariables = eventData.ContentVariables;
                 eventToUpdate.TriggerConditions = eventData.TriggerConditions;
-                eventToUpdate.ContentVariablesOverrides = eventData.ContentVariablesOverrides;
 
                 await SaveNotificationMappingAsync(mapping);
                 return true;

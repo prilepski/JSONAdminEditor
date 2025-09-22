@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using System.Text.Json;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Application.Models.Dictionaries;
 using JSONAdminEditor.Application.Models.Structure;
 
 namespace JSONAdminEditor.Services;
@@ -55,7 +55,7 @@ public class MockDatabaseService : IMockDatabaseService
         // CUST001 - DELL (minimal overrides)
         _customers["CUST001"] = new CustomerNotificationMapping
         {
-            EventMappings = new List<EventMapping>(),
+            EventMappings = new List<CustomerEventMapping>(),
             ContentVariables = new Dictionary<string, string>()
         };
 
@@ -67,7 +67,7 @@ public class MockDatabaseService : IMockDatabaseService
                 ["cust_name"] = "$Customer.FriendlyName$",
                 ["custom_var"] = "Sample Value"
             },
-            EventMappings = new List<EventMapping>
+            EventMappings = new List<CustomerEventMapping>
             {
                 new()
                 {
@@ -93,7 +93,7 @@ public class MockDatabaseService : IMockDatabaseService
         // BJ001 - Another sample (minimal overrides)
         _customers["BJ001"] = new CustomerNotificationMapping
         {
-            EventMappings = new List<EventMapping>(),
+            EventMappings = new List<CustomerEventMapping>(),
             ContentVariables = new Dictionary<string, string>()
         };
 
@@ -113,9 +113,9 @@ public class MockDatabaseService : IMockDatabaseService
 
         _eventTriggers.AddRange(new[]
         {
-            new EventTrigger { EventName = "Ready For Scheduling", IsActive = true },
-            new EventTrigger { EventName = "Appointment Scheduled", IsActive = true },
-            new EventTrigger { EventName = "Next Stop Update", IsActive = false }
+            new EventTrigger { EventName = "Ready For Scheduling", IsActive = true, ByOrderType = true },
+            new EventTrigger { EventName = "Appointment Scheduled", IsActive = true, ByOrderType = false },
+            new EventTrigger { EventName = "Next Stop Update", IsActive = false, ByOrderType = false }
         });
 
         _eventChannels.AddRange(new[]
@@ -192,10 +192,18 @@ public class MockDatabaseService : IMockDatabaseService
             {
                 Events = new List<EventBase>
                 {
-                    new() { Name = "Emergency Alert", Type = "Critical" }
+                    new() { Name = "Emergency", Type = "Critical" }
                 }
             }
         };
+        
+        _globalData.Agents = new Dictionary<string, bool>
+        {
+            ["SendGrid"] = true,
+            ["Twilio"] = true,
+            ["Voice"] = false
+        };
+            
         
         _globalData.FromEmail = "noreply@company.com";
     }

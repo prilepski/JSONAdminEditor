@@ -1,4 +1,4 @@
-using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Application.Models.Dictionaries;
 using JSONAdminEditor.Models;
 
 namespace JSONAdminEditor.Services
