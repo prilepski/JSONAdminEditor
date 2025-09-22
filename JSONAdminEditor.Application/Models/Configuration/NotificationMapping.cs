@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace JSONAdminEditor.Application.Models;
+namespace JSONAdminEditor.Application.Models.Structure;
 
 public class NotificationMapping
 {

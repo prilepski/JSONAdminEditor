@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace JSONAdminEditor.Application.Models;
+namespace JSONAdminEditor.Application.Models.Structure;
 
 public class EventMapping
 {
@@ -26,6 +26,4 @@ public class EventMapping
     public Dictionary<string, string> ContentVariables { get; set; } = [];
 
     public Dictionary<string, bool> TriggerConditions { get; set; } = [];
-
-    public Dictionary<string, Dictionary<string, Dictionary<string, string>>> ContentVariablesOverrides { get; set; } = [];
 }

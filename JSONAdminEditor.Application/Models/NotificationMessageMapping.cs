@@ -1,4 +1,6 @@
-﻿namespace JSONAdminEditor.Application.Models
+﻿using JSONAdminEditor.Application.Models.Structure;
+
+namespace JSONAdminEditor.Application.Models
 {
     public class NotificationMessageMapping 
     {

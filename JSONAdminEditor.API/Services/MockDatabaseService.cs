@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Application.Models.Structure;
 
 namespace JSONAdminEditor.Services;
 
