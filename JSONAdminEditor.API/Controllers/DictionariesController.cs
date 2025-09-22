@@ -60,51 +60,75 @@ public class DictionariesController : ControllerBase
     }
 
     [HttpGet("event-channels")]
+    [ProducesResponseType(200, Type = typeof(List<EventChannel>))]
+    [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
     {
         return await GetDictionaryData<EventChannel>(GetFilePathForType(FileType.EventChannels));
     }
 
     [HttpPut("event-channels")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateEventChannels([FromBody] List<EventChannel> eventChannels)
     {
         return await SaveDictionaryData(eventChannels, GetFilePathForType(FileType.EventChannels), "Event channels");
     }
 
     [HttpGet("order-types")]
+    [ProducesResponseType(200, Type = typeof(List<OrderType>))]
+    [ProducesResponseType(500)]
     public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
     {
         return await GetDictionaryData<OrderType>(GetFilePathForType(FileType.OrderTypes));
     }
 
     [HttpPut("order-types")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateOrderTypes([FromBody] List<OrderType> orderTypes)
     {
         return await SaveDictionaryData(orderTypes, GetFilePathForType(FileType.OrderTypes), "Order types");
     }
 
     [HttpGet("customers")]
+    [ProducesResponseType(200, Type = typeof(List<Customer>))]
+    [ProducesResponseType(500)]
     public async Task<ActionResult<List<Customer>>> GetCustomers()
     {
         return await GetDictionaryData<Customer>(GetFilePathForType(FileType.Customers));
     }
 
     [HttpPut("customers")]
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomers([FromBody] List<Customer> customers)
     {
         return await SaveDictionaryData(customers, GetFilePathForType(FileType.Customers), "Customers");
     }
 
     [HttpGet("logo-url")]
+    [ProducesResponseType(200, Type = typeof(List<LogoUrl>))]
+    [ProducesResponseType(500)]
     public async Task<ActionResult<List<LogoUrl>>> GetLogoUrlMappings()
     {
         return await GetDictionaryData<LogoUrl>(GetFilePathForType(FileType.LogoUrlMappings));
     }
 
     [HttpPut("logo-url")]
-    public async Task<IActionResult> UpdateLogoUrlMappings([FromBody] List<LogoUrl> logoUrlMappings)
+    [Consumes("application/json")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateLogoUrlMappings([FromBody] List<LogoUrl> logoUrls)
     {
-        return await SaveDictionaryData(logoUrlMappings, GetFilePathForType(FileType.LogoUrlMappings), "Logo URL mappings");
+        return await SaveDictionaryData(logoUrls, GetFilePathForType(FileType.LogoUrlMappings), "Logo URL mappings");
     }
 
     private async Task<ActionResult<List<T>>> GetDictionaryData<T>(string filePath)
