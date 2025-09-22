@@ -28,7 +28,7 @@ export const CustomerContentVariablesTable: React.FC<CustomerContentVariablesTab
         <thead className="table-light">
           <tr>
             <th>Variable Name</th>
-            <th>Value</th>
+            <th>Variable Value</th>
             <th>Actions</th>
           </tr>
         </thead>

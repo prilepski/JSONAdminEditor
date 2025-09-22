@@ -51,6 +51,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
 
   const addNewRow = () => {
     if (!dictionaryData?.columnNames) return;
+    if (selectedFileType === FileType.EventChannels) return; // Disable for Event Channels
 
     const newRow: TableData = {};
     dictionaryData.columnNames.forEach((column) => {
@@ -121,14 +122,16 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Edit {getDictionaryName(selectedFileType)} Dictionary</h4>
         <div>
-          <button
-            type="button"
-            className="btn btn-success me-2"
-            onClick={addNewRow}
-            disabled={saving}
-          >
-            <i className="fas fa-plus me-1"></i>Add Row
-          </button>
+          {selectedFileType !== FileType.EventChannels && (
+            <button
+              type="button"
+              className="btn btn-success me-2"
+              onClick={addNewRow}
+              disabled={saving}
+            >
+              <i className="fas fa-plus me-1"></i>Add Row
+            </button>
+          )}
           <SaveButton onClick={handleSave} loading={saving} text="Save Changes" />
         </div>
       </div>

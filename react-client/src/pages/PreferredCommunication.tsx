@@ -28,16 +28,16 @@ export const PreferredCommunication: React.FC = () => {
   
   const channelOptions = eventChannels.map((ch: any) => ch.channelName).filter(Boolean);
 
-  const columnNames = ['Channel', 'Priority'];
+  const columnNames = ['Channel Name', 'Priority'];
   const columnTypes = {
-    Channel: 'select',
+    'Channel Name': 'select',
     Priority: 'number',
   };
 
   const handleSave = async (tableData: Record<string, any>[]) => {
     try {
       const preferredCommData: PreferredCommunication[] = tableData.map(row => ({
-        channel: row.Channel as Channel,
+        channel: row['Channel Name'] as Channel,
         priority: Number(row.Priority)
       }));
       
@@ -51,7 +51,7 @@ export const PreferredCommunication: React.FC = () => {
   };
 
   const tableData = data.map(item => ({
-    Channel: item.channel,
+    'Channel Name': item.channel,
     Priority: item.priority
   }));
 

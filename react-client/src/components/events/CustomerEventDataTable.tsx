@@ -22,8 +22,8 @@ export const CustomerEventDataTable: React.FC<CustomerEventDataTableProps> = ({
       <table className="table table-bordered">
         <thead className="table-light">
           <tr>
-            <th>Field</th>
-            <th>Value</th>
+            <th>Field Name</th>
+            <th>Field Value</th>
             <th>Is Redefined</th>
             <th>Global Value</th>
           </tr>

@@ -29,11 +29,26 @@ export const dictionaryService = {
     const endpoint = getEndpoint(fileType);
     const response = await api.get<Template[] | EventTrigger[] | EventChannel[] | OrderType[] | Customer[]>(`/dictionaries/${endpoint}`);
     const tableData = response.data || [];
-    const columnNames = tableData.length > 0 ? Object.keys(tableData[0]) : [];
-    const columnTypes = columnNames.reduce((acc, col) => {
+    const rawColumnNames = tableData.length > 0 ? Object.keys(tableData[0]) : [];
+    const columnNames = rawColumnNames.map(col => {
+      // Convert camelCase to "Title Case"
+      return col.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    });
+    const columnTypes = rawColumnNames.reduce((acc, col, index) => {
       const isActiveCol = col.toLowerCase() === 'isactive';
-      return { ...acc, [col]: isActiveCol ? 'boolean' : 'string' };
+      const displayName = columnNames[index];
+      return { ...acc, [displayName]: isActiveCol ? 'boolean' : 'string' };
     }, {});
+    
+    // Map API data to display format
+    const displayTableData = tableData.map(row => {
+      const displayRow: any = {};
+      Object.entries(row).forEach(([apiField, value]) => {
+        const displayName = apiField.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        displayRow[displayName] = value;
+      });
+      return displayRow;
+    });
     
     return { 
       success: true, 
@@ -42,7 +57,7 @@ export const dictionaryService = {
         fileName: `${endpoint}.json`,
         columnNames,
         columnTypes,
-        tableData,
+        tableData: displayTableData,
         isValidJson: true
       }
     };
@@ -54,7 +69,17 @@ export const dictionaryService = {
     fileType: FileType
   ): Promise<ApiResponse> => {
     const endpoint = getEndpoint(fileType);
-    await api.put<void>(`/dictionaries/${endpoint}`, jsonData);
+    // Convert display names back to API field names
+    const apiData = jsonData.map(row => {
+      const apiRow: any = {};
+      Object.entries(row).forEach(([displayName, value]) => {
+        // Convert "Title Case" back to camelCase
+        const apiFieldName = displayName.replace(/\s+/g, '').replace(/^./, str => str.toLowerCase());
+        apiRow[apiFieldName] = value;
+      });
+      return apiRow;
+    });
+    await api.put<void>(`/dictionaries/${endpoint}`, apiData);
     return { success: true };
   },
 

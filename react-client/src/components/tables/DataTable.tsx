@@ -65,7 +65,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       );
     }
 
-    if (column === 'Channel' && columnType === 'select') {
+    if ((column === 'Channel' || column === 'Channel Name') && columnType === 'select') {
       return (
         <select
           className="form-select form-select-sm"
@@ -89,6 +89,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     }
 
     if (columnType === 'number') {
+      const isReadOnly = selectedFileType === 3; // FileType.EventChannels
       return (
         <input
           type="number"
@@ -96,16 +97,19 @@ export const DataTable: React.FC<DataTableProps> = ({
           value={cellValue.toString()}
           onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
           min="1"
+          readOnly={isReadOnly}
         />
       );
     }
 
+    const isReadOnly = selectedFileType === 3; // FileType.EventChannels
     return (
       <input
         type="text"
         className={inputClass}
         value={cellValue.toString()}
         onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
+        readOnly={isReadOnly}
       />
     );
   };
@@ -138,13 +142,15 @@ export const DataTable: React.FC<DataTableProps> = ({
                 );
               })}
               <td>
-                <button
-                  type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => onDeleteRow(rowIndex)}
-                >
-                  <i className="fas fa-trash"></i>
-                </button>
+                {selectedFileType !== 3 && ( // FileType.EventChannels
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={() => onDeleteRow(rowIndex)}
+                  >
+                    <i className="fas fa-trash"></i>
+                  </button>
+                )}
               </td>
             </tr>
           ))}

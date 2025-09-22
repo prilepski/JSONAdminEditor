@@ -30,8 +30,8 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
         <table className="table table-bordered">
           <thead className="table-light">
             <tr>
-              <th>Channel</th>
-              <th>Template</th>
+              <th>Channel Name</th>
+              <th>Template Name</th>
               <th>Is Redefined</th>
               <th>Global Value</th>
             </tr>
