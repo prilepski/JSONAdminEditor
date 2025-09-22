@@ -61,29 +61,22 @@ export const CustomerEvents: React.FC = () => {
       const fields: EventField[] = [
         {
           name: 'Phone',
-          value: existingEvent?.Phone || '$consigneeContact.phone$',
-          isRedefined: !!existingEvent?.Phone,
+          value: existingEvent?.phone || '$consigneeContact.phone$',
+          isRedefined: !!existingEvent?.phone,
           type: 'text',
           globalValue: '$consigneeContact.phone$',
         },
         {
           name: 'Email',
-          value: existingEvent?.Email || '$consigneeContact.email$',
-          isRedefined: !!existingEvent?.Email,
+          value: existingEvent?.email || '$consigneeContact.email$',
+          isRedefined: !!existingEvent?.email,
           type: 'text',
           globalValue: '$consigneeContact.email$',
         },
         {
-          name: 'Logo',
-          value: existingEvent?.Logo || 'base64',
-          isRedefined: !!existingEvent?.Logo,
-          type: 'text',
-          globalValue: 'base64',
-        },
-        {
           name: 'IsSuppressed',
-          value: existingEvent?.IsSuppressed ? 'true' : 'false',
-          isRedefined: existingEvent?.IsSuppressed !== undefined,
+          value: existingEvent?.isSuppressed ? 'true' : 'false',
+          isRedefined: existingEvent?.isSuppressed !== undefined,
           type: 'checkbox',
           globalValue: 'false',
         },
@@ -94,20 +87,20 @@ export const CustomerEvents: React.FC = () => {
       const templates: TemplateField[] = [
         {
           channel: 'Email',
-          value: existingEvent?.Templates?.Email || '',
-          isRedefined: !!existingEvent?.Templates?.Email,
+          value: existingEvent?.templates?.Email || '',
+          isRedefined: !!existingEvent?.templates?.Email,
           globalValue: '',
         },
         {
           channel: 'Sms',
-          value: existingEvent?.Templates?.Sms || '',
-          isRedefined: !!existingEvent?.Templates?.Sms,
+          value: existingEvent?.templates?.sms || '',
+          isRedefined: !!existingEvent?.templates?.Sms,
           globalValue: '',
         },
         {
           channel: 'Voice',
-          value: existingEvent?.Templates?.Voice || '',
-          isRedefined: !!existingEvent?.Templates?.Voice,
+          value: existingEvent?.templates?.Voice || '',
+          isRedefined: !!existingEvent?.templates?.Voice,
           globalValue: '',
         },
       ];
@@ -115,8 +108,8 @@ export const CustomerEvents: React.FC = () => {
 
       // Initialize content variables with existing data
       const vars: Record<string, ContentVariable> = {};
-      if (existingEvent?.ContentVariables) {
-        Object.entries(existingEvent.ContentVariables).forEach(([key, value]) => {
+      if (existingEvent?.contentVariables) {
+        Object.entries(existingEvent.contentVariables).forEach(([key, value]) => {
           vars[key] = {
             name: key,
             value: String(value),
@@ -170,15 +163,13 @@ export const CustomerEvents: React.FC = () => {
     }
 
     try {
-      const success = await saveMutation.mutateAsync({
+      await saveMutation.mutateAsync({
         customerId: selectedCustomer,
+        eventName: selectedEvent,
+        orderType: selectedOrderType,
         data: saveData,
       });
-      if (success) {
-        toast.success(`Customer event '${selectedEvent}' saved successfully!`);
-      } else {
-        toast.error('Failed to save customer event');
-      }
+      toast.success(`Customer event '${selectedEvent}' saved successfully!`);
     } catch (error) {
       toast.error('Error saving customer event');
     }

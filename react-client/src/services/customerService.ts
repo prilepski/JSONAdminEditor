@@ -1,35 +1,37 @@
 import axios from 'axios';
+import { components } from '../generated/api';
+
+type EventMapping = components['schemas']['EventMapping'];
+type CustomerNotificationMapping = components['schemas']['CustomerNotificationMapping'];
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/customers`,
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const customerService = {
   getCustomers: async (): Promise<string[]> => {
-    const response = await api.get('/');
+    const response = await api.get<string[]>('/config/customers');
     return response.data;
   },
 
-  getCustomerEvents: async (customerId: string, orderType?: string): Promise<any> => {
-    const url = orderType ? `/${customerId}/events?orderType=${orderType}` : `/${customerId}/events`;
-    const response = await api.get(url);
-    // Return the Events array from customer data, or empty array if not found
-    return response.data?.Events || [];
+  getCustomerEvents: async (customerId: string): Promise<EventMapping[]> => {
+    const response = await api.get<EventMapping[]>(`/config/customers/${customerId}/events`);
+    return response.data || [];
   },
 
-  saveCustomerEvents: async (customerId: string, data: any): Promise<{ success: boolean; data?: any }> => {
-    const response = await api.post(`/${customerId}/events`, data);
-    return { success: response.data.success, data: response.data.data };
+  saveCustomerEvents: async (customerId: string, eventName: string, orderType: string, data: EventMapping): Promise<{ success: boolean }> => {
+    await api.put<void>(`/config/customers/${customerId}/events/${eventName}/order-types/${orderType}`, data);
+    return { success: true };
   },
 
-  getCustomerSettings: async (customerId: string): Promise<any> => {
-    const response = await api.get(`/${customerId}/settings`);
+  getCustomerSettings: async (customerId: string): Promise<CustomerNotificationMapping> => {
+    const response = await api.get<CustomerNotificationMapping>(`/config/customers/${customerId}`);
     return response.data;
   },
 
-  saveCustomerSettings: async (customerId: string, data: any): Promise<{ success: boolean; data?: any }> => {
-    const response = await api.post(`/${customerId}/settings`, data);
-    return { success: response.data.success, data: response.data.data };
+  saveCustomerSettings: async (customerId: string, data: CustomerNotificationMapping): Promise<{ success: boolean }> => {
+    await api.put<void>(`/config/customers/${customerId}`, data);
+    return { success: true };
   },
 };

@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customerService } from '../services';
+import { components } from '../generated/api';
+
+type EventMapping = components['schemas']['EventMapping'];
+type CustomerNotificationMapping = components['schemas']['CustomerNotificationMapping'];
 
 export const useCustomersQuery = () => {
   return useQuery({
@@ -28,13 +32,9 @@ export const useCustomerEventsMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ customerId, data }: { customerId: string; data: any }) =>
-      customerService.saveCustomerEvents(customerId, data),
-    onSuccess: (result, { customerId }) => {
-      if (result.success && result.data) {
-        // Update the cache with the returned data
-        queryClient.setQueryData(['customerEvents', customerId], result.data.Events || []);
-      }
+    mutationFn: ({ customerId, eventName, orderType, data }: { customerId: string; eventName: string; orderType: string; data: EventMapping }) =>
+      customerService.saveCustomerEvents(customerId, eventName, orderType, data),
+    onSuccess: (_, { customerId }) => {
       queryClient.invalidateQueries({ queryKey: ['customerEvents', customerId] });
     },
   });
@@ -44,13 +44,9 @@ export const useCustomerSettingsMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ customerId, data }: { customerId: string; data: any }) =>
+    mutationFn: ({ customerId, data }: { customerId: string; data: CustomerNotificationMapping }) =>
       customerService.saveCustomerSettings(customerId, data),
-    onSuccess: (result, { customerId }) => {
-      if (result.success && result.data) {
-        // Update the cache with the returned data
-        queryClient.setQueryData(['customerSettings', customerId], result.data);
-      }
+    onSuccess: (_, { customerId }) => {
       queryClient.invalidateQueries({ queryKey: ['customerSettings', customerId] });
     },
   });
