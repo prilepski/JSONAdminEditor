@@ -1,25 +1,24 @@
 import axios from 'axios';
-import { Template } from '../types/template';
+import { Template, EventTrigger, OrderType } from '../types';
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/events`,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/dictionaries`,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const eventService = {
-  getActiveEventTriggers: async (): Promise<string[]> => {
-    const response = await api.get('/triggers');
+  getActiveEventTriggers: async (): Promise<EventTrigger[]> => {
+    const response = await api.get('/event-triggers');
     return response.data;
   },
 
-  getAvailableOrderTypes: async (): Promise<string[]> => {
+  getAvailableOrderTypes: async (): Promise<OrderType[]> => {
     const response = await api.get('/order-types');
     return response.data;
   },
 
   getAvailableTemplates: async (orderType?: string): Promise<Template[]> => {
-    const url = orderType ? `/templates?orderType=${orderType}` : '/templates';
-    const response = await api.get(url);
+    const response = await api.get('/templates');
     return response.data;
   },
 

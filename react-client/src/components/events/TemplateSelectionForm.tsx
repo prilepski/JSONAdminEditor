@@ -1,5 +1,5 @@
 import React from 'react';
-import { Template } from '../../types/template';
+import { Template } from '../../types';
 
 interface TemplateSelectionFormProps {
   templates: {

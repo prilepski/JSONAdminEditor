@@ -1,8 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { preferredCommunicationService } from '../services';
-import { components } from '../generated/api';
-
-type PreferredCommunication = components['schemas']['PreferredCommunication'];
 
 export const usePreferredCommunicationQuery = () => {
   return useQuery({

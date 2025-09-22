@@ -1,19 +1,18 @@
 import axios from 'axios';
-import { ApiResponse, TableData } from '../types';
+import { ContentVariables } from '../types';
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/content-variables`,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/config`,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const contentVariableService = {
-  getContentVariables: async (): Promise<TableData[]> => {
-    const response = await api.get('/');
+  getContentVariables: async (): Promise<ContentVariables> => {
+    const response = await api.get('/content-variables');
     return response.data;
   },
 
-  saveContentVariables: async (data: TableData[]): Promise<ApiResponse> => {
-    const response = await api.post('/save', { data });
-    return response.data;
+  saveContentVariables: async (data: ContentVariables): Promise<void> => {
+    await api.put('/content-variables', data);
   },
 };

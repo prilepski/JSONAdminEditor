@@ -50,3 +50,11 @@ export interface CustomerLookupResult {
   address?: string;
   IsActive?: boolean;
 }
+
+export interface CustomerContentVariable {
+  name: string;
+  value: string;
+  isRedefined: boolean;
+  isCustomerSpecific: boolean;
+  globalValue?: string;
+}

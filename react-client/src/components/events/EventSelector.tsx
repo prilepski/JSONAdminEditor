@@ -1,10 +1,11 @@
 import React from 'react';
+import { EventTrigger, OrderType } from '../../types';
 
 interface EventSelectorProps {
   selectedEvent: string;
   selectedOrderType: string;
-  eventTriggers: string[];
-  orderTypes: string[];
+  eventTriggers: EventTrigger[];
+  orderTypes: OrderType[];
   eventSupportsByOrderType: boolean;
   onEventChange: (event: string) => void;
   onOrderTypeChange: (orderType: string) => void;
@@ -33,8 +34,8 @@ export const EventSelector: React.FC<EventSelectorProps> = ({
           >
             <option value="">Select an event...</option>
             {eventTriggers.map((trigger) => (
-              <option key={trigger} value={trigger}>
-                {trigger}
+              <option key={trigger.eventName} value={trigger.eventName}>
+                {trigger.eventName}
               </option>
             ))}
           </select>
@@ -47,8 +48,8 @@ export const EventSelector: React.FC<EventSelectorProps> = ({
               onChange={(e) => onOrderTypeChange(e.target.value)}
             >
               {orderTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+                <option key={type.name} value={type.name}>
+                  {type.name}
                 </option>
               ))}
             </select>

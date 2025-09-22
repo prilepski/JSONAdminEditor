@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileType, DictionaryData, ValidationError, TableData } from '../types';
+import { FileType, TableData, ValidationError, DictionaryData } from '../types';
 import { useChannelOptionsQuery } from '../hooks/useDictionaryQuery';
 import { useConfirm } from '../hooks/useConfirm';
 import { DataTable } from './tables/DataTable';

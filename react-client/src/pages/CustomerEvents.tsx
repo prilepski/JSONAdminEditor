@@ -6,6 +6,7 @@ import {
   useCustomerEventsMutation,
 } from '../hooks/useCustomerQuery';
 import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery';
+import { EventTrigger, Template } from '../types';
 import toast from 'react-hot-toast';
 import {
   CustomerEventData,
@@ -42,8 +43,8 @@ export const CustomerEvents: React.FC = () => {
   const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
-  const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
-  const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery(selectedOrderType);
+  const { data: activeEventTriggers = [] as EventTrigger[], isLoading: triggersLoading } = useEventTriggersQuery();
+  const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery(selectedOrderType);
   const { data: customerEventData, isLoading: eventDataLoading } =
     useCustomerEventsQuery(selectedCustomer, selectedOrderType);
   const saveMutation = useCustomerEventsMutation();
@@ -167,7 +168,7 @@ export const CustomerEvents: React.FC = () => {
         customerId: selectedCustomer,
         eventName: selectedEvent,
         orderType: selectedOrderType,
-        data: saveData,
+        data: saveData as any,
       });
       toast.success(`Customer event '${selectedEvent}' saved successfully!`);
     } catch (error) {

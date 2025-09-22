@@ -5,14 +5,16 @@ import {
   useContentVariablesQuery,
   useContentVariablesMutation,
 } from '../hooks/useContentVariableQuery';
-import { ValidationError, TableData } from '../types';
+import { FileType, ValidationError, TableData } from '../types';
+
+type ContentVariables = Record<string, string>;
 import toast from 'react-hot-toast';
 
 import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const ContentVariables: React.FC = () => {
-  const { data = [], isLoading } = useContentVariablesQuery();
+  const { data = {} as ContentVariables, isLoading } = useContentVariablesQuery();
   const saveMutation = useContentVariablesMutation();
 
   const { state, updateField } = useFormState({
@@ -25,27 +27,34 @@ export const ContentVariables: React.FC = () => {
     updateField('validationErrors', []);
 
     try {
-      const result = await saveMutation.mutateAsync(tableData);
-      if (result.success) {
-        toast.success('Content Variables saved successfully!');
-        return { success: true, message: result.message };
-      } else {
-        toast.error(result.error || 'Failed to save content variables');
-        if (result.validationErrors) {
-          updateField('validationErrors', result.validationErrors);
-        }
-        return { success: false, error: result.error };
-      }
+      // Convert TableData[] to ContentVariables format
+      const contentVars: Record<string, string> = {};
+      tableData.forEach(row => {
+        const name = row['Variable Name'] as string;
+        const value = row['Variable Value'] as string;
+        if (name) contentVars[name] = value || '';
+      });
+      
+      await saveMutation.mutateAsync(contentVars);
+      toast.success('Content Variables saved successfully!');
+      return { success: true };
     } catch (error) {
       toast.error('Error saving content variables');
       return { success: false, error: 'Error saving content variables' };
     }
   };
 
+  // Convert ContentVariables to TableData format
+  const tableData = Object.entries(data).map(([name, value]) => ({
+    'Variable Name': name,
+    'Variable Value': value,
+    'Description': ''
+  }));
+
   const dictionaryData = {
     columnNames: ['Variable Name', 'Variable Value', 'Description'],
     columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text', Description: 'text' },
-    tableData: data,
+    tableData,
     filePath: 'content-variables',
     fileName: 'content-variables.json',
     isValidJson: true,
@@ -72,7 +81,7 @@ export const ContentVariables: React.FC = () => {
             <ComponentErrorBoundary componentName="Content Variables Editor">
               <JsonEditor
                 dictionaryData={dictionaryData}
-                selectedFileType={1}
+                selectedFileType={FileType.Templates}
                 validationErrors={validationErrors}
                 onSave={handleSave}
                 onClearValidationErrors={() => updateField('validationErrors', [])}

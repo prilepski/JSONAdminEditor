@@ -1,15 +1,7 @@
-import { TableData, ValidationError, FileType } from './common';
+import { ValidationError } from './api';
+import { TableData } from './table';
 
-// Dictionary-specific types
-export interface DictionaryData {
-  filePath: string;
-  fileName: string;
-  columnNames: string[];
-  columnTypes: Record<string, string>;
-  tableData: TableData[];
-  isValidJson: boolean;
-}
-
+// Dictionary UI types
 export interface JsonFileViewModel {
   fileName?: string;
   filePath?: string;
@@ -20,10 +12,4 @@ export interface JsonFileViewModel {
   errorMessage?: string;
   isValidJson: boolean;
   validationErrors?: ValidationError[];
-}
-
-export interface FileUploadRequest {
-  fileType: FileType;
-  customerName?: string;
-  jsonFile?: File;
 }

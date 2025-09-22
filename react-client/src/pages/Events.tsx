@@ -8,6 +8,7 @@ import {
   useEventSupportQuery,
   useEventMutation,
 } from '../hooks/useEventQuery';
+import { EventTrigger, OrderType, Template } from '../types';
 import toast from 'react-hot-toast';
 import { PageHeader, TabNavigation, SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
@@ -41,9 +42,9 @@ export const Events: React.FC = () => {
 
   const [eventData, setEventData] = useState<EventData | null>(null);
   const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
-  const { data: activeEventTriggers = [], isLoading: triggersLoading } = useEventTriggersQuery();
-  const { data: availableOrderTypes = [], isLoading: orderTypesLoading } = useOrderTypesQuery();
-  const { data: availableTemplates = [], isLoading: templatesLoading } = useTemplatesQuery();
+  const { data: activeEventTriggers = [] as EventTrigger[], isLoading: triggersLoading } = useEventTriggersQuery();
+  const { data: availableOrderTypes = [] as OrderType[], isLoading: orderTypesLoading } = useOrderTypesQuery();
+  const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery();
 
   const { data: eventSupports = false, isLoading: supportsLoading } =
     useEventSupportQuery(selectedEvent);

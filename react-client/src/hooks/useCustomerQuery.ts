@@ -1,9 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customerService } from '../services';
-import { components } from '../generated/api';
-
-type EventMapping = components['schemas']['EventMapping'];
-type CustomerNotificationMapping = components['schemas']['CustomerNotificationMapping'];
+import { EventMapping, CustomerNotificationMapping } from '../types';
 
 export const useCustomersQuery = () => {
   return useQuery({
@@ -15,7 +12,7 @@ export const useCustomersQuery = () => {
 export const useCustomerEventsQuery = (customerId: string, orderType?: string) => {
   return useQuery({
     queryKey: ['customerEvents', customerId, orderType],
-    queryFn: () => customerService.getCustomerEvents(customerId, orderType),
+    queryFn: () => customerService.getCustomerEvents(customerId),
     enabled: !!customerId,
   });
 };

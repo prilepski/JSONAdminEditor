@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableData, ValidationError } from '../../types';
+import { FileType, TableData, ValidationError } from '../../types';
 
 interface DataTableProps {
   data: TableData[];
@@ -9,7 +9,7 @@ interface DataTableProps {
   onUpdateCell: (rowIndex: number, column: string, value: any) => void;
   onDeleteRow: (index: number) => void;
   channelOptions?: string[];
-  selectedFileType?: number;
+  selectedFileType?: FileType;
 }
 
 export const DataTable: React.FC<DataTableProps> = ({
@@ -47,7 +47,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       );
     }
 
-    if (column.toLowerCase() === 'channeltype' && selectedFileType === 1) {
+    if (column.toLowerCase() === 'channeltype' && selectedFileType === FileType.Templates) {
       return (
         <select
           className="form-select form-select-sm"
@@ -89,7 +89,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     }
 
     if (columnType === 'number') {
-      const isReadOnly = selectedFileType === 3; // FileType.EventChannels
+      const isReadOnly = selectedFileType === FileType.EventChannels;
       return (
         <input
           type="number"
@@ -102,7 +102,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       );
     }
 
-    const isReadOnly = selectedFileType === 3; // FileType.EventChannels
+    const isReadOnly = selectedFileType === FileType.EventChannels;
     return (
       <input
         type="text"
@@ -142,7 +142,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                 );
               })}
               <td>
-                {selectedFileType !== 3 && ( // FileType.EventChannels
+                {selectedFileType !== FileType.EventChannels && (
                   <button
                     type="button"
                     className="btn btn-danger btn-sm"

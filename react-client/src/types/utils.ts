@@ -1,6 +1,7 @@
 // Type utility functions and guards - currently unused but kept for future use
 
-import { FileType, ValidationError, TableData } from './common';
+import { FileType, ValidationError } from './api';
+import { TableData } from './table';
 
 // Type guards
 export const isValidFileType = (value: number): value is FileType => {

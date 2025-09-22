@@ -5,6 +5,7 @@ import {
   useCustomerSettingsMutation,
 } from '../hooks/useCustomerQuery';
 import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
+
 import toast from 'react-hot-toast';
 import { CustomerContentVariable } from '../types/customer';
 import { CustomerSettingsData } from '../types/customerSettings';
@@ -33,12 +34,12 @@ export const CustomerSettings: React.FC = () => {
       return;
     }
 
-    const customerVars = customerSettings?.contentVariables || {};
+    const customerVars = customerSettings?.ContentVariables || {};
     const variables: CustomerContentVariable[] = [];
 
     // Add customer-specific variables (not in global)
     Object.entries(customerVars).forEach(([name, value]) => {
-      const isInGlobal = globalVariables.some((gv) => gv['Variable Name'] === name);
+      const isInGlobal = Array.isArray(globalVariables) ? globalVariables.some((gv: any) => gv['Variable Name'] === name) : false;
       if (!isInGlobal) {
         variables.push({
           name,
@@ -50,7 +51,8 @@ export const CustomerSettings: React.FC = () => {
     });
 
     // Add global variables with redefinition status
-    globalVariables.forEach((globalVar) => {
+    if (Array.isArray(globalVariables)) {
+      globalVariables.forEach((globalVar: any) => {
       const name = String(globalVar['Variable Name']);
       const globalValue = globalVar['Variable Mapping'] || globalVar['Variable Value'] || '';
       const isRedefined = customerVars.hasOwnProperty(name);
@@ -66,6 +68,7 @@ export const CustomerSettings: React.FC = () => {
         globalValue: String(globalValue),
       });
     });
+    }
 
     setContentVariables(variables);
   }, [selectedCustomer, customerSettings, globalVariables]);
@@ -74,13 +77,13 @@ export const CustomerSettings: React.FC = () => {
     if (!selectedCustomer) return;
 
     const saveData: CustomerSettingsData = {
-      contentVariables: {},
+      ContentVariables: {},
     };
 
     // Save customer-specific variables and redefined global variables
     contentVariables.forEach((variable) => {
       if (variable.isCustomerSpecific || variable.isRedefined) {
-        saveData.contentVariables[variable.name] = variable.value;
+        saveData.ContentVariables![variable.name] = variable.value;
       }
     });
 

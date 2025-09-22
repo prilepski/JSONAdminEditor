@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { components } from '../generated/api';
-
-type AfterHours2 = components['schemas']['AfterHours2'];
+import { AfterHours2 } from '../types';
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/config`,

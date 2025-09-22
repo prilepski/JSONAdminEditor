@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from 'react';
-import { ValidationError } from '../types/errors';
+import { ValidationError } from '../types';
 
 interface PageState {
   selectedCustomer: string;

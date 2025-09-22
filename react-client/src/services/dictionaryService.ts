@@ -1,12 +1,5 @@
 import axios from 'axios';
-import { FileType, ApiResponse, DictionaryData, FileUploadRequest, TableData } from '../types';
-import { components } from '../generated/api';
-
-type Template = components['schemas']['Template'];
-type EventTrigger = components['schemas']['EventTrigger'];
-type EventChannel = components['schemas']['EventChannel'];
-type OrderType = components['schemas']['OrderType'];
-type Customer = components['schemas']['Customer'];
+import { FileType, Template, EventTrigger, EventChannel, OrderType, Customer, TableData, DictionaryData, ApiResponse, FileUploadRequest } from '../types';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',

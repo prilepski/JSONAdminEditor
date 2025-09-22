@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAfterHoursQuery, useAfterHoursMutation } from '../hooks/useAfterHoursQuery';
 import { useQuery } from '@tanstack/react-query';
-import { components } from '../generated/api';
+import { AfterHours2, EventTrigger, OrderType } from '../types';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
-
-type AfterHours2 = components['schemas']['AfterHours2'];
 
 export const AfterHours: React.FC = () => {
   const { data, isLoading } = useAfterHoursQuery();
@@ -36,7 +34,7 @@ export const AfterHours: React.FC = () => {
     if (data) {
       setFormData({
         restrictedHoursPeriod: data.restrictedHoursPeriod || { start: '', end: '' },
-        exceptionOfValidation: data.exceptionOfValidation || { events: [] }
+        exceptionOfValidation: { events: data.exceptionOfValidation?.events || [] }
       });
     }
   }, [data]);
@@ -153,12 +151,12 @@ export const AfterHours: React.FC = () => {
                             onChange={(e) => updateEvent(index, 'name', e.target.value)}
                           >
                             <option value="">Select Event</option>
-                            {event.name && !eventTriggers.find((t: any) => t.eventName === event.name) && (
+                            {event.name && !eventTriggers.find((t: EventTrigger) => t.eventName === event.name) && (
                               <option key={event.name} value={event.name}>
                                 {event.name}
                               </option>
                             )}
-                            {eventTriggers.map((trigger: any) => (
+                            {eventTriggers.map((trigger: EventTrigger) => (
                               <option key={trigger.eventName} value={trigger.eventName}>
                                 {trigger.eventName}
                               </option>
@@ -172,12 +170,12 @@ export const AfterHours: React.FC = () => {
                             onChange={(e) => updateEvent(index, 'type', e.target.value)}
                           >
                             <option value="">Select Type</option>
-                            {event.type && !orderTypes.find((t: any) => t.name === event.type) && (
+                            {event.type && !orderTypes.find((t: OrderType) => t.name === event.type) && (
                               <option key={event.type} value={event.type}>
                                 {event.type}
                               </option>
                             )}
-                            {orderTypes.map((orderType: any) => (
+                            {orderTypes.map((orderType: OrderType) => (
                               <option key={orderType.name} value={orderType.name}>
                                 {orderType.name}
                               </option>

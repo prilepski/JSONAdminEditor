@@ -5,16 +5,13 @@ import {
   usePreferredCommunicationMutation,
 } from '../hooks/usePreferredCommunicationQuery';
 import { useQuery } from '@tanstack/react-query';
-import { components } from '../generated/api';
+import { FileType, PreferredCommunication, Channel } from '../types';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
-type PreferredCommunication = components['schemas']['PreferredCommunication'];
-type Channel = components['schemas']['Channel'];
-
-export const PreferredCommunication: React.FC = () => {
+const PreferredCommunicationPage: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
   const saveMutation = usePreferredCommunicationMutation();
   
@@ -87,7 +84,7 @@ export const PreferredCommunication: React.FC = () => {
             <ComponentErrorBoundary componentName="Preferred Communication Editor">
               <JsonEditor
                 dictionaryData={dictionaryData}
-                selectedFileType={1}
+                selectedFileType={FileType.Templates}
                 validationErrors={[]}
                 onSave={handleSave}
                 onClearValidationErrors={() => {}}
@@ -100,3 +97,5 @@ export const PreferredCommunication: React.FC = () => {
     </PageErrorBoundary>
   );
 };
+
+export { PreferredCommunicationPage as PreferredCommunication };

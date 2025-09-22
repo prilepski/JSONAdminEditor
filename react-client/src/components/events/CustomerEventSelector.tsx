@@ -1,11 +1,12 @@
 import React from 'react';
 import { ToggleButtonGroup } from '../common';
+import { EventTrigger } from '../../types';
 
 interface CustomerEventSelectorProps {
   selectedCustomer: string;
   selectedEvent: string;
   selectedOrderType: string;
-  eventTriggers: string[];
+  eventTriggers: EventTrigger[];
   onEventChange: (event: string) => void;
   onOrderTypeChange: (orderType: string) => void;
 }
@@ -34,8 +35,8 @@ export const CustomerEventSelector: React.FC<CustomerEventSelectorProps> = ({
           >
             <option value="">Select an event...</option>
             {eventTriggers.map((trigger) => (
-              <option key={trigger} value={trigger}>
-                {trigger}
+              <option key={trigger.eventName} value={trigger.eventName}>
+                {trigger.eventName}
               </option>
             ))}
           </select>

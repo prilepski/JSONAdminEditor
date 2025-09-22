@@ -1,6 +1,6 @@
 import React from 'react';
 import { TemplateField } from '../../types/customerEvent';
-import { Template } from '../../types/template';
+import { Template } from '../../types';
 
 interface CustomerTemplateTableProps {
   templateFields: TemplateField[];

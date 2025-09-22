@@ -1,8 +1,5 @@
 import axios from 'axios';
-import { components } from '../generated/api';
-
-type EventMapping = components['schemas']['EventMapping'];
-type CustomerNotificationMapping = components['schemas']['CustomerNotificationMapping'];
+import { EventMapping, CustomerNotificationMapping } from '../types';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
