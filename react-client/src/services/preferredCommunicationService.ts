@@ -1,19 +1,20 @@
 import axios from 'axios';
-import { ApiResponse } from '../types/api';
+import { components } from '../generated/api';
+
+type PreferredCommunication = components['schemas']['PreferredCommunication'];
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/preferred-communication`,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/config`,
   headers: { 'Content-Type': 'application/json' },
 });
 
 export const preferredCommunicationService = {
-  getPreferredCommunication: async (): Promise<Record<string, any>[]> => {
-    const response = await api.get('/');
+  getPreferredCommunication: async (): Promise<PreferredCommunication[]> => {
+    const response = await api.get('/preferred-communication');
     return response.data;
   },
 
-  savePreferredCommunication: async (data: Record<string, any>[]): Promise<ApiResponse> => {
-    const response = await api.post('/save', { data });
-    return response.data;
+  savePreferredCommunication: async (data: PreferredCommunication[]): Promise<void> => {
+    await api.put('/preferred-communication', data);
   },
 };

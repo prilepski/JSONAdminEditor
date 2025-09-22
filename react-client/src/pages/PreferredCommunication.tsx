@@ -1,60 +1,42 @@
 import React from 'react';
-import { useFormState } from '../hooks/useFormState';
 import { JsonEditor } from '../components/JsonEditor';
 import {
   usePreferredCommunicationQuery,
   usePreferredCommunicationMutation,
 } from '../hooks/usePreferredCommunicationQuery';
-import { useDictionaryQuery } from '../hooks/useDictionaryQuery';
-import { ValidationError } from '../types/api';
+import { components } from '../generated/api';
 import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
+type PreferredCommunication = components['schemas']['PreferredCommunication'];
+type Channel = components['schemas']['Channel'];
+
 export const PreferredCommunication: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
-  const { data: eventChannelsData } = useDictionaryQuery(6); // FileType.EventChannels = 6
   const saveMutation = usePreferredCommunicationMutation();
   
-  const channelOptions = eventChannelsData?.data?.tableData?.map((row: any) => {
-    // Try different possible field names
-    return row['Channel Name'] || row['channelName'] || row['Channel'] || row['channel'];
-  }).filter(Boolean) || ['Email', 'SMS', 'Voice'];
-  
-  console.log('Event Channels Data:', eventChannelsData);
-  console.log('Extracted Channel Options:', channelOptions);
+  const channelOptions: Channel[] = ['Email', 'Sms', 'Voice'];
 
-  const { state, updateField } = useFormState({
-    validationErrors: [] as ValidationError[],
-  });
-
-  const { validationErrors } = state;
-
-  const columnNames = ['Channel', 'Priority'];
+  const columnNames = ['channel', 'priority'];
   const columnTypes = {
-    Channel: 'select',
-    Priority: 'number',
+    channel: 'select',
+    priority: 'number',
   };
 
   const handleSave = async (tableData: Record<string, any>[]) => {
-    updateField('validationErrors', []);
-
     try {
-      const result = await saveMutation.mutateAsync(tableData);
-      if (result.success) {
-        toast.success('Preferred Communication settings saved successfully!');
-        return { success: true, message: result.message };
-      } else {
-        toast.error(result.error || 'Failed to save preferred communication');
-        if (result.validationErrors) {
-          updateField('validationErrors', result.validationErrors);
-        }
-        return { success: false, error: result.error };
-      }
+      const preferredCommData: PreferredCommunication[] = tableData.map(row => ({
+        channel: row.channel as Channel,
+        priority: Number(row.priority)
+      }));
+      
+      await saveMutation.mutateAsync(preferredCommData);
+      toast.success('Preferred Communication settings saved successfully!');
+      return { success: true };
     } catch (error) {
-      const errorMessage = 'Error saving preferred communication';
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+      toast.error('Error saving preferred communication');
+      return { success: false, error: 'Error saving preferred communication' };
     }
   };
 
@@ -74,7 +56,7 @@ export const PreferredCommunication: React.FC = () => {
       </h1>
 
       <p className="text-muted mb-4">
-        Manage communication channel priorities. Channel values must be unique and exist in the Event Channels dictionary.
+        Manage communication channel priorities. Available channels: Email, SMS, Voice.
       </p>
 
       <div className="card">
@@ -91,9 +73,9 @@ export const PreferredCommunication: React.FC = () => {
               <JsonEditor
                 dictionaryData={dictionaryData}
                 selectedFileType={1}
-                validationErrors={validationErrors}
+                validationErrors={[]}
                 onSave={handleSave}
-                onClearValidationErrors={() => updateField('validationErrors', [])}
+                onClearValidationErrors={() => {}}
                 channelOptions={channelOptions}
               />
             </ComponentErrorBoundary>
