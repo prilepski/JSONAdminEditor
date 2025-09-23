@@ -7,3 +7,4 @@ export * from './customer';
 export * from './customerEvent';
 export * from './customerSettings';
 export * from './utils';
+export * from './errors';

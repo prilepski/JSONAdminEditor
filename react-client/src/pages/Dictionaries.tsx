@@ -1,11 +1,11 @@
 import React from 'react';
 import { useFormState } from '../hooks/useFormState';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { FileType, ValidationError, TableData } from '../types';
 import { useDictionaryQuery, useDictionaryMutation } from '../hooks/useDictionaryQuery';
 import { DictionarySelector } from '../components/DictionarySelector';
 import { FileUpload } from '../components/FileUpload';
 import { JsonEditor } from '../components/JsonEditor';
-import toast from 'react-hot-toast';
 
 import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
@@ -15,6 +15,7 @@ export const Dictionaries: React.FC = () => {
     selectedFileType: FileType.None,
     validationErrors: [] as ValidationError[],
   });
+  const { handleError } = useErrorHandler({ context: 'Dictionaries' });
 
   const { selectedFileType, validationErrors } = state;
 
@@ -41,26 +42,23 @@ export const Dictionaries: React.FC = () => {
       });
 
       if (result.success) {
-        toast.success(result.message || 'Dictionary saved successfully!');
         return { success: true, message: result.message };
       } else {
-        toast.error(result.error || 'Failed to save dictionary');
         if (result.validationErrors) {
           updateField('validationErrors', result.validationErrors);
         }
         return { success: false, error: result.error };
       }
     } catch (error) {
-      const errorMessage = 'Error saving dictionary';
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+      handleError(error);
+      return { success: false, error: 'Error saving dictionary' };
     }
   };
 
   return (
     <PageErrorBoundary pageName="Dictionaries">
       <PageHeader icon="fa-cog" title="Dictionary Management" />
-      {error && toast.error(String(error))}
+      {error && handleError(error)}
 
       <ComponentErrorBoundary componentName="Dictionary Selector">
         <DictionarySelector

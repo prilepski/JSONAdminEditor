@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -15,11 +15,34 @@ import { PreferredCommunication } from './pages/PreferredCommunication';
 import { AfterHours } from './pages/AfterHours';
 import { OptOut } from './pages/OptOut';
 import { AuthProvider, ProtectedRoute, LoginCallback } from './auth';
+import { setupGlobalErrorHandling, cleanupGlobalErrorHandling } from './utils/globalErrorHandler';
 
 import './App.css';
 
 function App() {
-  const queryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = useMemo(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: (failureCount, error) => {
+          // Don't retry on auth errors
+          if ((error as any)?.status === 401 || (error as any)?.status === 403) {
+            return false;
+          }
+          // Retry up to 2 times for other errors
+          return failureCount < 2;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      },
+      mutations: {
+        retry: false, // Don't retry mutations
+      },
+    },
+  }), []);
+
+  useEffect(() => {
+    setupGlobalErrorHandling();
+    return cleanupGlobalErrorHandling;
+  }, []);
 
   return (
     <PageErrorBoundary pageName="Application">

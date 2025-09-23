@@ -5,15 +5,16 @@ import {
   usePreferredCommunicationMutation,
 } from '../hooks/usePreferredCommunicationQuery';
 import { useQuery } from '@tanstack/react-query';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { FileType, PreferredCommunication, Channel } from '../types';
 import axios from 'axios';
-import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 const PreferredCommunicationPage: React.FC = () => {
   const { data = [], isLoading } = usePreferredCommunicationQuery();
   const saveMutation = usePreferredCommunicationMutation();
+  const { handleError } = useErrorHandler({ context: 'PreferredCommunication' });
   
   const { data: eventChannels = [] } = useQuery({
     queryKey: ['eventChannels'],
@@ -39,10 +40,9 @@ const PreferredCommunicationPage: React.FC = () => {
       }));
       
       await saveMutation.mutateAsync(preferredCommData);
-      toast.success('Preferred Communication settings saved successfully!');
       return { success: true };
     } catch (error) {
-      toast.error('Error saving preferred communication');
+      handleError(error);
       return { success: false, error: 'Error saving preferred communication' };
     }
   };

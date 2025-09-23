@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { optOutService } from '../services/optOutService';
 import { OptOutLocale } from '../types';
+import { useErrorHandler } from './useErrorHandler';
 
 export const useOptOutQuery = () => {
   return useQuery({
@@ -53,6 +55,7 @@ export const useOptOutQuery = () => {
 
 export const useOptOutMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'OptOut' });
 
   return useMutation({
     mutationFn: (tableData: any[]) => {
@@ -80,6 +83,10 @@ export const useOptOutMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['optOut'] });
+      toast.success('Opt-out configuration saved successfully');
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save opt-out configuration');
     },
   });
 };

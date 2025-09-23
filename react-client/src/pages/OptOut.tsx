@@ -1,9 +1,9 @@
 import React from 'react';
 import { JsonEditor } from '../components/JsonEditor';
 import { useOptOutQuery, useOptOutMutation } from '../hooks/useOptOutQuery';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { FileType, ValidationError } from '../types';
 import { useFormState } from '../hooks/useFormState';
-import toast from 'react-hot-toast';
 import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
@@ -11,15 +11,15 @@ const OptOutPage: React.FC = () => {
   const { data, isLoading } = useOptOutQuery();
   const saveMutation = useOptOutMutation();
   const { state, updateField } = useFormState({ validationErrors: [] as ValidationError[] });
+  const { handleError } = useErrorHandler({ context: 'OptOut' });
 
   const handleSave = async (tableData: any[]) => {
     updateField('validationErrors', []);
     try {
       await saveMutation.mutateAsync(tableData);
-      toast.success('Opt-out configuration saved successfully!');
       return { success: true };
     } catch (error) {
-      toast.error('Error saving opt-out configuration');
+      handleError(error);
       return { success: false, error: 'Error saving opt-out configuration' };
     }
   };

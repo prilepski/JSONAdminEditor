@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { FileType } from '../types';
 import { dictionaryService } from '../services';
+import { useErrorHandler } from './useErrorHandler';
 
 export const useDictionaryQuery = (fileType: FileType) => {
   return useQuery({
@@ -12,6 +14,7 @@ export const useDictionaryQuery = (fileType: FileType) => {
 
 export const useDictionaryMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'DictionaryMutation' });
 
   return useMutation({
     mutationFn: ({
@@ -25,17 +28,26 @@ export const useDictionaryMutation = () => {
     }) => dictionaryService.save(filePath, jsonData, fileType),
     onSuccess: (_, { fileType }) => {
       queryClient.invalidateQueries({ queryKey: ['dictionary', fileType] });
+      toast.success('Dictionary saved successfully');
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save dictionary');
     },
   });
 };
 
 export const useUploadMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'FileUpload' });
 
   return useMutation({
     mutationFn: dictionaryService.upload,
     onSuccess: (_, { fileType }) => {
       queryClient.invalidateQueries({ queryKey: ['dictionary', fileType] });
+      toast.success('File uploaded successfully');
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to upload file');
     },
   });
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFormState } from '../hooks/useFormState';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import {
   useEventTriggersQuery,
   useOrderTypesQuery,
@@ -9,7 +10,6 @@ import {
   useEventMutation,
 } from '../hooks/useEventQuery';
 import { EventTrigger, OrderType, Template } from '../types';
-import toast from 'react-hot-toast';
 import { PageHeader, TabNavigation, SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { EventSelector } from '../components/events/EventSelector';
@@ -39,6 +39,7 @@ export const Events: React.FC = () => {
     activeTab: 'event-data',
     isNewEvent: false,
   });
+  const { handleError } = useErrorHandler({ context: 'Events' });
 
   const [eventData, setEventData] = useState<EventData | null>(null);
   const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
@@ -85,10 +86,9 @@ export const Events: React.FC = () => {
         eventData,
       });
       
-      toast.success(`Event '${selectedEvent}' ${isNewEvent ? 'added' : 'updated'} successfully!`);
       updateField('isNewEvent', false);
     } catch (error) {
-      toast.error('Error saving event data');
+      handleError(error, 'Failed to save event data');
     }
   };
 

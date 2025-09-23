@@ -1,5 +1,6 @@
 import React from 'react';
 import { useFormState } from '../hooks/useFormState';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { JsonEditor } from '../components/JsonEditor';
 import {
   useContentVariablesQuery,
@@ -8,7 +9,6 @@ import {
 import { FileType, ValidationError, TableData } from '../types';
 
 type ContentVariables = Record<string, string>;
-import toast from 'react-hot-toast';
 
 import { PageHeader, TableSkeleton } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
@@ -16,6 +16,7 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const ContentVariables: React.FC = () => {
   const { data = {} as ContentVariables, isLoading } = useContentVariablesQuery();
   const saveMutation = useContentVariablesMutation();
+  const { handleError } = useErrorHandler({ context: 'ContentVariables' });
 
   const { state, updateField } = useFormState({
     validationErrors: [] as ValidationError[],
@@ -36,10 +37,9 @@ export const ContentVariables: React.FC = () => {
       });
       
       await saveMutation.mutateAsync(contentVars);
-      toast.success('Content Variables saved successfully!');
       return { success: true };
     } catch (error) {
-      toast.error('Error saving content variables');
+      handleError(error);
       return { success: false, error: 'Error saving content variables' };
     }
   };

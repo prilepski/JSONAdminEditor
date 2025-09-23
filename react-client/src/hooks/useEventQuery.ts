@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { eventService } from '../services';
+import { useErrorHandler } from './useErrorHandler';
 
 export const useEventTriggersQuery = () => {
   return useQuery({
@@ -39,6 +41,7 @@ export const useEventQuery = (eventName: string, orderType: string) => {
 
 export const useEventMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'EventMutation' });
 
   return useMutation({
     mutationFn: ({ eventName, orderType, eventData }: {
@@ -49,18 +52,27 @@ export const useEventMutation = () => {
     onSuccess: (_, { eventName, orderType }) => {
       queryClient.invalidateQueries({ queryKey: ['event', eventName, orderType] });
       queryClient.invalidateQueries({ queryKey: ['allEvents'] });
+      toast.success(`Event '${eventName}' saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save event');
     },
   });
 };
 
 export const useEventDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'EventDelete' });
 
   return useMutation({
     mutationFn: ({ eventName, orderType }: { eventName: string; orderType: string }) => 
       eventService.deleteEvent(eventName, orderType),
-    onSuccess: () => {
+    onSuccess: (_, { eventName }) => {
       queryClient.invalidateQueries({ queryKey: ['allEvents'] });
+      toast.success(`Event '${eventName}' deleted successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to delete event');
     },
   });
 };

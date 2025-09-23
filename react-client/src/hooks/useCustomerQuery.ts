@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { customerService } from '../services';
 import { EventMapping, CustomerNotificationMapping } from '../types';
+import { useErrorHandler } from './useErrorHandler';
 
 export const useCustomersQuery = () => {
   return useQuery({
@@ -27,24 +29,34 @@ export const useCustomerSettingsQuery = (customerId: string) => {
 
 export const useCustomerEventsMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerEvents' });
 
   return useMutation({
     mutationFn: ({ customerId, eventName, orderType, data }: { customerId: string; eventName: string; orderType: string; data: EventMapping }) =>
       customerService.saveCustomerEvents(customerId, eventName, orderType, data),
-    onSuccess: (_, { customerId }) => {
+    onSuccess: (_, { customerId, eventName }) => {
       queryClient.invalidateQueries({ queryKey: ['customerEvents', customerId] });
+      toast.success(`Customer event '${eventName}' saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer event');
     },
   });
 };
 
 export const useCustomerSettingsMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerSettings' });
 
   return useMutation({
     mutationFn: ({ customerId, data }: { customerId: string; data: CustomerNotificationMapping }) =>
       customerService.saveCustomerSettings(customerId, data),
     onSuccess: (_, { customerId }) => {
       queryClient.invalidateQueries({ queryKey: ['customerSettings', customerId] });
+      toast.success(`Customer settings for '${customerId}' saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer settings');
     },
   });
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFormState } from '../hooks/useFormState';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import {
   useCustomersQuery,
   useCustomerEventsQuery,
@@ -7,7 +8,6 @@ import {
 } from '../hooks/useCustomerQuery';
 import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery';
 import { EventTrigger, Template } from '../types';
-import toast from 'react-hot-toast';
 import {
   CustomerEventData,
   EventField,
@@ -35,6 +35,7 @@ export const CustomerEvents: React.FC = () => {
     selectedOrderType: 'Delivery',
     activeTab: 'event-data',
   });
+  const { handleError } = useErrorHandler({ context: 'CustomerEvents' });
 
   const [eventFields, setEventFields] = useState<EventField[]>([]);
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
@@ -170,9 +171,8 @@ export const CustomerEvents: React.FC = () => {
         orderType: selectedOrderType,
         data: saveData as any,
       });
-      toast.success(`Customer event '${selectedEvent}' saved successfully!`);
     } catch (error) {
-      toast.error('Error saving customer event');
+      handleError(error, 'Failed to save customer event');
     }
   };
 

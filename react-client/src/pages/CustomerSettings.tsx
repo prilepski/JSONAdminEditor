@@ -5,8 +5,7 @@ import {
   useCustomerSettingsMutation,
 } from '../hooks/useCustomerQuery';
 import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
-
-import toast from 'react-hot-toast';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { CustomerContentVariable } from '../types/customer';
 import { CustomerSettingsData } from '../types/customerSettings';
 import {
@@ -21,6 +20,7 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [contentVariables, setContentVariables] = useState<CustomerContentVariable[]>([]);
+  const { handleError } = useErrorHandler({ context: 'CustomerSettings' });
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
   const { data: customerSettings, isLoading: settingsLoading } =
@@ -88,17 +88,12 @@ export const CustomerSettings: React.FC = () => {
     });
 
     try {
-      const success = await saveMutation.mutateAsync({
+      await saveMutation.mutateAsync({
         customerId: selectedCustomer,
         data: saveData,
       });
-      if (success) {
-        toast.success(`Customer content variables for '${selectedCustomer}' saved successfully!`);
-      } else {
-        toast.error('Failed to save customer settings');
-      }
     } catch (error) {
-      toast.error('Error saving customer settings');
+      handleError(error, 'Failed to save customer settings');
     }
   };
 

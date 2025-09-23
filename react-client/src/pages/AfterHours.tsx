@@ -2,8 +2,8 @@ import React from 'react';
 import { useAfterHoursQuery, useAfterHoursMutation } from '../hooks/useAfterHoursQuery';
 import { useEventTriggersQuery, useOrderTypesQuery } from '../hooks/useEventTriggersQuery';
 import { useAfterHoursForm } from '../hooks/useAfterHoursForm';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { AfterHours2 } from '../types';
-import toast from 'react-hot-toast';
 import { SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { TimeInputs } from '../components/afterhours/TimeInputs';
@@ -15,13 +15,13 @@ export const AfterHours: React.FC = () => {
   const { data: orderTypes = [] } = useOrderTypesQuery();
   const saveMutation = useAfterHoursMutation();
   const { formData, updateTime, addEvent, removeEvent, updateEvent } = useAfterHoursForm(data);
+  const { handleError } = useErrorHandler({ context: 'AfterHours' });
 
   const handleSave = async () => {
     try {
       await saveMutation.mutateAsync(formData as AfterHours2);
-      toast.success('After Hours settings saved successfully!');
     } catch (error) {
-      toast.error('Error saving after hours settings');
+      handleError(error, 'Failed to save after hours settings');
     }
   };
 
