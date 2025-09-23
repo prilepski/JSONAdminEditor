@@ -13,6 +13,7 @@ import { CustomerEvents } from './pages/CustomerEvents';
 import { CustomerSettings } from './pages/CustomerSettings';
 import { PreferredCommunication } from './pages/PreferredCommunication';
 import { AfterHours } from './pages/AfterHours';
+import { OptOut } from './pages/OptOut';
 import { AuthProvider, ProtectedRoute, LoginCallback } from './auth';
 
 import './App.css';
@@ -62,6 +63,7 @@ function App() {
                                     element={<PreferredCommunication />}
                                   />
                                   <Route path="/after-hours" element={<AfterHours />} />
+                                  <Route path="/opt-out" element={<OptOut />} />
                                 </Routes>
                               </div>
                             </main>
