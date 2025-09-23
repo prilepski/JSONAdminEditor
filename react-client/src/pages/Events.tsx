@@ -5,7 +5,7 @@ import {
   useOrderTypesQuery,
   useTemplatesQuery,
   useEventQuery,
-  useEventSupportQuery,
+  useAllEventsQuery,
   useEventMutation,
 } from '../hooks/useEventQuery';
 import { EventTrigger, OrderType, Template } from '../types';
@@ -16,20 +16,20 @@ import { EventSelector } from '../components/events/EventSelector';
 import { EventDataForm } from '../components/events/EventDataForm';
 import { TemplateSelectionForm } from '../components/events/TemplateSelectionForm';
 import { ContentVariablesForm } from '../components/events/ContentVariablesForm';
+import { PreferredCommunicationForm } from '../components/events/PreferredCommunicationForm';
+import { TriggerConditionsForm } from '../components/events/TriggerConditionsForm';
 
 interface EventData {
-  Event?: string;
-  OrderType?: string;
-  Phone?: string;
-  Email?: string;
-  Logo?: string;
-  IsSuppressed?: boolean;
-  Templates?: {
-    Email?: string;
-    Sms?: string;
-    Voice?: string;
-  };
-  ContentVariables?: Record<string, string>;
+  event: string;
+  orderType: string;
+  phone?: string;
+  email?: string;
+  templates?: Record<string, string>;
+  isSuppressed?: boolean;
+  preferredCommunication?: Array<{ channel: string; priority: number }>;
+  contentVariables?: Record<string, string>;
+  triggerConditions?: Record<string, boolean>;
+  contentVariablesOverrides?: Record<string, Record<string, Record<string, string>>>;
 }
 
 export const Events: React.FC = () => {
@@ -42,12 +42,9 @@ export const Events: React.FC = () => {
 
   const [eventData, setEventData] = useState<EventData | null>(null);
   const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
-  const { data: activeEventTriggers = [] as EventTrigger[], isLoading: triggersLoading } = useEventTriggersQuery();
   const { data: availableOrderTypes = [] as OrderType[], isLoading: orderTypesLoading } = useOrderTypesQuery();
   const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery();
-
-  const { data: eventSupports = false, isLoading: supportsLoading } =
-    useEventSupportQuery(selectedEvent);
+  const { data: allEvents = [] } = useAllEventsQuery();
   const { data: eventInfo, isLoading: eventLoading } = useEventQuery(
     selectedEvent,
     selectedOrderType
@@ -55,44 +52,41 @@ export const Events: React.FC = () => {
   const eventMutation = useEventMutation();
 
   useEffect(() => {
-    if (eventInfo && Object.keys(eventInfo).length > 0) {
+    if (eventInfo) {
       setEventData(eventInfo);
       updateField('isNewEvent', false);
-    } else if (selectedEvent) {
+    } else if (selectedEvent && selectedOrderType) {
       updateField('isNewEvent', true);
       setEventData({
-        Event: selectedEvent,
-        OrderType: selectedOrderType,
-        Phone: '$consigneeContact.phone$',
-        Email: '$consigneeContact.email$',
-        Logo: 'base64',
-        IsSuppressed: false,
-        Templates: { Email: '', Sms: '', Voice: '' },
-        ContentVariables: {},
+        event: selectedEvent,
+        orderType: selectedOrderType,
+        phone: '$consigneeContact.phone$',
+        email: '$consigneeContact.email$',
+        templates: {},
+        isSuppressed: false,
+        preferredCommunication: [],
+        contentVariables: {},
+        triggerConditions: {},
+        contentVariablesOverrides: {},
       });
     } else {
       setEventData(null);
       updateField('isNewEvent', false);
     }
-  }, [selectedEvent, selectedOrderType, eventSupports, eventInfo, updateField]);
+  }, [selectedEvent, selectedOrderType, eventInfo, updateField]);
 
   const handleSaveEventData = async () => {
     if (!eventData || !selectedEvent) return;
 
     try {
-      const success = await eventMutation.mutateAsync({
+      await eventMutation.mutateAsync({
         eventName: selectedEvent,
         orderType: selectedOrderType,
         eventData,
-        isNew: isNewEvent,
       });
-
-      if (success) {
-        toast.success(`Event '${selectedEvent}' ${isNewEvent ? 'added' : 'updated'} successfully!`);
-        updateField('isNewEvent', false);
-      } else {
-        toast.error('Failed to save event data');
-      }
+      
+      toast.success(`Event '${selectedEvent}' ${isNewEvent ? 'added' : 'updated'} successfully!`);
+      updateField('isNewEvent', false);
     } catch (error) {
       toast.error('Error saving event data');
     }
@@ -107,24 +101,34 @@ export const Events: React.FC = () => {
       prev
         ? {
             ...prev,
-            Templates: { ...prev.Templates, [channel]: value },
+            templates: { ...prev.templates, [channel]: value },
           }
         : null
     );
   };
 
   const updateContentVariables = (variables: Record<string, string>) => {
-    setEventData((prev) => (prev ? { ...prev, ContentVariables: variables } : null));
+    setEventData((prev) => (prev ? { ...prev, contentVariables: variables } : null));
+  };
+
+  const updatePreferredCommunication = (communication: Array<{ channel: string; priority: number }>) => {
+    setEventData((prev) => (prev ? { ...prev, preferredCommunication: communication } : null));
+  };
+
+  const updateTriggerConditions = (conditions: Record<string, boolean>) => {
+    setEventData((prev) => (prev ? { ...prev, triggerConditions: conditions } : null));
   };
 
   const tabs = [
     { id: 'event-data', label: 'Event Data', icon: 'fa-cog' },
     { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
     { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
+    { id: 'preferred-communication', label: 'Preferred Communication', icon: 'fa-comments' },
+    { id: 'trigger-conditions', label: 'Trigger Conditions', icon: 'fa-filter' },
   ];
 
-  const isInitialLoading = triggersLoading || orderTypesLoading || templatesLoading;
-  const isEventDataLoading = selectedEvent && (supportsLoading || eventLoading);
+  const isInitialLoading = orderTypesLoading || templatesLoading;
+  const isEventDataLoading = selectedEvent && eventLoading;
 
   return (
     <PageErrorBoundary pageName="Events">
@@ -137,9 +141,8 @@ export const Events: React.FC = () => {
           <EventSelector
             selectedEvent={selectedEvent}
             selectedOrderType={selectedOrderType}
-            eventTriggers={activeEventTriggers}
+            allEvents={allEvents}
             orderTypes={availableOrderTypes}
-            eventSupportsByOrderType={eventSupports}
             onEventChange={(event) => updateField('selectedEvent', event)}
             onOrderTypeChange={(orderType) => updateField('selectedOrderType', orderType)}
           />
@@ -175,14 +178,18 @@ export const Events: React.FC = () => {
 
                 {activeTab === 'event-data' && (
                   <ComponentErrorBoundary componentName="Event Data Form">
-                    <EventDataForm eventData={eventData} onUpdate={updateEventField} />
+                    <EventDataForm 
+                      eventData={eventData} 
+                      orderTypes={availableOrderTypes}
+                      onUpdate={updateEventField} 
+                    />
                   </ComponentErrorBoundary>
                 )}
 
                 {activeTab === 'templates' && (
                   <ComponentErrorBoundary componentName="Template Selection">
                     <TemplateSelectionForm
-                      templates={eventData.Templates || {}}
+                      templates={eventData.templates || {}}
                       availableTemplates={availableTemplates}
                       onUpdate={updateTemplateField}
                     />
@@ -192,8 +199,26 @@ export const Events: React.FC = () => {
                 {activeTab === 'content-variables' && (
                   <ComponentErrorBoundary componentName="Content Variables">
                     <ContentVariablesForm
-                      contentVariables={eventData.ContentVariables || {}}
+                      contentVariables={eventData.contentVariables || {}}
                       onUpdate={updateContentVariables}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+
+                {activeTab === 'preferred-communication' && (
+                  <ComponentErrorBoundary componentName="Preferred Communication">
+                    <PreferredCommunicationForm
+                      preferredCommunication={eventData.preferredCommunication || []}
+                      onUpdate={updatePreferredCommunication}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+
+                {activeTab === 'trigger-conditions' && (
+                  <ComponentErrorBoundary componentName="Trigger Conditions">
+                    <TriggerConditionsForm
+                      triggerConditions={eventData.triggerConditions || {}}
+                      onUpdate={updateTriggerConditions}
                     />
                   </ComponentErrorBoundary>
                 )}

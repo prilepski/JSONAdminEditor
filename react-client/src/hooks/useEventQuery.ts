@@ -15,10 +15,17 @@ export const useOrderTypesQuery = () => {
   });
 };
 
-export const useTemplatesQuery = (orderType?: string) => {
+export const useTemplatesQuery = () => {
   return useQuery({
-    queryKey: ['templates', orderType],
-    queryFn: () => eventService.getAvailableTemplates(orderType),
+    queryKey: ['templates'],
+    queryFn: eventService.getAvailableTemplates,
+  });
+};
+
+export const useAllEventsQuery = () => {
+  return useQuery({
+    queryKey: ['allEvents'],
+    queryFn: eventService.getAllEvents,
   });
 };
 
@@ -26,15 +33,7 @@ export const useEventQuery = (eventName: string, orderType: string) => {
   return useQuery({
     queryKey: ['event', eventName, orderType],
     queryFn: () => eventService.getEventByNameAndOrderType(eventName, orderType),
-    enabled: !!eventName,
-  });
-};
-
-export const useEventSupportQuery = (eventName: string) => {
-  return useQuery({
-    queryKey: ['eventSupport', eventName],
-    queryFn: () => eventService.checkEventSupportsByOrderType(eventName),
-    enabled: !!eventName,
+    enabled: !!eventName && !!orderType,
   });
 };
 
@@ -42,20 +41,26 @@ export const useEventMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      eventName,
-      orderType,
-      eventData,
-      isNew,
-    }: {
+    mutationFn: ({ eventName, orderType, eventData }: {
       eventName: string;
       orderType: string;
       eventData: any;
-      isNew: boolean;
-    }) => eventService.saveEvent(eventName, orderType, eventData, isNew),
+    }) => eventService.saveEvent(eventName, orderType, eventData),
     onSuccess: (_, { eventName, orderType }) => {
       queryClient.invalidateQueries({ queryKey: ['event', eventName, orderType] });
-      queryClient.invalidateQueries({ queryKey: ['eventTriggers'] });
+      queryClient.invalidateQueries({ queryKey: ['allEvents'] });
+    },
+  });
+};
+
+export const useEventDeleteMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventName, orderType }: { eventName: string; orderType: string }) => 
+      eventService.deleteEvent(eventName, orderType),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allEvents'] });
     },
   });
 };

@@ -1,12 +1,11 @@
-import React from 'react';
-import { EventTrigger, OrderType } from '../../types';
+import React, { useMemo } from 'react';
+import { EventMapping, OrderType } from '../../types';
 
 interface EventSelectorProps {
   selectedEvent: string;
   selectedOrderType: string;
-  eventTriggers: EventTrigger[];
+  allEvents: EventMapping[];
   orderTypes: OrderType[];
-  eventSupportsByOrderType: boolean;
   onEventChange: (event: string) => void;
   onOrderTypeChange: (orderType: string) => void;
 }
@@ -14,33 +13,37 @@ interface EventSelectorProps {
 export const EventSelector: React.FC<EventSelectorProps> = ({
   selectedEvent,
   selectedOrderType,
-  eventTriggers,
+  allEvents,
   orderTypes,
-  eventSupportsByOrderType,
   onEventChange,
   onOrderTypeChange,
-}) => (
-  <div className="card mb-4">
-    <div className="card-header">
-      <h3>Select Event</h3>
-    </div>
-    <div className="card-body">
-      <div className="row">
-        <div className="col-md-6">
-          <select
-            className="form-select"
-            value={selectedEvent}
-            onChange={(e) => onEventChange(e.target.value)}
-          >
-            <option value="">Select an event...</option>
-            {eventTriggers.map((trigger) => (
-              <option key={trigger.eventName} value={trigger.eventName}>
-                {trigger.eventName}
-              </option>
-            ))}
-          </select>
-        </div>
-        {eventSupportsByOrderType && (
+}) => {
+  const uniqueEvents = useMemo(() => 
+    [...new Set(allEvents.map(event => event.event))], 
+    [allEvents]
+  );
+  
+  return (
+    <div className="card mb-4">
+      <div className="card-header">
+        <h3>Select Event</h3>
+      </div>
+      <div className="card-body">
+        <div className="row">
+          <div className="col-md-6">
+            <select
+              className="form-select"
+              value={selectedEvent}
+              onChange={(e) => onEventChange(e.target.value)}
+            >
+              <option value="">Select an event...</option>
+              {uniqueEvents.map((eventName) => (
+                <option key={eventName} value={eventName}>
+                  {eventName}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="col-md-6">
             <select
               className="form-select"
@@ -54,8 +57,8 @@ export const EventSelector: React.FC<EventSelectorProps> = ({
               ))}
             </select>
           </div>
-        )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

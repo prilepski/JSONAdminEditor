@@ -1,54 +1,39 @@
 import axios from 'axios';
-import { Template, EventTrigger, OrderType } from '../types';
-
-const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL || '/api'}/dictionaries`,
-  headers: { 'Content-Type': 'application/json' },
-});
+import { Template, EventTrigger, OrderType, EventMapping } from '../types';
 
 export const eventService = {
+  // Dictionary endpoints
   getActiveEventTriggers: async (): Promise<EventTrigger[]> => {
-    const response = await api.get('/event-triggers');
+    const response = await axios.get('/api/dictionaries/event-triggers');
     return response.data;
   },
 
   getAvailableOrderTypes: async (): Promise<OrderType[]> => {
-    const response = await api.get('/order-types');
+    const response = await axios.get('/api/dictionaries/order-types');
     return response.data;
   },
 
-  getAvailableTemplates: async (orderType?: string): Promise<Template[]> => {
-    const response = await api.get('/templates');
+  getAvailableTemplates: async (): Promise<Template[]> => {
+    const response = await axios.get('/api/dictionaries/templates');
     return response.data;
   },
 
-  checkEventSupportsByOrderType: async (eventName: string): Promise<boolean> => {
-    const response = await api.get(`/supports-order-type?eventName=${eventName}`);
+  // Config endpoints
+  getAllEvents: async (): Promise<EventMapping[]> => {
+    const response = await axios.get('/api/config/events');
     return response.data;
   },
 
-  getEventByNameAndOrderType: async (eventName: string, orderType: string): Promise<any> => {
-    const response = await api.get(`/data?eventName=${eventName}&orderType=${orderType}`);
+  getEventByNameAndOrderType: async (eventName: string, orderType: string): Promise<EventMapping> => {
+    const response = await axios.get(`/api/config/events/${eventName}/order-types/${orderType}`);
     return response.data;
   },
 
-  getEventTemplate: async (): Promise<any> => {
-    const response = await api.get('/template');
-    return response.data;
+  saveEvent: async (eventName: string, orderType: string, eventData: EventMapping): Promise<void> => {
+    await axios.put(`/api/config/events/${eventName}/order-types/${orderType}`, eventData);
   },
 
-  saveEvent: async (
-    eventName: string,
-    orderType: string,
-    eventData: any,
-    isNew: boolean
-  ): Promise<boolean> => {
-    const response = await api.post('/save', {
-      eventName,
-      orderType,
-      eventData,
-      isNew,
-    });
-    return response.data.success;
+  deleteEvent: async (eventName: string, orderType: string): Promise<void> => {
+    await axios.delete(`/api/config/events/${eventName}/order-types/${orderType}`);
   },
 };
