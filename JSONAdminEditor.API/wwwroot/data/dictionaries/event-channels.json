@@ -10,9 +10,5 @@
   {
     "ChannelName": "Voice",
     "IsActive": true
-  },
-  {
-    "ChannelName": "doves",
-    "IsActive": false
   }
 ]
