@@ -259,4 +259,47 @@ public class CustomersController : ControllerBase
         await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
         return Ok(new { success = true, message = "Customer from email updated successfully!" });
     }
+
+    [HttpGet("{customerId:minlength(1):maxlength(50)}/content-variables-overrides")]
+    [ProducesResponseType(200, Type = typeof(Dictionary<string, Dictionary<string, Dictionary<string, string>>>))]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
+    public async Task<ActionResult<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>> GetCustomerContentVariablesOverrides(string customerId)
+    {
+        if (!IsValidCustomerId(customerId))
+            return BadRequest(new { error = "Invalid customer ID" });
+
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
+            return NotFound(new { error = "Customer not found" });
+
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
+        return Ok(customerData.ContentVariablesOverrides);
+    }
+
+    [HttpPut("{customerId:minlength(1):maxlength(50)}/content-variables-overrides")]
+    [Consumes("application/json")]
+    [ProducesResponseType(200, Type = typeof(object))]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> UpdateCustomerContentVariablesOverrides(string customerId, [FromBody] Dictionary<string, Dictionary<string, Dictionary<string, string>>> contentVariablesOverrides)
+    {
+        if (!IsValidCustomerId(customerId))
+            return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });
+        
+        if (contentVariablesOverrides == null)
+            return BadRequest(new { success = false, error = "Content variables overrides data is required" });
+        
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
+            return NotFound(new { success = false, error = "Customer not found" });
+        
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
+        customerData.ContentVariablesOverrides = contentVariablesOverrides;
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+        return Ok(new { success = true, message = "Customer content variables overrides updated successfully!" });
+    }
 }
