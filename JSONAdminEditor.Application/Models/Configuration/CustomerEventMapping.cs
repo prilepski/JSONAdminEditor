@@ -1,7 +1,4 @@
-﻿using JSONAdminEditor.Application.Models.Structure;
-using System.ComponentModel.DataAnnotations;
-
-namespace JSONAdminEditor.Application.Models;
+﻿namespace JSONAdminEditor.Application.Models.Configuration;
 
 public class CustomerEventMapping : EventMapping
 {

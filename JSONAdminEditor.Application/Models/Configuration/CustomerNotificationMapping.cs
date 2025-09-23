@@ -1,12 +1,19 @@
-namespace JSONAdminEditor.Application.Models.Structure;
+using System.Text.Json.Serialization;
+
+namespace JSONAdminEditor.Application.Models.Configuration;
 
 public class CustomerNotificationMapping
 {
-    public List<CustomerEventMapping> EventMappings { get; set; } = new();
+    public List<PreferredCommunication> PreferredCommunication { get; set; } = new();
+
     public Dictionary<string, string> ContentVariables { get; set; } = new();
+
     public Dictionary<string, Dictionary<string, Dictionary<string, string>>> ContentVariablesOverrides { get; set; } = [];
 
-    public List<PreferredCommunication> PreferredCommunication { get; set; } = new();
+    [JsonPropertyName("Events")]
+    public List<CustomerEventMapping> EventMappings { get; set; } = new();
+
     public AfterHours? AfterHours { get; set; }
+
     public string? FromEmail { get; set; }
 }

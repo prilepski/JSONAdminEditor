@@ -1,4 +1,4 @@
-﻿namespace JSONAdminEditor.Application.Models.Structure;
+﻿namespace JSONAdminEditor.Application.Models.Configuration;
 
 public class AfterHours
 {

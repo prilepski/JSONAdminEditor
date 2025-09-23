@@ -45,7 +45,6 @@ builder.Services.AddScoped<IFileContentService, FileContentService>();
 builder.Services.AddScoped<IJsonFileService, JsonFileService>();
 builder.Services.AddScoped<UniqueFieldValidationService>();
 builder.Services.AddScoped<NotificationsService>();
-builder.Services.AddSingleton<IMockDatabaseService, MockDatabaseService>();
 builder.Services.AddScoped<IDataMigrationService, DataMigrationService>();
 builder.Services.AddScoped<IBackwardCompatibilityService, BackwardCompatibilityService>();
 

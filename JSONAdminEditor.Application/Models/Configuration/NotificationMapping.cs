@@ -1,14 +1,12 @@
 using System.Text.Json.Serialization;
 
-namespace JSONAdminEditor.Application.Models.Structure;
+namespace JSONAdminEditor.Application.Models.Configuration;
 
 public class NotificationMapping
 {
     public List<PreferredCommunication> PreferredCommunication { get; set; } = [];
 
     public Dictionary<string, string> ContentVariables { get; set; } = [];
-
-    public Dictionary<string, Dictionary<string, Dictionary<string, string>>> ContentVariablesOverrides { get; set; } = [];
 
     [JsonPropertyName("Events")]
     public List<EventMapping> EventMappings { get; set; } = [];

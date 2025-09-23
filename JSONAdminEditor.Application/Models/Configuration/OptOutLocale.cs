@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace JSONAdminEditor.Application.Models.Structure;
+namespace JSONAdminEditor.Application.Models.Configuration;
 
 public class OptOutLocale
 {

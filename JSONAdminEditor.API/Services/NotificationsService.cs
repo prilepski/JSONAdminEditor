@@ -1,6 +1,5 @@
-using JSONAdminEditor.Models;
 using System.Text.Json;
-using JSONAdminEditor.Application.Models.Structure;
+using JSONAdminEditor.Application.Models.Configuration;
 using JSONAdminEditor.Application.Models.Dictionaries;
 
 namespace JSONAdminEditor.Services

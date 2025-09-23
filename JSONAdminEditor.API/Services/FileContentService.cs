@@ -11,18 +11,11 @@ namespace JSONAdminEditor.Services
         string MapToStoragePath(string filePath);
     }
 
-    public class FileContentService : IFileContentService
+    public class FileContentService(IStorageServiceFactory storageServiceFactory, IOptions<StorageSettings> storageSettings, IWebHostEnvironment environment) : IFileContentService
     {
-        private readonly IStorageServiceFactory _storageServiceFactory;
-        private readonly StorageSettings _storageSettings;
-        private readonly IWebHostEnvironment _environment;
-
-        public FileContentService(IStorageServiceFactory storageServiceFactory, IOptions<StorageSettings> storageSettings, IWebHostEnvironment environment)
-        {
-            _storageServiceFactory = storageServiceFactory;
-            _storageSettings = storageSettings.Value;
-            _environment = environment;
-        }
+        private readonly IStorageServiceFactory _storageServiceFactory = storageServiceFactory;
+        private readonly StorageSettings _storageSettings = storageSettings.Value;
+        private readonly IWebHostEnvironment _environment = environment;
 
         public async Task<string> ReadFileAsync(string filePath)
         {

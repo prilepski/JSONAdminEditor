@@ -1,4 +1,4 @@
-using JSONAdminEditor.Application.Models.Structure;
+using JSONAdminEditor.Application.Models.Configuration;
 using System.Text.Json;
 
 namespace JSONAdminEditor.Services;

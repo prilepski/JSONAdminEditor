@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
-using JSONAdminEditor.Application.Models.Structure;
+using System.Text.Json;
+using JSONAdminEditor.Application.Models.Configuration;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -9,11 +10,13 @@ namespace JSONAdminEditor.Controllers;
 [Produces("application/json")]
 public class ConfigEventsController : ControllerBase
 {
-    private readonly IMockDatabaseService _mockDb;
+    private readonly IFileContentService _fileService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public ConfigEventsController(IMockDatabaseService mockDb)
+    public ConfigEventsController(IFileContentService fileService)
     {
-        _mockDb = mockDb;
+        _fileService = fileService;
+        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
     [HttpGet]
@@ -21,7 +24,8 @@ public class ConfigEventsController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventMapping>>> GetEvents()
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         return Ok(config.EventMappings);
     }
 
@@ -31,7 +35,8 @@ public class ConfigEventsController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<EventMapping?>> GetEvent(string eventName, string orderType)
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var eventMapping = config.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -56,12 +61,12 @@ public class ConfigEventsController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity(new { success = false, error = "Invalid event mapping data" });
 
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var existingIndex = config.EventMappings.FindIndex(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
-        // Ensure the event mapping has correct event name and order type
         eventMapping.Event = eventName;
         eventMapping.OrderType = orderType;
 
@@ -74,16 +79,9 @@ public class ConfigEventsController : ControllerBase
             config.EventMappings.Add(eventMapping);
         }
 
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-
-        if (success)
-        {
-            return Ok(new { success = true, message = "Event mapping updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update event mapping" });
-        }
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return Ok(new { success = true, message = "Event mapping updated successfully!" });
     }
 
     [HttpDelete("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
@@ -92,7 +90,8 @@ public class ConfigEventsController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<IActionResult> DeleteEvent(string eventName, string orderType)
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var existingIndex = config.EventMappings.FindIndex(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -101,26 +100,19 @@ public class ConfigEventsController : ControllerBase
             return NotFound(new { success = false, error = "Event mapping not found" });
 
         config.EventMappings.RemoveAt(existingIndex);
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-
-        if (success)
-        {
-            return Ok(new { success = true, message = "Event mapping deleted successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to delete event mapping" });
-        }
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return Ok(new { success = true, message = "Event mapping deleted successfully!" });
     }
 
-    // Event-specific nested properties
     [HttpGet("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}/preferred-communication")]
     [ProducesResponseType(200, Type = typeof(List<PreferredCommunication>))]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<PreferredCommunication>>> GetEventPreferredCommunication(string eventName, string orderType)
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var eventMapping = config.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -146,7 +138,8 @@ public class ConfigEventsController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity(new { success = false, error = "Invalid preferred communication data" });
 
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var eventMapping = config.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -155,16 +148,9 @@ public class ConfigEventsController : ControllerBase
             return NotFound(new { success = false, error = "Event mapping not found" });
 
         eventMapping.PreferredCommunication = data;
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-
-        if (success)
-        {
-            return Ok(new { success = true, message = "Event preferred communication updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update event preferred communication" });
-        }
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return Ok(new { success = true, message = "Event preferred communication updated successfully!" });
     }
 
     [HttpGet("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}/content-variables")]
@@ -173,7 +159,8 @@ public class ConfigEventsController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<object>>> GetEventContentVariables(string eventName, string orderType)
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var eventMapping = config.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -197,7 +184,8 @@ public class ConfigEventsController : ControllerBase
         if (contentVariables == null)
             return BadRequest(new { success = false, error = "Content variables data is required" });
 
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         var eventMapping = config.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -206,15 +194,8 @@ public class ConfigEventsController : ControllerBase
             return NotFound(new { success = false, error = "Event mapping not found" });
 
         eventMapping.ContentVariables = contentVariables;
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-
-        if (success)
-        {
-            return Ok(new { success = true, message = "Event content variables updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update event content variables" });
-        }
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return Ok(new { success = true, message = "Event content variables updated successfully!" });
     }
 }

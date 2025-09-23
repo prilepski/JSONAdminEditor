@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace JSONAdminEditor.Application.Models.Structure;
+namespace JSONAdminEditor.Application.Models.Configuration;
 
 public class EventMapping
 {

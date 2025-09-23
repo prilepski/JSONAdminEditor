@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
 using System.Text.RegularExpressions;
-using JSONAdminEditor.Application.Models.Structure;
+using System.Text.Json;
+using JSONAdminEditor.Application.Models.Configuration;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -10,11 +11,13 @@ namespace JSONAdminEditor.Controllers;
 [Produces("application/json")]
 public class CustomersController : ControllerBase
 {
-    private readonly IMockDatabaseService _mockDb;
+    private readonly IFileContentService _fileService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public CustomersController(IMockDatabaseService mockDb)
+    public CustomersController(IFileContentService fileService)
     {
-        _mockDb = mockDb;
+        _fileService = fileService;
+        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
     private static bool IsValidCustomerId(string customerId)
@@ -29,7 +32,15 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<string>>> GetCustomers()
     {
-        var customerIds = await _mockDb.GetCustomerIdsAsync();
+        var customerIds = new List<string>();
+        var files = await _fileService.ReadFileAsync("data/customers/");
+        foreach (var file in files)
+        {
+            if (file.EndsWith(".json"))
+            {
+                customerIds.Add(Path.GetFileNameWithoutExtension(file));
+            }
+        }
         return Ok(customerIds);
     }
 
@@ -42,11 +53,12 @@ public class CustomersController : ControllerBase
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
-            
-        var data = await _mockDb.GetCustomerAsync(customerId);
-        if (data == null)
+
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { error = "Customer not found" });
-            
+
+        var data = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         return Ok(data);
     }
 
@@ -65,16 +77,9 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return BadRequest(new { success = false, error = "Customer data is required" });
         
-        var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
-        
-        if (success)
-        {
-            return Ok(new { success = true, message = "Customer configuration updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update customer configuration" });
-        }
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+        return Ok(new { success = true, message = "Customer configuration updated successfully!" });
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/preferred-communication")]
@@ -86,11 +91,12 @@ public class CustomersController : ControllerBase
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
-            
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { error = "Customer not found" });
-            
+
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         return Ok(customerData.PreferredCommunication);
     }
 
@@ -112,21 +118,15 @@ public class CustomersController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity(new { success = false, error = "Invalid preferred communication data" });
         
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { success = false, error = "Customer not found" });
         
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         customerData.PreferredCommunication = data;
-        var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
-        
-        if (success)
-        {
-            return Ok(new { success = true, message = "Customer preferred communication updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update customer preferred communication" });
-        }
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+        return Ok(new { success = true, message = "Customer preferred communication updated successfully!" });
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/content-variables")]
@@ -138,11 +138,12 @@ public class CustomersController : ControllerBase
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
-            
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { error = "Customer not found" });
-            
+
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         var listData = customerData.ContentVariables.Select(kvp => new { key = kvp.Key, value = kvp.Value }).ToList();
         return Ok(listData);
     }
@@ -161,21 +162,15 @@ public class CustomersController : ControllerBase
         if (contentVariables == null)
             return BadRequest(new { success = false, error = "Content variables data is required" });
         
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { success = false, error = "Customer not found" });
         
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         customerData.ContentVariables = contentVariables;
-        var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
-        
-        if (success)
-        {
-            return Ok(new { success = true, message = "Customer content variables updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update customer content variables" });
-        }
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+        return Ok(new { success = true, message = "Customer content variables updated successfully!" });
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/after-hours")]
@@ -187,11 +182,12 @@ public class CustomersController : ControllerBase
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
-            
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { error = "Customer not found" });
-            
+
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         return Ok(customerData.AfterHours);
     }
 
@@ -213,21 +209,15 @@ public class CustomersController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity(new { success = false, error = "Invalid after hours data" });
         
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { success = false, error = "Customer not found" });
         
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         customerData.AfterHours = afterHours;
-        var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
-        
-        if (success)
-        {
-            return Ok(new { success = true, message = "Customer after hours updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update customer after hours" });
-        }
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+        return Ok(new { success = true, message = "Customer after hours updated successfully!" });
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/from-email")]
@@ -239,11 +229,12 @@ public class CustomersController : ControllerBase
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest(new { error = "Invalid customer ID" });
-            
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { error = "Customer not found" });
-            
+
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         return Ok(customerData.FromEmail);
     }
 
@@ -258,20 +249,14 @@ public class CustomersController : ControllerBase
         if (!IsValidCustomerId(customerId))
             return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });
         
-        var customerData = await _mockDb.GetCustomerAsync(customerId);
-        if (customerData == null)
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        if (string.IsNullOrEmpty(content))
             return NotFound(new { success = false, error = "Customer not found" });
         
+        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         customerData.FromEmail = fromEmail;
-        var success = await _mockDb.SaveCustomerAsync(customerId, customerData);
-        
-        if (success)
-        {
-            return Ok(new { success = true, message = "Customer from email updated successfully!" });
-        }
-        else
-        {
-            return BadRequest(new { success = false, error = "Failed to update customer from email" });
-        }
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+        return Ok(new { success = true, message = "Customer from email updated successfully!" });
     }
 }

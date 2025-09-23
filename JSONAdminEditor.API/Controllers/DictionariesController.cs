@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Services;
-using JSONAdminEditor.Application.Models;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Dictionaries;
 
@@ -15,7 +14,7 @@ public class DictionariesController : ControllerBase
     private readonly IFileContentService _fileContentService;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public DictionariesController(NotificationsService notificationsService, IFileContentService fileContentService)
+    public DictionariesController(IFileContentService fileContentService)
     {
         _fileContentService = fileContentService;
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
@@ -187,7 +186,7 @@ public class DictionariesController : ControllerBase
         await _fileContentService.WriteFileAsync(GetFilePathForType(fileType), jsonData);
     }
 
-    private string GetFilePathForType(FileType fileType) => fileType switch
+    private static string GetFilePathForType(FileType fileType) => fileType switch
     {
         FileType.Templates => "data/dictionaries/templates.json",
         FileType.EventTriggers => "data/dictionaries/event-triggers.json",

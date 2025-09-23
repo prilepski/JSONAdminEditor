@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using JSONAdminEditor.Services;
-using JSONAdminEditor.Application.Models.Structure;
+using System.Text.Json;
+using JSONAdminEditor.Application.Models.Configuration;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -12,11 +13,13 @@ namespace JSONAdminEditor.Controllers;
 [Produces("application/json")]
 public class ConfigController : ControllerBase
 {
-    private readonly IMockDatabaseService _mockDb;
+    private readonly IFileContentService _fileService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public ConfigController(IMockDatabaseService mockDb)
+    public ConfigController(IFileContentService fileService)
     {
-        _mockDb = mockDb;
+        _fileService = fileService;
+        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
     /// <summary>
@@ -28,7 +31,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<NotificationMapping>> GetConfig()
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         return Ok(config);
     }
 
@@ -51,8 +55,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid configuration data");
 
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-        return success ? NoContent() : BadRequest("Failed to update configuration");
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return NoContent();
     }
 
     /// <summary>
@@ -64,7 +69,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<PreferredCommunication>>> GetPreferredCommunication()
     {
-        var data = await _mockDb.GetPreferredCommunicationAsync();
+        var content = await _fileService.ReadFileAsync("data/preferred-communication.json");
+        var data = string.IsNullOrEmpty(content) ? new List<PreferredCommunication>() : JsonSerializer.Deserialize<List<PreferredCommunication>>(content, _jsonOptions);
         return Ok(data);
     }
 
@@ -87,8 +93,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid preferred communication data");
 
-        var success = await _mockDb.SavePreferredCommunicationAsync(data);
-        return success ? NoContent() : BadRequest("Failed to update preferred communication");
+        var json = JsonSerializer.Serialize(data, _jsonOptions);
+        await _fileService.WriteFileAsync("data/preferred-communication.json", json);
+        return NoContent();
     }
 
     /// <summary>
@@ -100,7 +107,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, string>>> GetContentVariables()
     {
-        var data = await _mockDb.GetContentVariablesAsync();
+        var content = await _fileService.ReadFileAsync("data/content-variables.json");
+        var data = string.IsNullOrEmpty(content) ? new Dictionary<string, string>() : JsonSerializer.Deserialize<Dictionary<string, string>>(content, _jsonOptions);
         return Ok(data);
     }
 
@@ -119,8 +127,9 @@ public class ConfigController : ControllerBase
         if (contentVariables == null)
             return BadRequest("Content variables data is required");
 
-        var success = await _mockDb.SaveContentVariablesAsync(contentVariables);
-        return success ? NoContent() : BadRequest("Failed to update content variables");
+        var json = JsonSerializer.Serialize(contentVariables, _jsonOptions);
+        await _fileService.WriteFileAsync("data/content-variables.json", json);
+        return NoContent();
     }
 
     /// <summary>
@@ -132,7 +141,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<OptOut>> GetOptOut()
     {
-        var data = await _mockDb.GetOptOutAsync();
+        var content = await _fileService.ReadFileAsync("data/opt-out.json");
+        var data = string.IsNullOrEmpty(content) ? new OptOut() : JsonSerializer.Deserialize<OptOut>(content, _jsonOptions);
         return Ok(data);
     }
 
@@ -155,8 +165,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid opt-out data");
 
-        var success = await _mockDb.SaveOptOutAsync(optOut);
-        return success ? NoContent() : BadRequest("Failed to update opt-out settings");
+        var json = JsonSerializer.Serialize(optOut, _jsonOptions);
+        await _fileService.WriteFileAsync("data/opt-out.json", json);
+        return NoContent();
     }
 
     /// <summary>
@@ -168,7 +179,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<AfterHours?>> GetAfterHours()
     {
-        var data = await _mockDb.GetAfterHoursAsync();
+        var content = await _fileService.ReadFileAsync("data/after-hours.json");
+        var data = string.IsNullOrEmpty(content) ? null : JsonSerializer.Deserialize<AfterHours>(content, _jsonOptions);
         return Ok(data);
     }
 
@@ -191,8 +203,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid after hours data");
 
-        var success = await _mockDb.SaveAfterHoursAsync(afterHours);
-        return success ? NoContent() : BadRequest("Failed to update after hours settings");
+        var json = JsonSerializer.Serialize(afterHours, _jsonOptions);
+        await _fileService.WriteFileAsync("data/after-hours.json", json);
+        return NoContent();
     }
 
     /// <summary>
@@ -204,7 +217,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<string>> GetFromEmail()
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         return Ok(config.FromEmail ?? "");
     }
 
@@ -223,10 +237,12 @@ public class ConfigController : ControllerBase
         if (string.IsNullOrEmpty(fromEmail))
             return BadRequest("From email is required");
 
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         config.FromEmail = fromEmail;
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-        return success ? NoContent() : BadRequest("Failed to update from email");
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return NoContent();
     }
 
     /// <summary>
@@ -238,7 +254,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, bool>>> GetAgents()
     {
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         return Ok(config.Agents);
     }
 
@@ -257,43 +274,12 @@ public class ConfigController : ControllerBase
         if (agents == null)
             return BadRequest("Agents data is required");
 
-        var config = await _mockDb.GetNotificationMappingAsync();
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
         config.Agents = agents;
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-        return success ? NoContent() : BadRequest("Failed to update agents");
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+        return NoContent();
     }
-
-    /// <summary>
-    /// Gets the content variables overrides configuration
-    /// </summary>
-    /// <returns>Nested dictionary of content variable overrides</returns>
-    [HttpGet("content-variables-overrides")]
-    [ProducesResponseType(200, Type = typeof(Dictionary<string, Dictionary<string, Dictionary<string, string>>>))]
-    [ProducesResponseType(500)]
-    public async Task<ActionResult<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>> GetContentVariablesOverrides()
-    {
-        var config = await _mockDb.GetNotificationMappingAsync();
-        return Ok(config.ContentVariablesOverrides);
-    }
-
-    /// <summary>
-    /// Updates the content variables overrides configuration
-    /// </summary>
-    /// <param name="overrides">Nested dictionary of content variable overrides</param>
-    /// <returns>Success or error response</returns>
-    [HttpPut("content-variables-overrides")]
-    [Consumes("application/json")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(500)]
-    public async Task<IActionResult> UpdateContentVariablesOverrides([FromBody] Dictionary<string, Dictionary<string, Dictionary<string, string>>> overrides)
-    {
-        if (overrides == null)
-            return BadRequest("Content variables overrides data is required");
-
-        var config = await _mockDb.GetNotificationMappingAsync();
-        config.ContentVariablesOverrides = overrides;
-        var success = await _mockDb.SaveNotificationMappingAsync(config);
-        return success ? NoContent() : BadRequest("Failed to update content variables overrides");
-    }
+  
 }
