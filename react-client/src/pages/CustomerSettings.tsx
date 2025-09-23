@@ -65,8 +65,6 @@ export const CustomerSettings: React.FC = () => {
     });
   };
 
-
-
   const isInitialLoading = customersLoading;
   const isSettingsLoading = selectedCustomer && settingsLoading;
 

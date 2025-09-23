@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { EventMapping, CustomerNotificationMapping, ContentVariableItem } from '../types';
+import { EventMapping, CustomerNotificationMapping } from '../types';
 import { createApiError, createServiceError } from '../utils/errorHandler';
 
 const api = axios.create({
@@ -25,7 +25,7 @@ export const customerService = {
 
   getCustomerContentVariables: async (customerId: string): Promise<Record<string, string>> => {
     try {
-      const response = await api.get<ContentVariableItem[]>(`/config/customers/${customerId}/content-variables`);
+      const response = await api.get<Array<{ key: string; value: string }>>(`/config/customers/${customerId}/content-variables`);
       const data = response.data || [];
       return data.reduce((acc, item) => ({ ...acc, [item.key]: item.value }), {});
     } catch (error) {
