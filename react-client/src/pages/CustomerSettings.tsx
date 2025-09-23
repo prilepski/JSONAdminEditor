@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   useCustomersQuery,
-  useCustomerSettingsQuery,
-  useCustomerSettingsMutation,
+  useCustomerContentVariablesQuery,
+  useCustomerContentVariablesMutation,
 } from '../hooks/useCustomerQuery';
-import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import { useErrorHandler } from '../hooks/useErrorHandler';
-import { CustomerContentVariable } from '../types/customer';
-import { CustomerSettingsData } from '../types/customerSettings';
 import {
   PageHeader,
   CustomerSelector,
@@ -19,120 +16,58 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [contentVariables, setContentVariables] = useState<CustomerContentVariable[]>([]);
+  const [contentVariables, setContentVariables] = useState<Record<string, string>>({});
   const { handleError } = useErrorHandler({ context: 'CustomerSettings' });
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
-  const { data: customerSettings, isLoading: settingsLoading } =
-    useCustomerSettingsQuery(selectedCustomer);
-  const { data: globalVariables = [], isLoading: variablesLoading } = useContentVariablesQuery();
-  const saveMutation = useCustomerSettingsMutation();
+  const { data: customerContentVars = {}, isLoading: settingsLoading } =
+    useCustomerContentVariablesQuery(selectedCustomer);
+  const saveMutation = useCustomerContentVariablesMutation();
 
   useEffect(() => {
-    if (!selectedCustomer) {
-      setContentVariables([]);
-      return;
-    }
-
-    const customerVars = customerSettings?.ContentVariables || {};
-    const variables: CustomerContentVariable[] = [];
-
-    // Add customer-specific variables (not in global)
-    Object.entries(customerVars).forEach(([name, value]) => {
-      const isInGlobal = Array.isArray(globalVariables) ? globalVariables.some((gv: any) => gv['Variable Name'] === name) : false;
-      if (!isInGlobal) {
-        variables.push({
-          name,
-          value: String(value),
-          isRedefined: false,
-          isCustomerSpecific: true,
-        });
-      }
-    });
-
-    // Add global variables with redefinition status
-    if (Array.isArray(globalVariables)) {
-      globalVariables.forEach((globalVar: any) => {
-      const name = String(globalVar['Variable Name']);
-      const globalValue = globalVar['Variable Mapping'] || globalVar['Variable Value'] || '';
-      const isRedefined = customerVars.hasOwnProperty(name);
-      const value = isRedefined
-        ? String(customerVars[name as keyof typeof customerVars])
-        : String(globalValue);
-
-      variables.push({
-        name,
-        value,
-        isRedefined,
-        isCustomerSpecific: false,
-        globalValue: String(globalValue),
-      });
-    });
-    }
-
-    setContentVariables(variables);
-  }, [selectedCustomer, customerSettings, globalVariables]);
+    setContentVariables(customerContentVars);
+  }, [customerContentVars]);
 
   const handleSave = async () => {
     if (!selectedCustomer) return;
 
-    const saveData: CustomerSettingsData = {
-      ContentVariables: {},
-    };
-
-    // Save customer-specific variables and redefined global variables
-    contentVariables.forEach((variable) => {
-      if (variable.isCustomerSpecific || variable.isRedefined) {
-        saveData.ContentVariables![variable.name] = variable.value;
-      }
-    });
-
     try {
       await saveMutation.mutateAsync({
         customerId: selectedCustomer,
-        data: saveData,
+        data: contentVariables,
       });
     } catch (error) {
-      handleError(error, 'Failed to save customer settings');
+      handleError(error, 'Failed to save customer content variables');
     }
   };
 
   const addVariable = () => {
-    const newVariable: CustomerContentVariable = {
-      name: `new_var_${Date.now()}`,
-      value: '',
-      isRedefined: false,
-      isCustomerSpecific: true,
-    };
-    setContentVariables((prev) => [newVariable, ...prev]);
+    const newKey = `new_var_${Date.now()}`;
+    setContentVariables((prev) => ({ ...prev, [newKey]: '' }));
   };
 
-  const updateVariable = (index: number, field: keyof CustomerContentVariable, value: any) => {
-    setContentVariables((prev) =>
-      prev.map((variable, i) => (i === index ? { ...variable, [field]: value } : variable))
-    );
+  const updateVariable = (oldKey: string, newKey: string, value: string) => {
+    setContentVariables((prev) => {
+      const newVars = { ...prev };
+      if (oldKey !== newKey) {
+        delete newVars[oldKey];
+      }
+      newVars[newKey] = value;
+      return newVars;
+    });
   };
 
-  const removeVariable = (index: number) => {
-    setContentVariables((prev) => prev.filter((_, i) => i !== index));
+  const removeVariable = (key: string) => {
+    setContentVariables((prev) => {
+      const newVars = { ...prev };
+      delete newVars[key];
+      return newVars;
+    });
   };
 
-  const toggleRedefined = (index: number, isRedefined: boolean) => {
-    setContentVariables((prev) =>
-      prev.map((variable, i) => {
-        if (i === index) {
-          return {
-            ...variable,
-            isRedefined,
-            value: isRedefined ? variable.value : variable.globalValue || '',
-          };
-        }
-        return variable;
-      })
-    );
-  };
 
-  const isInitialLoading = customersLoading || variablesLoading;
+
+  const isInitialLoading = customersLoading;
   const isSettingsLoading = selectedCustomer && settingsLoading;
 
   return (
@@ -186,74 +121,43 @@ export const CustomerSettings: React.FC = () => {
                     </div>
                   </div>
 
-                  {contentVariables.length > 0 ? (
+                  {Object.keys(contentVariables).length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-striped table-hover">
                         <thead className="table-dark">
                           <tr>
-                            <th style={{ width: '25%' }}>Variable Name</th>
+                            <th style={{ width: '40%' }}>Variable Name</th>
                             <th style={{ width: '50%' }}>Value</th>
-                            <th style={{ width: '15%' }}>Is Redefined</th>
                             <th style={{ width: '10%' }}>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {contentVariables.map((variable, index) => (
-                            <tr key={`${variable.name}-${index}`}>
+                          {Object.entries(contentVariables).map(([key, value]) => (
+                            <tr key={key}>
                               <td>
                                 <input
                                   type="text"
                                   className="form-control form-control-sm"
-                                  value={variable.name}
-                                  readOnly={!variable.isCustomerSpecific}
-                                  onChange={(e) => updateVariable(index, 'name', e.target.value)}
+                                  value={key}
+                                  onChange={(e) => updateVariable(key, e.target.value, value)}
                                 />
-                                {variable.isCustomerSpecific && (
-                                  <small className="text-warning">
-                                    <i className="fas fa-star me-1"></i>Customer-specific
-                                  </small>
-                                )}
                               </td>
                               <td>
                                 <input
                                   type="text"
                                   className="form-control form-control-sm"
-                                  value={variable.value}
-                                  readOnly={!variable.isCustomerSpecific && !variable.isRedefined}
-                                  onChange={(e) => updateVariable(index, 'value', e.target.value)}
+                                  value={value}
+                                  onChange={(e) => updateVariable(key, key, e.target.value)}
                                 />
-                                {variable.isRedefined && (
-                                  <small className="text-warning">
-                                    <i className="fas fa-edit me-1"></i>Overridden
-                                  </small>
-                                )}
                               </td>
                               <td className="text-center">
-                                {variable.isCustomerSpecific ? (
-                                  <span className="text-muted">-</span>
-                                ) : (
-                                  <div className="form-check">
-                                    <input
-                                      className="form-check-input"
-                                      type="checkbox"
-                                      checked={variable.isRedefined}
-                                      onChange={(e) => toggleRedefined(index, e.target.checked)}
-                                    />
-                                  </div>
-                                )}
-                              </td>
-                              <td className="text-center">
-                                {variable.isCustomerSpecific ? (
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => removeVariable(index)}
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </button>
-                                ) : (
-                                  <span className="text-muted">-</span>
-                                )}
+                                <button
+                                  type="button"
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => removeVariable(key)}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
                               </td>
                             </tr>
                           ))}

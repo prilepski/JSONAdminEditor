@@ -30,6 +30,12 @@ export interface ValidationError {
   message: string;
 }
 
+// Content variable types
+export interface ContentVariableItem {
+  key: string;
+  value: string;
+}
+
 // File upload types
 export interface FileUploadRequest {
   fileType: FileType;

@@ -19,6 +19,14 @@ export const useCustomerEventsQuery = (customerId: string, orderType?: string) =
   });
 };
 
+export const useCustomerContentVariablesQuery = (customerId: string) => {
+  return useQuery({
+    queryKey: ['customerContentVariables', customerId],
+    queryFn: () => customerService.getCustomerContentVariables(customerId),
+    enabled: !!customerId,
+  });
+};
+
 export const useCustomerSettingsQuery = (customerId: string) => {
   return useQuery({
     queryKey: ['customerSettings', customerId],
@@ -40,6 +48,23 @@ export const useCustomerEventsMutation = () => {
     },
     onError: (error) => {
       handleError(error, 'Failed to save customer event');
+    },
+  });
+};
+
+export const useCustomerContentVariablesMutation = () => {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerContentVariables' });
+
+  return useMutation({
+    mutationFn: ({ customerId, data }: { customerId: string; data: Record<string, string> }) =>
+      customerService.saveCustomerContentVariables(customerId, data),
+    onSuccess: (_, { customerId }) => {
+      queryClient.invalidateQueries({ queryKey: ['customerContentVariables', customerId] });
+      toast.success(`Customer content variables for '${customerId}' saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer content variables');
     },
   });
 };
