@@ -22,6 +22,18 @@ public class ConfigController : ControllerBase
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
+    private async Task<NotificationMapping> GetConfigAsync()
+    {
+        var content = await _fileService.ReadFileAsync("data/notifications.json");
+        return string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+    }
+
+    private async Task SaveConfigAsync(NotificationMapping config)
+    {
+        var json = JsonSerializer.Serialize(config, _jsonOptions);
+        await _fileService.WriteFileAsync("data/notifications.json", json);
+    }
+
     /// <summary>
     /// Gets the complete default notification configuration
     /// </summary>
@@ -31,8 +43,7 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<NotificationMapping>> GetConfig()
     {
-        var content = await _fileService.ReadFileAsync("data/notifications.json");
-        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+        var config = await GetConfigAsync();
         return Ok(config);
     }
 
@@ -55,8 +66,7 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid configuration data");
 
-        var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await _fileService.WriteFileAsync("data/notifications.json", json);
+        await SaveConfigAsync(config);
         return NoContent();
     }
 
@@ -69,9 +79,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<PreferredCommunication>>> GetPreferredCommunication()
     {
-        var content = await _fileService.ReadFileAsync("data/preferred-communication.json");
-        var data = string.IsNullOrEmpty(content) ? new List<PreferredCommunication>() : JsonSerializer.Deserialize<List<PreferredCommunication>>(content, _jsonOptions);
-        return Ok(data);
+        var config = await GetConfigAsync();
+        return Ok(config.PreferredCommunication);
     }
 
     /// <summary>
@@ -93,8 +102,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid preferred communication data");
 
-        var json = JsonSerializer.Serialize(data, _jsonOptions);
-        await _fileService.WriteFileAsync("data/preferred-communication.json", json);
+        var config = await GetConfigAsync();
+        config.PreferredCommunication = data;
+        await SaveConfigAsync(config);
         return NoContent();
     }
 
@@ -107,9 +117,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, string>>> GetContentVariables()
     {
-        var content = await _fileService.ReadFileAsync("data/content-variables.json");
-        var data = string.IsNullOrEmpty(content) ? new Dictionary<string, string>() : JsonSerializer.Deserialize<Dictionary<string, string>>(content, _jsonOptions);
-        return Ok(data);
+        var config = await GetConfigAsync();
+        return Ok(config.ContentVariables);
     }
 
     /// <summary>
@@ -127,8 +136,9 @@ public class ConfigController : ControllerBase
         if (contentVariables == null)
             return BadRequest("Content variables data is required");
 
-        var json = JsonSerializer.Serialize(contentVariables, _jsonOptions);
-        await _fileService.WriteFileAsync("data/content-variables.json", json);
+        var config = await GetConfigAsync();
+        config.ContentVariables = contentVariables;
+        await SaveConfigAsync(config);
         return NoContent();
     }
 
@@ -141,9 +151,8 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<OptOut>> GetOptOut()
     {
-        var content = await _fileService.ReadFileAsync("data/opt-out.json");
-        var data = string.IsNullOrEmpty(content) ? new OptOut() : JsonSerializer.Deserialize<OptOut>(content, _jsonOptions);
-        return Ok(data);
+        var config = await GetConfigAsync();
+        return Ok(config.OptOut);
     }
 
     /// <summary>
@@ -165,8 +174,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid opt-out data");
 
-        var json = JsonSerializer.Serialize(optOut, _jsonOptions);
-        await _fileService.WriteFileAsync("data/opt-out.json", json);
+        var config = await GetConfigAsync();
+        config.OptOut = optOut;
+        await SaveConfigAsync(config);
         return NoContent();
     }
 
@@ -175,13 +185,11 @@ public class ConfigController : ControllerBase
     /// </summary>
     /// <returns>The after-hours settings</returns>
     [HttpGet("after-hours")]
-    [ProducesResponseType(200, Type = typeof(AfterHours))]
     [ProducesResponseType(500)]
     public async Task<ActionResult<AfterHours?>> GetAfterHours()
     {
-        var content = await _fileService.ReadFileAsync("data/after-hours.json");
-        var data = string.IsNullOrEmpty(content) ? null : JsonSerializer.Deserialize<AfterHours>(content, _jsonOptions);
-        return Ok(data);
+        var config = await GetConfigAsync();
+        return Ok(config.AfterHours);
     }
 
     /// <summary>
@@ -203,8 +211,9 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid after hours data");
 
-        var json = JsonSerializer.Serialize(afterHours, _jsonOptions);
-        await _fileService.WriteFileAsync("data/after-hours.json", json);
+        var config = await GetConfigAsync();
+        config.AfterHours = afterHours;
+        await SaveConfigAsync(config);
         return NoContent();
     }
 
@@ -217,8 +226,7 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<string>> GetFromEmail()
     {
-        var content = await _fileService.ReadFileAsync("data/notifications.json");
-        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+        var config = await GetConfigAsync();
         return Ok(config.FromEmail ?? "");
     }
 
@@ -237,11 +245,9 @@ public class ConfigController : ControllerBase
         if (string.IsNullOrEmpty(fromEmail))
             return BadRequest("From email is required");
 
-        var content = await _fileService.ReadFileAsync("data/notifications.json");
-        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+        var config = await GetConfigAsync();
         config.FromEmail = fromEmail;
-        var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await _fileService.WriteFileAsync("data/notifications.json", json);
+        await SaveConfigAsync(config);
         return NoContent();
     }
 
@@ -254,8 +260,7 @@ public class ConfigController : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, bool>>> GetAgents()
     {
-        var content = await _fileService.ReadFileAsync("data/notifications.json");
-        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+        var config = await GetConfigAsync();
         return Ok(config.Agents);
     }
 
@@ -274,12 +279,9 @@ public class ConfigController : ControllerBase
         if (agents == null)
             return BadRequest("Agents data is required");
 
-        var content = await _fileService.ReadFileAsync("data/notifications.json");
-        var config = string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+        var config = await GetConfigAsync();
         config.Agents = agents;
-        var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await _fileService.WriteFileAsync("data/notifications.json", json);
+        await SaveConfigAsync(config);
         return NoContent();
     }
-  
 }

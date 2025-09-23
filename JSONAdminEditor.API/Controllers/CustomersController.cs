@@ -33,14 +33,14 @@ public class CustomersController : ControllerBase
     public async Task<ActionResult<List<string>>> GetCustomers()
     {
         var customerIds = new List<string>();
-        var files = await _fileService.ReadFileAsync("data/customers/");
-        foreach (var file in files)
-        {
-            if (file.EndsWith(".json"))
-            {
-                customerIds.Add(Path.GetFileNameWithoutExtension(file));
-            }
-        }
+        //var files = await _fileService.GetFilesAsync("data/customers/");
+        //foreach (var file in files)
+        //{
+        //    if (file.EndsWith(".json"))
+        //    {
+        //        customerIds.Add(Path.GetFileNameWithoutExtension(file));
+        //    }
+        //}
         return Ok(customerIds);
     }
 

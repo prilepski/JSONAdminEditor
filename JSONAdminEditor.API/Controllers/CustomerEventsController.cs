@@ -20,12 +20,27 @@ public class CustomerEventsController : ControllerBase
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
-    private static bool IsValidCustomerId(string customerId)
+    private static bool IsValidCustomerId(string customerId) =>
+        !string.IsNullOrWhiteSpace(customerId) && 
+        Regex.IsMatch(customerId, @"^[a-zA-Z0-9_-]+$") && 
+        customerId.Length <= 50;
+
+    private async Task<CustomerNotificationMapping?> GetCustomerDataAsync(string customerId)
     {
-        return !string.IsNullOrWhiteSpace(customerId) && 
-               Regex.IsMatch(customerId, @"^[a-zA-Z0-9_-]+$") && 
-               customerId.Length <= 50;
+        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
+        return string.IsNullOrEmpty(content) ? null : JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
     }
+
+    private async Task SaveCustomerDataAsync(string customerId, CustomerNotificationMapping customerData)
+    {
+        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
+        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
+    }
+
+    private EventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
+        customerData.EventMappings.FirstOrDefault(e => 
+            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
+            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(List<EventMapping>))]
@@ -35,13 +50,12 @@ public class CustomerEventsController : ControllerBase
     public async Task<ActionResult<List<EventMapping>>> GetCustomerEvents(string customerId)
     {
         if (!IsValidCustomerId(customerId))
-            return BadRequest(new { error = "Invalid customer ID" });
+            return BadRequest("Invalid customer ID");
 
-        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
-        if (string.IsNullOrEmpty(content))
-            return NotFound(new { error = "Customer not found" });
+        var customerData = await GetCustomerDataAsync(customerId);
+        if (customerData == null)
+            return NotFound("Customer not found");
 
-        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         return Ok(customerData.EventMappings);
     }
 
@@ -50,29 +64,25 @@ public class CustomerEventsController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<EventMapping?>> GetCustomerEvent(string customerId, string eventName, string orderType)
+    public async Task<ActionResult<EventMapping>> GetCustomerEvent(string customerId, string eventName, string orderType)
     {
         if (!IsValidCustomerId(customerId))
-            return BadRequest(new { error = "Invalid customer ID" });
+            return BadRequest("Invalid customer ID");
 
-        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
-        if (string.IsNullOrEmpty(content))
-            return NotFound(new { error = "Customer not found" });
+        var customerData = await GetCustomerDataAsync(customerId);
+        if (customerData == null)
+            return NotFound("Customer not found");
 
-        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
-        var eventMapping = customerData.EventMappings.FirstOrDefault(e => 
-            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
-            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
-
+        var eventMapping = FindEventMapping(customerData, eventName, orderType);
         if (eventMapping == null)
-            return NotFound(new { error = "Event mapping not found" });
+            return NotFound("Event mapping not found");
 
         return Ok(eventMapping);
     }
 
     [HttpPut("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
     [Consumes("application/json")]
-    [ProducesResponseType(200, Type = typeof(object))]
+    [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(422)]
@@ -80,19 +90,18 @@ public class CustomerEventsController : ControllerBase
     public async Task<IActionResult> UpdateCustomerEvent(string customerId, string eventName, string orderType, [FromBody] CustomerEventMapping eventMapping)
     {
         if (!IsValidCustomerId(customerId))
-            return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });
+            return BadRequest("Invalid customer ID");
 
         if (eventMapping == null)
-            return BadRequest(new { success = false, error = "Event mapping data is required" });
+            return BadRequest("Event mapping data is required");
 
         if (!ModelState.IsValid)
-            return UnprocessableEntity(new { success = false, error = "Invalid event mapping data" });
+            return UnprocessableEntity("Invalid event mapping data");
 
-        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
-        if (string.IsNullOrEmpty(content))
-            return NotFound(new { success = false, error = "Customer not found" });
+        var customerData = await GetCustomerDataAsync(customerId);
+        if (customerData == null)
+            return NotFound("Customer not found");
 
-        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         eventMapping.Event = eventName;
         eventMapping.OrderType = orderType;
 
@@ -101,44 +110,37 @@ public class CustomerEventsController : ControllerBase
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
         if (existingIndex >= 0)
-        {
             customerData.EventMappings[existingIndex] = eventMapping;
-        }
         else
-        {
             customerData.EventMappings.Add(eventMapping);
-        }
 
-        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
-        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
-        return Ok(new { success = true, message = "Customer event mapping updated successfully!" });
+        await SaveCustomerDataAsync(customerId, customerData);
+        return NoContent();
     }
 
     [HttpDelete("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
-    [ProducesResponseType(200, Type = typeof(object))]
+    [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<IActionResult> DeleteCustomerEvent(string customerId, string eventName, string orderType)
     {
         if (!IsValidCustomerId(customerId))
-            return UnprocessableEntity(new { success = false, error = "Invalid customer ID" });
+            return BadRequest("Invalid customer ID");
 
-        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
-        if (string.IsNullOrEmpty(content))
-            return NotFound(new { success = false, error = "Customer not found" });
+        var customerData = await GetCustomerDataAsync(customerId);
+        if (customerData == null)
+            return NotFound("Customer not found");
 
-        var customerData = JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
         var existingIndex = customerData.EventMappings.FindIndex(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
         if (existingIndex < 0)
-            return NotFound(new { success = false, error = "Event mapping not found" });
+            return NotFound("Event mapping not found");
 
         customerData.EventMappings.RemoveAt(existingIndex);
-        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
-        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
-        return Ok(new { success = true, message = "Customer event mapping deleted successfully!" });
+        await SaveCustomerDataAsync(customerId, customerData);
+        return NoContent();
     }
 }
