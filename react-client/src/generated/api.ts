@@ -1332,8 +1332,8 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["EventMapping"];
-                    "application/*+json": components["schemas"]["EventMapping"];
+                    "application/json": components["schemas"]["CustomerEventMapping"];
+                    "application/*+json": components["schemas"]["CustomerEventMapping"];
                 };
             };
             responses: {
@@ -2531,6 +2531,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dictionaries/logo-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LogoUrl"][];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LogoUrl"][];
+                    "application/*+json": components["schemas"]["LogoUrl"][];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dictionaries/upload": {
         parameters: {
             query?: never;
@@ -2616,10 +2702,41 @@ export interface components {
             address?: string;
             isActive?: boolean;
         };
-        CustomerNotificationMapping: {
-            eventMappings?: components["schemas"]["EventMapping"][];
+        CustomerEventMapping: {
+            contentVariablesOverrides?: {
+                [key: string]: {
+                    [key: string]: {
+                        [key: string]: string;
+                    };
+                };
+            };
+            event: string;
+            orderType: string;
+            phone?: string;
+            email?: string;
+            templates?: {
+                [key: string]: string;
+            };
+            isSuppressed?: boolean;
+            preferredCommunication?: components["schemas"]["PreferredCommunication"][];
             contentVariables?: {
                 [key: string]: string;
+            };
+            triggerConditions?: {
+                [key: string]: boolean;
+            };
+        };
+        CustomerNotificationMapping: {
+            eventMappings?: components["schemas"]["CustomerEventMapping"][];
+            contentVariables?: {
+                [key: string]: string;
+            };
+            contentVariablesOverrides?: {
+                [key: string]: {
+                    [key: string]: {
+                        [key: string]: string;
+                    };
+                };
             };
             preferredCommunication?: unknown[];
             afterHours?: components["schemas"]["AfterHours"];
@@ -2649,13 +2766,6 @@ export interface components {
             triggerConditions?: {
                 [key: string]: boolean;
             };
-            contentVariablesOverrides?: {
-                [key: string]: {
-                    [key: string]: {
-                        [key: string]: string;
-                    };
-                };
-            };
         };
         EventTrigger: {
             eventName?: string;
@@ -2667,6 +2777,10 @@ export interface components {
         } | null;
         /** Format: binary */
         IFormFile: string;
+        LogoUrl: {
+            fileName?: string;
+            url?: string;
+        };
         NotificationMapping: {
             preferredCommunication?: components["schemas"]["PreferredCommunication"][];
             contentVariables?: {

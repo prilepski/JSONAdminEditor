@@ -7,12 +7,13 @@ interface DictionarySelectorProps {
 }
 
 const dictionaryOptions = [
-  { value: FileType.None, label: 'Select dictionary type...' },
-  { value: FileType.Templates, label: 'Notification Templates' },
-  { value: FileType.EventTriggers, label: 'Event Triggers' },
-  { value: FileType.EventChannels, label: 'Event Channels' },
-  { value: FileType.OrderTypes, label: 'Order Types' },
-  { value: FileType.Customers, label: 'Customers' },
+  { value: FileType.None, label: 'Select dictionary type...', description: '' },
+  { value: FileType.Templates, label: 'Notification Templates', description: 'Email, SMS, and Voice templates for notifications' },
+  { value: FileType.EventTriggers, label: 'Event Triggers', description: 'Events that trigger notifications (Ready For Scheduling, Next Stop Update, etc.)' },
+  { value: FileType.EventChannels, label: 'Event Channels', description: 'Communication channels (Email, SMS, Voice)' },
+  { value: FileType.OrderTypes, label: 'Order Types', description: 'Types of orders (Delivery, Pickup, ALL)' },
+  { value: FileType.Customers, label: 'Customers', description: 'Customer information and contact details' },
+  { value: FileType.LogoUrls, label: 'Logo URLs', description: 'Logo file names and URLs for branding' },
 ];
 
 export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
@@ -44,6 +45,12 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
               </option>
             ))}
           </select>
+          {selectedFileType !== FileType.None && (
+            <div className="form-text">
+              <i className="fas fa-info-circle me-1"></i>
+              {dictionaryOptions.find(opt => opt.value === selectedFileType)?.description}
+            </div>
+          )}
         </div>
       </div>
     </div>

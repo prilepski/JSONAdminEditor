@@ -6,6 +6,7 @@ export type EventTrigger = components['schemas']['EventTrigger'];
 export type EventChannel = components['schemas']['EventChannel'];
 export type OrderType = components['schemas']['OrderType'];
 export type Customer = components['schemas']['Customer'];
+export type LogoUrl = components['schemas']['LogoUrl'];
 export type PreferredCommunication = components['schemas']['PreferredCommunication'];
 export type Channel = components['schemas']['Channel'];
 export type AfterHours2 = components['schemas']['AfterHours2'];
@@ -44,4 +45,5 @@ export enum FileType {
   EventChannels = 3,
   EventTriggers = 5,
   OrderTypes = 7,
+  LogoUrls = 8,
 }

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { FileType, Template, EventTrigger, EventChannel, OrderType, Customer, TableData, DictionaryData, ApiResponse, FileUploadRequest } from '../types';
+import { FileType, Template, EventTrigger, EventChannel, OrderType, Customer, LogoUrl, TableData, DictionaryData, ApiResponse, FileUploadRequest } from '../types';
 import { createApiError, createServiceError } from '../utils/errorHandler';
 
 const api = axios.create({
@@ -13,16 +13,32 @@ const getEndpoint = (fileType: FileType): string => {
     [FileType.EventTriggers]: 'event-triggers', 
     [FileType.EventChannels]: 'event-channels',
     [FileType.OrderTypes]: 'order-types',
-    [FileType.Customers]: 'customers'
+    [FileType.Customers]: 'customers',
+    [FileType.LogoUrls]: 'logo-url'
   };
-  return endpoints[fileType] || 'templates';
+  const endpoint = endpoints[fileType];
+  if (!endpoint) {
+    throw new Error(`Unsupported dictionary type: ${fileType}`);
+  }
+  return endpoint;
 };
 
 export const dictionaryService = {
+  getAvailableDictionaries: () => {
+    return [
+      { type: FileType.Templates, name: 'Notification Templates', endpoint: 'templates' },
+      { type: FileType.EventTriggers, name: 'Event Triggers', endpoint: 'event-triggers' },
+      { type: FileType.EventChannels, name: 'Event Channels', endpoint: 'event-channels' },
+      { type: FileType.OrderTypes, name: 'Order Types', endpoint: 'order-types' },
+      { type: FileType.Customers, name: 'Customers', endpoint: 'customers' },
+      { type: FileType.LogoUrls, name: 'Logo URLs', endpoint: 'logo-url' },
+    ];
+  },
+
   getData: async (fileType: FileType): Promise<ApiResponse<DictionaryData>> => {
     try {
       const endpoint = getEndpoint(fileType);
-      const response = await api.get<Template[] | EventTrigger[] | EventChannel[] | OrderType[] | Customer[]>(`/dictionaries/${endpoint}`);
+      const response = await api.get<Template[] | EventTrigger[] | EventChannel[] | OrderType[] | Customer[] | LogoUrl[]>(`/dictionaries/${endpoint}`);
       const tableData = response.data || [];
       const rawColumnNames = tableData.length > 0 ? Object.keys(tableData[0]) : [];
       const columnNames = rawColumnNames.map(col => {
