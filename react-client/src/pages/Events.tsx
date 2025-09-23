@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useFormState } from '../hooks/useFormState';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import {
-  useEventTriggersQuery,
-  useOrderTypesQuery,
   useTemplatesQuery,
   useEventQuery,
   useAllEventsQuery,
   useEventMutation,
 } from '../hooks/useEventQuery';
-import { EventTrigger, OrderType, Template } from '../types';
+import { Template } from '../types';
 import { PageHeader, TabNavigation, SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { EventSelector } from '../components/events/EventSelector';
@@ -43,7 +41,6 @@ export const Events: React.FC = () => {
 
   const [eventData, setEventData] = useState<EventData | null>(null);
   const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
-  const { data: availableOrderTypes = [] as OrderType[], isLoading: orderTypesLoading } = useOrderTypesQuery();
   const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery();
   const { data: allEvents = [] } = useAllEventsQuery();
   const { data: eventInfo, isLoading: eventLoading } = useEventQuery(
@@ -127,7 +124,7 @@ export const Events: React.FC = () => {
     { id: 'trigger-conditions', label: 'Trigger Conditions', icon: 'fa-filter' },
   ];
 
-  const isInitialLoading = orderTypesLoading || templatesLoading;
+  const isInitialLoading = templatesLoading;
   const isEventDataLoading = selectedEvent && eventLoading;
 
   return (
@@ -142,7 +139,6 @@ export const Events: React.FC = () => {
             selectedEvent={selectedEvent}
             selectedOrderType={selectedOrderType}
             allEvents={allEvents}
-            orderTypes={availableOrderTypes}
             onEventChange={(event) => updateField('selectedEvent', event)}
             onOrderTypeChange={(orderType) => updateField('selectedOrderType', orderType)}
           />
@@ -180,7 +176,6 @@ export const Events: React.FC = () => {
                   <ComponentErrorBoundary componentName="Event Data Form">
                     <EventDataForm 
                       eventData={eventData} 
-                      orderTypes={availableOrderTypes}
                       onUpdate={updateEventField} 
                     />
                   </ComponentErrorBoundary>

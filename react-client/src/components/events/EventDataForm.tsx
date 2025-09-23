@@ -7,11 +7,10 @@ interface EventDataFormProps {
     email?: string;
     isSuppressed?: boolean;
   };
-  orderTypes: { name?: string }[];
   onUpdate: (field: string, value: any) => void;
 }
 
-export const EventDataForm: React.FC<EventDataFormProps> = ({ eventData, orderTypes, onUpdate }) => (
+export const EventDataForm: React.FC<EventDataFormProps> = ({ eventData, onUpdate }) => (
   <div className="table-responsive">
     <table className="table table-bordered">
       <thead className="table-light">
@@ -24,20 +23,12 @@ export const EventDataForm: React.FC<EventDataFormProps> = ({ eventData, orderTy
         <tr>
           <td><strong>Order Type</strong></td>
           <td>
-            <select
-              className="form-select"
+            <input
+              type="text"
+              className="form-control"
               value={eventData.orderType || ''}
-              onChange={(e) => onUpdate('orderType', e.target.value)}
-            >
-              <option value="">Select Order Type</option>
-              {orderTypes
-                .filter(orderType => orderType.name)
-                .map(orderType => (
-                  <option key={orderType.name} value={orderType.name}>
-                    {orderType.name}
-                  </option>
-                ))}
-            </select>
+              readOnly
+            />
           </td>
         </tr>
         <tr>
