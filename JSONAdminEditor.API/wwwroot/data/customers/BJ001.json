@@ -1,33 +1,76 @@
 {
+  "PreferredCommunication": [
+    {
+      "Channel": "Email",
+      "Priority": 1
+    },
+    {
+      "Channel": "Sms",
+      "Priority": 2
+    },
+    {
+      "Channel": "Voice",
+      "Priority": 3
+    }
+  ],
   "ContentVariables": {
-    "sdfsdf": "sdfsdf",
-    "cust_name": "$Customer.FriendlyName$"
+    "sdfsdf": "string",
+    "cust_name": "$Customer.FriendlyName$",
+    "additionalProp3": "string"
+  },
+  "ContentVariablesOverrides": {
+    "sdfsdf": {
+      "ReferenceNumber": {
+        "123": "string",
+        "234": "string",
+        "345": "string"
+      }
+    }
   },
   "Events": [
     {
+      "ContentVariablesOverrides": {},
       "Event": "Final Scheduling Appointment",
       "OrderType": "Delivery",
       "Phone": "$consigneeContact.phone$2",
       "Email": "$consigneeContact.email$1",
-      "Logo": "base641",
-      "IsSuppressed": true,
       "Templates": {
         "Email": "5432qwerty",
         "Sms": "5432qwertysms"
       },
-      "ContentVariables": {}
+      "IsSuppressed": true,
+      "PreferredCommunication": [],
+      "ContentVariables": {},
+      "TriggerConditions": {}
     },
     {
+      "ContentVariablesOverrides": {},
       "Event": "Schedule Appointment",
       "OrderType": "Delivery",
       "Phone": "",
       "Email": "",
-      "Logo": "",
-      "IsSuppressed": false,
       "Templates": {},
+      "IsSuppressed": false,
+      "PreferredCommunication": [],
       "ContentVariables": {
         "cust_name": "$Customer.FriendlyName$"
-      }
+      },
+      "TriggerConditions": {}
     }
-  ]
+  ],
+  "AfterHours": {
+    "ExceptionOfValidation": {
+      "Events": [
+        {
+          "Name": "ALL",
+          "Type": "Help Information"
+        }
+      ]
+    },
+    "RestrictedHoursPeriod": {
+      "Start": "22:00:00",
+      "End": "09:00:00"
+    }
+  },
+  "FromEmail": "test@gmail.com"
 }
