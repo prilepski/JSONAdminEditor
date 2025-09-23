@@ -1,85 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAfterHoursQuery, useAfterHoursMutation } from '../hooks/useAfterHoursQuery';
-import { useQuery } from '@tanstack/react-query';
-import { AfterHours2, EventTrigger, OrderType } from '../types';
-import axios from 'axios';
+import { useEventTriggersQuery, useOrderTypesQuery } from '../hooks/useEventTriggersQuery';
+import { useAfterHoursForm } from '../hooks/useAfterHoursForm';
+import { AfterHours2 } from '../types';
 import toast from 'react-hot-toast';
 import { SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
+import { TimeInputs } from '../components/afterhours/TimeInputs';
+import { EventRow } from '../components/afterhours/EventRow';
 
 export const AfterHours: React.FC = () => {
   const { data, isLoading } = useAfterHoursQuery();
-  const { data: eventTriggers = [] } = useQuery({
-    queryKey: ['eventTriggers'],
-    queryFn: async () => {
-      const response = await axios.get('/api/dictionaries/event-triggers');
-      return response.data;
-    }
-  });
-  const { data: orderTypes = [] } = useQuery({
-    queryKey: ['orderTypes'],
-    queryFn: async () => {
-      const response = await axios.get('/api/dictionaries/order-types');
-      return response.data;
-    }
-  });
+  const { data: eventTriggers = [] } = useEventTriggersQuery();
+  const { data: orderTypes = [] } = useOrderTypesQuery();
   const saveMutation = useAfterHoursMutation();
-  const [formData, setFormData] = useState({
-    restrictedHoursPeriod: { start: '', end: '' },
-    exceptionOfValidation: { events: [] as any[] }
-  });
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (data) {
-      setFormData({
-        restrictedHoursPeriod: data.restrictedHoursPeriod || { start: '', end: '' },
-        exceptionOfValidation: { events: data.exceptionOfValidation?.events || [] }
-      });
-    }
-  }, [data]);
+  const { formData, updateTime, addEvent, removeEvent, updateEvent } = useAfterHoursForm(data);
 
   const handleSave = async () => {
-    setSaving(true);
     try {
       await saveMutation.mutateAsync(formData as AfterHours2);
       toast.success('After Hours settings saved successfully!');
     } catch (error) {
       toast.error('Error saving after hours settings');
     }
-    setSaving(false);
-  };
-
-  const addEvent = () => {
-    setFormData(prev => ({
-      ...prev,
-      exceptionOfValidation: {
-        ...prev.exceptionOfValidation,
-        events: [...prev.exceptionOfValidation.events, { name: '', type: '' }]
-      }
-    }));
-  };
-
-  const removeEvent = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      exceptionOfValidation: {
-        ...prev.exceptionOfValidation,
-        events: prev.exceptionOfValidation.events.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const updateEvent = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      exceptionOfValidation: {
-        ...prev.exceptionOfValidation,
-        events: prev.exceptionOfValidation.events.map((event, i) => 
-          i === index ? { ...event, [field]: value } : event
-        )
-      }
-    }));
   };
 
   return (
@@ -91,39 +34,18 @@ export const AfterHours: React.FC = () => {
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
           <h3><i className="fas fa-edit me-2"></i>After Hours Settings</h3>
-          <SaveButton onClick={handleSave} loading={saving} text="Save Changes" />
+          <SaveButton onClick={handleSave} loading={saveMutation.isPending} text="Save Changes" />
         </div>
         <div className="card-body">
           {isLoading ? (
             <LoadingSpinner text="Loading after hours settings..." />
           ) : (
             <ComponentErrorBoundary componentName="After Hours Editor">
-              <div className="row mb-4">
-                <div className="col-md-6">
-                  <label className="form-label">Start Time</label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={formData.restrictedHoursPeriod.start}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      restrictedHoursPeriod: { ...prev.restrictedHoursPeriod, start: e.target.value }
-                    }))}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">End Time</label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={formData.restrictedHoursPeriod.end}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      restrictedHoursPeriod: { ...prev.restrictedHoursPeriod, end: e.target.value }
-                    }))}
-                  />
-                </div>
-              </div>
+              <TimeInputs
+                startTime={formData.restrictedHoursPeriod.start}
+                endTime={formData.restrictedHoursPeriod.end}
+                onTimeChange={updateTime}
+              />
 
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5>Exception Events</h5>
@@ -143,54 +65,15 @@ export const AfterHours: React.FC = () => {
                   </thead>
                   <tbody>
                     {formData.exceptionOfValidation.events.map((event, index) => (
-                      <tr key={index}>
-                        <td>
-                          <select
-                            className="form-select form-select-sm"
-                            value={event.name || ''}
-                            onChange={(e) => updateEvent(index, 'name', e.target.value)}
-                          >
-                            <option value="">Select Event</option>
-                            {event.name && !eventTriggers.find((t: EventTrigger) => t.eventName === event.name) && (
-                              <option key={event.name} value={event.name}>
-                                {event.name}
-                              </option>
-                            )}
-                            {eventTriggers.map((trigger: EventTrigger) => (
-                              <option key={trigger.eventName} value={trigger.eventName}>
-                                {trigger.eventName}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <select
-                            className="form-select form-select-sm"
-                            value={event.type || ''}
-                            onChange={(e) => updateEvent(index, 'type', e.target.value)}
-                          >
-                            <option value="">Select Type</option>
-                            {event.type && !orderTypes.find((t: OrderType) => t.name === event.type) && (
-                              <option key={event.type} value={event.type}>
-                                {event.type}
-                              </option>
-                            )}
-                            {orderTypes.map((orderType: OrderType) => (
-                              <option key={orderType.name} value={orderType.name}>
-                                {orderType.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => removeEvent(index)}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
+                      <EventRow
+                        key={index}
+                        event={event}
+                        index={index}
+                        eventTriggers={eventTriggers}
+                        orderTypes={orderTypes}
+                        onUpdate={updateEvent}
+                        onRemove={removeEvent}
+                      />
                     ))}
                   </tbody>
                 </table>
