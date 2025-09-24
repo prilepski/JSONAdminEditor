@@ -152,7 +152,12 @@ namespace JSONAdminEditor.Services
         {
             try
             {
-                return File.Exists(filePath) && filePath.StartsWith(_customerFolder) && (File.Delete(filePath) == default(void));
+                if (File.Exists(filePath) && filePath.StartsWith(_customerFolder))
+                {
+                    File.Delete(filePath);
+                    return true; 
+                }
+                return false; 
             }
             catch
             {

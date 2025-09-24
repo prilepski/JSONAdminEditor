@@ -14,7 +14,6 @@ namespace JSONAdminEditor.Services
     public class FileContentService(IStorageServiceFactory storageServiceFactory, IOptions<StorageSettings> storageSettings, IWebHostEnvironment environment) : IFileContentService
     {
         private readonly IStorageServiceFactory _storageServiceFactory = storageServiceFactory;
-        private readonly StorageSettings _storageSettings = storageSettings.Value;
         private readonly IWebHostEnvironment _environment = environment;
         private readonly bool _isS3Storage = storageSettings.Value.StorageType.Equals("s3", StringComparison.OrdinalIgnoreCase);
 
@@ -31,7 +30,7 @@ namespace JSONAdminEditor.Services
                     }
                     return "";
                 }
-                
+
                 var absolutePath = MapToFileSystemPath(filePath);
                 return File.Exists(absolutePath) ? await File.ReadAllTextAsync(absolutePath) : "";
             }
@@ -54,14 +53,14 @@ namespace JSONAdminEditor.Services
                     }
                     return false;
                 }
-                
+
                 var absolutePath = MapToFileSystemPath(filePath);
                 var directory = Path.GetDirectoryName(absolutePath);
                 if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
-                
+
                 await File.WriteAllTextAsync(absolutePath, content);
                 return true;
             }
@@ -81,28 +80,30 @@ namespace JSONAdminEditor.Services
                 }
                 return false;
             }
-            
+
             return File.Exists(MapToFileSystemPath(filePath));
         }
 
-        public string MapToStoragePath(string filePath) => 
+        public string MapToStoragePath(string filePath) =>
             _isS3Storage ? MapFilePathToS3Key(filePath) : MapToFileSystemPath(filePath);
 
-        private string MapToFileSystemPath(string filePath) => 
+        private string MapToFileSystemPath(string filePath) =>
             Path.IsPathRooted(filePath) ? filePath : Path.Combine(_environment.WebRootPath, filePath);
 
         private string MapFilePathToS3Key(string filePath)
         {
             var key = filePath.Replace('\\', '/');
-            
-            return key switch
+
+            var result = key switch
             {
                 var k when k.Contains("/wwwroot/data/") => k.Substring(k.IndexOf("/wwwroot/data/") + 14),
                 var k when k.Contains("wwwroot/data/") => k.Substring(k.IndexOf("wwwroot/data/") + 13),
                 var k when k.StartsWith("data/") => k.Substring(5),
                 var k when k.StartsWith("/data/") => k.Substring(6),
                 _ => key
-            }.TrimStart('/');
+            };
+
+            return result.TrimStart('/');
         }
     }
 }
