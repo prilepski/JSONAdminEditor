@@ -90,7 +90,7 @@ namespace JSONAdminEditor.Services
         private string MapToFileSystemPath(string filePath) =>
             Path.IsPathRooted(filePath) ? filePath : Path.Combine(_environment.WebRootPath, filePath);
 
-        private string MapFilePathToS3Key(string filePath)
+        private static string MapFilePathToS3Key(string filePath)
         {
             var key = filePath.Replace('\\', '/');
 

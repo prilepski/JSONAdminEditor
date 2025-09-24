@@ -2,10 +2,14 @@ using JSONAdminEditor.Services;
 using JSONAdminEditor.Models;
 using JSONAdminEditor.Middleware;
 using JSONAdminEditor.API.Middleware;
+using JSONAdminEditor.Application.Models;
 using Amazon.S3;
 using Amazon;
 using Amazon.Extensions.NETCore.Setup;
 using JSONAdminEditor.API;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,8 +22,39 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 builder.Services.Configure<StorageSettings>(
     builder.Configuration.GetSection("StorageSettings"));
 
+// Configure Okta settings
+builder.Services.Configure<OktaSettings>(builder.Configuration.GetSection("Okta"));
+
+// Add authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies";
+    options.DefaultChallengeScheme = "oidc";
+})
+.AddCookie("Cookies")
+.AddOpenIdConnect("oidc", options =>
+{
+    var oktaSettings = builder.Configuration.GetSection("Okta").Get<OktaSettings>();
+    options.Authority = oktaSettings?.Domain;
+    options.ClientId = oktaSettings?.ClientId;
+    options.ClientSecret = oktaSettings?.ClientSecret;
+    options.ResponseType = "code";
+    options.SaveTokens = true;
+    options.Scope.Add("openid");
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+});
+
+builder.Services.AddAuthorization();
+
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(config =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    config.Filters.Add(new AuthorizeFilter(policy));
+});
 
 // Add modern Microsoft OpenAPI support
 builder.Services.AddOpenApi("v1", options =>
@@ -129,6 +164,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Serve React static files
