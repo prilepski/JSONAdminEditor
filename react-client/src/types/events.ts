@@ -38,7 +38,7 @@ export interface EventField {
 }
 
 export interface TemplateField {
-  channel: ChannelType;
+  channel: string;
   value: string;
   isRedefined: boolean;
   globalValue?: string;

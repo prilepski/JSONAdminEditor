@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContentVariable } from '../../types/customerEvent';
+import { ContentVariable } from '../../types/components';
 
 interface CustomerContentVariablesTableProps {
   contentVariables: Record<string, ContentVariable>;
@@ -19,13 +19,13 @@ export const CustomerContentVariablesTable: React.FC<CustomerContentVariablesTab
       <h5>
         <i className="fas fa-code me-2"></i>Content Variables
       </h5>
-      <button type="button" className="btn btn-outline-primary" onClick={onAdd}>
+      <button type="button" className="btn btn-success" onClick={onAdd}>
         <i className="fas fa-plus me-1"></i>Add Variable
       </button>
     </div>
     <div className="table-responsive">
-      <table className="table table-bordered">
-        <thead className="table-light">
+      <table className="table table-striped table-hover">
+        <thead className="table-dark">
           <tr>
             <th>Variable Name</th>
             <th>Variable Value</th>
@@ -54,7 +54,7 @@ export const CustomerContentVariablesTable: React.FC<CustomerContentVariablesTab
               <td className="text-center">
                 <button
                   type="button"
-                  className="btn btn-outline-danger btn-sm"
+                  className="btn btn-danger btn-sm"
                   onClick={() => onRemove(key)}
                 >
                   <i className="fas fa-trash"></i>

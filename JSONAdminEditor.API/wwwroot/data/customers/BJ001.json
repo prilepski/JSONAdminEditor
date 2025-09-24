@@ -47,18 +47,11 @@
         "Sms": "5432qwertysms"
       },
       "IsSuppressed": true,
-      "PreferredCommunication": [
-        {
-          "Channel": "Sms",
-          "Priority": 2
-        },
-        {
-          "Channel": "Voice",
-          "Priority": 1
-        }
-      ],
+      "PreferredCommunication": [],
       "ContentVariables": {
-        "customerEventVariable": "string"
+        "customerEventVariable": "string",
+        "new_var_1758706338996": "ssss",
+        "new_var_1758706970964": "test"
       },
       "TriggerConditions": {}
     },

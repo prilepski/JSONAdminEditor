@@ -1,12 +1,11 @@
-import React from 'react';
-import { ToggleButtonGroup } from '../common';
-import { EventTrigger } from '../../types';
+import React, { useMemo } from 'react';
+import { EventMapping } from '../../types';
 
 interface CustomerEventSelectorProps {
   selectedCustomer: string;
   selectedEvent: string;
   selectedOrderType: string;
-  eventTriggers: EventTrigger[];
+  customerEvents: EventMapping[];
   onEventChange: (event: string) => void;
   onOrderTypeChange: (orderType: string) => void;
 }
@@ -15,44 +14,54 @@ export const CustomerEventSelector: React.FC<CustomerEventSelectorProps> = ({
   selectedCustomer,
   selectedEvent,
   selectedOrderType,
-  eventTriggers,
+  customerEvents,
   onEventChange,
   onOrderTypeChange,
-}) => (
-  <div className="card mb-4">
-    <div className="card-header">
-      <h3>
-        <i className="fas fa-calendar-alt me-2"></i>Select Event for {selectedCustomer}
-      </h3>
-    </div>
-    <div className="card-body">
-      <div className="row">
-        <div className="col-md-6">
-          <select
-            className="form-select"
-            value={selectedEvent}
-            onChange={(e) => onEventChange(e.target.value)}
-          >
-            <option value="">Select an event...</option>
-            {eventTriggers.map((trigger) => (
-              <option key={trigger.eventName} value={trigger.eventName}>
-                {trigger.eventName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-6">
-          <ToggleButtonGroup
-            options={[
-              { value: 'Delivery', label: 'Delivery' },
-              { value: 'Pickup', label: 'Pickup' }
-            ]}
-            selected={selectedOrderType}
-            onChange={onOrderTypeChange}
-            size="sm"
-          />
-        </div>
+}) => {
+  const eventOptions = useMemo(() => {
+    return customerEvents.map(event => ({
+      value: `${event.event}|${event.orderType}`,
+      label: `${event.event} - ${event.orderType}`,
+      event: event.event,
+      orderType: event.orderType
+    }));
+  }, [customerEvents]);
+  
+  const selectedValue = selectedEvent && selectedOrderType ? `${selectedEvent}|${selectedOrderType}` : '';
+  
+  const handleChange = (value: string) => {
+    if (!value) {
+      onEventChange('');
+      onOrderTypeChange('Delivery');
+      return;
+    }
+    
+    const [event, orderType] = value.split('|');
+    onEventChange(event);
+    onOrderTypeChange(orderType);
+  };
+  
+  return (
+    <div className="card mb-4">
+      <div className="card-header">
+        <h3>
+          <i className="fas fa-calendar-alt me-2"></i>Select Event for {selectedCustomer}
+        </h3>
+      </div>
+      <div className="card-body">
+        <select
+          className="form-select"
+          value={selectedValue}
+          onChange={(e) => handleChange(e.target.value)}
+        >
+          <option value="">Select an event...</option>
+          {eventOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
-  </div>
-);
+  );
+};
