@@ -11,28 +11,26 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
   globalContentVariables = {},
   onUpdate,
 }) => {
-  // Merge global and event-level variables
+  // Merge global and event-level variables following backend logic
   const mergedVariables = React.useMemo(() => {
     const merged: Record<string, { value: string; isRedefined: boolean; globalValue?: string }> = {};
     
-    // Add global variables first
+    // Start with global variables
     Object.entries(globalContentVariables).forEach(([key, value]) => {
       merged[key] = {
-        value: contentVariables[key] || value,
-        isRedefined: key in contentVariables,
+        value,
+        isRedefined: false,
         globalValue: value
       };
     });
     
-    // Add event-only variables
+    // Override with event-level variables (these are considered redefined)
     Object.entries(contentVariables).forEach(([key, value]) => {
-      if (!(key in globalContentVariables)) {
-        merged[key] = {
-          value,
-          isRedefined: true,
-          globalValue: undefined
-        };
-      }
+      merged[key] = {
+        value,
+        isRedefined: true,
+        globalValue: merged[key]?.globalValue
+      };
     });
     
     return merged;
