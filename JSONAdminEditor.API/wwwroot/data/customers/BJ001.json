@@ -16,8 +16,7 @@
   "ContentVariables": {
     "sdfsdf": "string",
     "cust_name": "$Customer.FriendlyName$",
-    "additionalProp3": "string",
-    "test cust levelsdsasadsadas": "sdadsasd"
+    "additionalProp3": "string"
   },
   "ContentVariablesOverrides": {
     "sdfsdf": {
