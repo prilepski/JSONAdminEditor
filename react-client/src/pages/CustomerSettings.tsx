@@ -26,15 +26,34 @@ export const CustomerSettings: React.FC = () => {
   const { data: globalContentVariables = {} } = useContentVariablesQuery();
   const saveMutation = useCustomerContentVariablesMutation();
 
+  // Merge global and customer variables following same logic as events
+  const mergedVariables = React.useMemo(() => {
+    const merged: Record<string, { value: string; isRedefined: boolean; globalValue?: string }> = {};
+    
+    // Start with global variables
+    Object.entries(globalContentVariables).forEach(([key, value]) => {
+      merged[key] = {
+        value,
+        isRedefined: false,
+        globalValue: value
+      };
+    });
+    
+    // Override with current customer variables (these are considered redefined)
+    Object.entries(contentVariables).forEach(([key, value]) => {
+      merged[key] = {
+        value,
+        isRedefined: true,
+        globalValue: merged[key]?.globalValue
+      };
+    });
+    
+    return merged;
+  }, [globalContentVariables, contentVariables]);
+
   useEffect(() => {
-    if (selectedCustomer) {
-      // Merge global and customer variables
-      const merged = { ...globalContentVariables, ...customerContentVars };
-      setContentVariables(merged);
-    } else {
-      setContentVariables({});
-    }
-  }, [selectedCustomer, globalContentVariables, JSON.stringify(customerContentVars)]);
+    setContentVariables(selectedCustomer ? customerContentVars || {} : {});
+  }, [selectedCustomer, JSON.stringify(customerContentVars)]);
 
   const handleSave = async () => {
     if (!selectedCustomer) return;
@@ -55,20 +74,29 @@ export const CustomerSettings: React.FC = () => {
   };
 
   const updateVariable = (oldKey: string, newKey: string, value: string) => {
-    setContentVariables((prev) => {
+    setContentVariables(prev => {
       const newVars = { ...prev };
-      if (oldKey !== newKey) {
-        delete newVars[oldKey];
-      }
+      if (oldKey !== newKey) delete newVars[oldKey];
       newVars[newKey] = value;
       return newVars;
     });
   };
 
   const removeVariable = (key: string) => {
-    setContentVariables((prev) => {
+    setContentVariables(prev => {
+      const { [key]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const toggleRedefined = (key: string, isRedefined: boolean) => {
+    setContentVariables(prev => {
       const newVars = { ...prev };
-      delete newVars[key];
+      if (isRedefined) {
+        newVars[key] = mergedVariables[key]?.value || globalContentVariables[key] || '';
+      } else {
+        delete newVars[key];
+      }
       return newVars;
     });
   };
@@ -127,7 +155,7 @@ export const CustomerSettings: React.FC = () => {
                     </div>
                   </div>
 
-                  {Object.keys(contentVariables).length > 0 ? (
+                  {Object.keys(mergedVariables).length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-striped table-hover">
                         <thead className="table-dark">
@@ -139,50 +167,47 @@ export const CustomerSettings: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(contentVariables).map(([key, value], index) => {
-                            const isRedefined = key in customerContentVars;
-                            const isGlobal = key in globalContentVariables;
-                            return (
-                              <tr key={`setting-${index}-${key}`}>
-                                <td>
+                          {Object.entries(mergedVariables).map(([key, data], index) => (
+                            <tr key={`setting-${index}-${key}`}>
+                              <td>
+                                <input
+                                  type="text"
+                                  className={`form-control form-control-sm ${data.globalValue ? 'bg-light' : ''}`}
+                                  value={key}
+                                  readOnly={!!data.globalValue}
+                                  onChange={data.globalValue ? undefined : (e) => updateVariable(key, e.target.value, data.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm"
+                                  value={data.value}
+                                  onChange={(e) => updateVariable(key, key, e.target.value)}
+                                  disabled={!data.isRedefined}
+                                />
+                              </td>
+                              <td className="text-center">
+                                <div className="form-check">
                                   <input
-                                    type="text"
-                                    className={`form-control form-control-sm ${isGlobal ? 'bg-light' : ''}`}
-                                    value={key}
-                                    readOnly={isGlobal}
-                                    onChange={isGlobal ? undefined : (e) => updateVariable(key, e.target.value, value)}
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    checked={data.isRedefined}
+                                    onChange={(e) => toggleRedefined(key, e.target.checked)}
                                   />
-                                </td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className="form-control form-control-sm"
-                                    value={value}
-                                    onChange={(e) => updateVariable(key, key, e.target.value)}
-                                  />
-                                </td>
-                                <td className="text-center">
-                                  <div className="form-check">
-                                    <input
-                                      className="form-check-input"
-                                      type="checkbox"
-                                      checked={isRedefined}
-                                      readOnly
-                                    />
-                                  </div>
-                                </td>
-                                <td className="text-center">
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => removeVariable(key)}
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                                </div>
+                              </td>
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => removeVariable(key)}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
