@@ -1,23 +1,17 @@
 import React from 'react';
-import { TemplateField } from '../../types/customerEvent';
-import { Template } from '../../types';
+import { TemplateField } from '../../types/components';
 
 interface CustomerTemplateTableProps {
   templateFields: TemplateField[];
-  availableTemplates: Template[];
-  onUpdateTemplate: (channel: 'Email' | 'Sms' | 'Voice', value: string) => void;
-  onToggleRedefined: (channel: 'Email' | 'Sms' | 'Voice', isRedefined: boolean) => void;
+  onUpdateTemplate: (channel: string, value: string) => void;
+  onToggleRedefined: (channel: string, isRedefined: boolean) => void;
 }
 
 export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
   templateFields,
-  availableTemplates,
   onUpdateTemplate,
   onToggleRedefined,
 }) => {
-  const getTemplatesByChannel = (channel: 'Email' | 'Sms' | 'Voice'): Template[] => {
-    return availableTemplates.filter((t) => t.channelType === channel);
-  };
 
   return (
     <div>
@@ -43,19 +37,14 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
                   <strong>{template.channel}</strong>
                 </td>
                 <td>
-                  <select
-                    className="form-select"
+                  <input
+                    type="text"
+                    className="form-control"
                     value={template.value}
                     disabled={!template.isRedefined}
                     onChange={(e) => onUpdateTemplate(template.channel, e.target.value)}
-                  >
-                    <option value="">Select template...</option>
-                    {getTemplatesByChannel(template.channel).map((t) => (
-                      <option key={t.templateId} value={t.templateId}>
-                        {t.templateName} ({t.templateId})
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Enter template ID..."
+                  />
                 </td>
                 <td className="text-center">
                   <div className="form-check">

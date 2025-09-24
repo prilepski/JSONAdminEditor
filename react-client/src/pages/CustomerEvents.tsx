@@ -4,16 +4,11 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import {
   useCustomersQuery,
   useCustomerEventsQuery,
-  useCustomerEventsMutation,
+  useCustomerEventQuery,
+  useCustomerEventMutation,
 } from '../hooks/useCustomerQuery';
-import { useEventTriggersQuery, useTemplatesQuery } from '../hooks/useEventQuery';
-import { EventTrigger, Template } from '../types';
-import {
-  CustomerEventData,
-  EventField,
-  TemplateField,
-  ContentVariable,
-} from '../types/customerEvent';
+import { CustomerEventMapping, EventMapping } from '../types';
+import { EventField, TemplateField, ContentVariable } from '../types/components';
 import {
   PageHeader,
   CustomerSelector,
@@ -27,6 +22,7 @@ import { CustomerEventSelector } from '../components/events/CustomerEventSelecto
 import { CustomerEventDataTable } from '../components/events/CustomerEventDataTable';
 import { CustomerTemplateTable } from '../components/events/CustomerTemplateTable';
 import { CustomerContentVariablesTable } from '../components/events/CustomerContentVariablesTable';
+import { CustomerContentVariablesOverridesTable } from '../components/events/CustomerContentVariablesOverridesTable';
 
 export const CustomerEvents: React.FC = () => {
   const { state, updateField } = useFormState({
@@ -40,78 +36,74 @@ export const CustomerEvents: React.FC = () => {
   const [eventFields, setEventFields] = useState<EventField[]>([]);
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [contentVariables, setContentVariables] = useState<Record<string, ContentVariable>>({});
+  const [contentVariablesOverrides, setContentVariablesOverrides] = useState<Record<string, Record<string, Record<string, string>>>>({});
 
   const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
-  const { data: activeEventTriggers = [] as EventTrigger[], isLoading: triggersLoading } = useEventTriggersQuery();
-  const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery(selectedOrderType);
-  const { data: customerEventData, isLoading: eventDataLoading } =
-    useCustomerEventsQuery(selectedCustomer, selectedOrderType);
-  const saveMutation = useCustomerEventsMutation();
+  const { data: customerEventData = [], isLoading: eventDataLoading } = useCustomerEventsQuery(selectedCustomer);
+  const saveMutation = useCustomerEventMutation();
+  const { data: specificEventData, isLoading: specificEventLoading } = useCustomerEventQuery(
+    selectedCustomer,
+    selectedEvent,
+    selectedOrderType
+  );
 
   useEffect(() => {
-    if (selectedEvent && selectedCustomer) {
-      // Find existing customer event data
-      const existingEvent = Array.isArray(customerEventData)
-        ? customerEventData.find(
-            (event: any) => event.Event === selectedEvent && event.OrderType === selectedOrderType
-          )
-        : customerEventData;
-
-      // Initialize event fields with existing data or defaults
+    if (selectedEvent && selectedOrderType) {
+      // Initialize with defaults or existing data
       const fields: EventField[] = [
         {
           name: 'Phone',
-          value: existingEvent?.phone || '$consigneeContact.phone$',
-          isRedefined: !!existingEvent?.phone,
+          value: specificEventData?.phone || '$consigneeContact.phone$',
+          isRedefined: !!specificEventData?.phone,
           type: 'text',
           globalValue: '$consigneeContact.phone$',
         },
         {
           name: 'Email',
-          value: existingEvent?.email || '$consigneeContact.email$',
-          isRedefined: !!existingEvent?.email,
+          value: specificEventData?.email || '$consigneeContact.email$',
+          isRedefined: !!specificEventData?.email,
           type: 'text',
           globalValue: '$consigneeContact.email$',
         },
         {
           name: 'IsSuppressed',
-          value: existingEvent?.isSuppressed ? 'true' : 'false',
-          isRedefined: existingEvent?.isSuppressed !== undefined,
+          value: specificEventData?.isSuppressed ? 'true' : 'false',
+          isRedefined: specificEventData?.isSuppressed !== undefined,
           type: 'checkbox',
           globalValue: 'false',
         },
       ];
       setEventFields(fields);
 
-      // Initialize template fields with existing data
+      // Initialize template fields
       const templates: TemplateField[] = [
         {
           channel: 'Email',
-          value: existingEvent?.templates?.Email || '',
-          isRedefined: !!existingEvent?.templates?.Email,
+          value: specificEventData?.templates?.Email || '',
+          isRedefined: !!specificEventData?.templates?.Email,
           globalValue: '',
         },
         {
           channel: 'Sms',
-          value: existingEvent?.templates?.sms || '',
-          isRedefined: !!existingEvent?.templates?.Sms,
+          value: specificEventData?.templates?.Sms || '',
+          isRedefined: !!specificEventData?.templates?.Sms,
           globalValue: '',
         },
         {
           channel: 'Voice',
-          value: existingEvent?.templates?.Voice || '',
-          isRedefined: !!existingEvent?.templates?.Voice,
+          value: specificEventData?.templates?.Voice || '',
+          isRedefined: !!specificEventData?.templates?.Voice,
           globalValue: '',
         },
       ];
       setTemplateFields(templates);
 
-      // Initialize content variables with existing data
+      // Initialize content variables
       const vars: Record<string, ContentVariable> = {};
-      if (existingEvent?.contentVariables) {
-        Object.entries(existingEvent.contentVariables).forEach(([key, value]) => {
+      if (specificEventData?.contentVariables) {
+        Object.entries(specificEventData.contentVariables).forEach(([key, value]) => {
           vars[key] = {
             name: key,
             value: String(value),
@@ -120,27 +112,29 @@ export const CustomerEvents: React.FC = () => {
         });
       }
       setContentVariables(vars);
+
+      // Initialize content variables overrides
+      setContentVariablesOverrides(specificEventData?.contentVariablesOverrides || {});
     }
-  }, [selectedEvent, selectedCustomer, selectedOrderType, customerEventData]);
+  }, [selectedEvent, selectedOrderType, specificEventData]);
 
   const handleSave = async () => {
     if (!selectedCustomer || !selectedEvent) return;
 
-    const saveData: CustomerEventData = {
-      Event: selectedEvent,
-      OrderType: selectedOrderType,
+    const saveData: CustomerEventMapping = {
+      event: selectedEvent,
+      orderType: selectedOrderType,
     };
 
     // Add redefined event fields
     eventFields.forEach((field) => {
       if (field.isRedefined) {
-        if (field.type === 'checkbox') {
-          (saveData as any)[field.name] = field.value === 'true';
-        } else {
-          (saveData as any)[field.name] = field.value;
-        }
+        if (field.name === 'Phone') saveData.phone = field.value;
+        if (field.name === 'Email') saveData.email = field.value;
+        if (field.name === 'IsSuppressed') saveData.isSuppressed = field.value === 'true';
       }
     });
+    
 
     // Add redefined templates
     const templates: Record<string, string> = {};
@@ -150,7 +144,7 @@ export const CustomerEvents: React.FC = () => {
       }
     });
     if (Object.keys(templates).length > 0) {
-      saveData.Templates = templates;
+      saveData.templates = templates;
     }
 
     // Add content variables
@@ -161,7 +155,12 @@ export const CustomerEvents: React.FC = () => {
       }
     });
     if (Object.keys(vars).length > 0) {
-      saveData.ContentVariables = vars;
+      saveData.contentVariables = vars;
+    }
+
+    // Add content variables overrides
+    if (Object.keys(contentVariablesOverrides).length > 0) {
+      saveData.contentVariablesOverrides = contentVariablesOverrides;
     }
 
     try {
@@ -169,7 +168,7 @@ export const CustomerEvents: React.FC = () => {
         customerId: selectedCustomer,
         eventName: selectedEvent,
         orderType: selectedOrderType,
-        data: saveData as any,
+        data: saveData,
       });
     } catch (error) {
       handleError(error, 'Failed to save customer event');
@@ -183,18 +182,18 @@ export const CustomerEvents: React.FC = () => {
   };
 
   const toggleEventFieldRedefined = (fieldName: string, isRedefined: boolean) => {
-    setEventFields((prev) =>
+      setEventFields((prev) =>
       prev.map((field) => (field.name === fieldName ? { ...field, isRedefined } : field))
     );
   };
 
-  const updateTemplateField = (channel: 'Email' | 'Sms' | 'Voice', value: string) => {
+  const updateTemplateField = (channel: string, value: string) => {
     setTemplateFields((prev) =>
       prev.map((template) => (template.channel === channel ? { ...template, value } : template))
     );
   };
 
-  const toggleTemplateRedefined = (channel: 'Email' | 'Sms' | 'Voice', isRedefined: boolean) => {
+  const toggleTemplateRedefined = (channel: string, isRedefined: boolean) => {
     setTemplateFields((prev) =>
       prev.map((template) =>
         template.channel === channel ? { ...template, isRedefined } : template
@@ -229,14 +228,60 @@ export const CustomerEvents: React.FC = () => {
     });
   };
 
+  const addContentVariableOverride = () => {
+    const eventKey = `event_${Date.now()}`;
+    const variableKey = `variable_${Date.now()}`;
+    const overrideKey = `override_${Date.now()}`;
+    setContentVariablesOverrides((prev) => ({
+      ...prev,
+      [eventKey]: {
+        ...prev[eventKey],
+        [variableKey]: {
+          ...prev[eventKey]?.[variableKey],
+          [overrideKey]: ''
+        }
+      }
+    }));
+  };
+
+  const updateContentVariableOverride = (eventKey: string, variableKey: string, overrideKey: string, value: string) => {
+    setContentVariablesOverrides((prev) => ({
+      ...prev,
+      [eventKey]: {
+        ...prev[eventKey],
+        [variableKey]: {
+          ...prev[eventKey]?.[variableKey],
+          [overrideKey]: value
+        }
+      }
+    }));
+  };
+
+  const removeContentVariableOverride = (eventKey: string, variableKey: string, overrideKey: string) => {
+    setContentVariablesOverrides((prev) => {
+      const newOverrides = { ...prev };
+      if (newOverrides[eventKey]?.[variableKey]) {
+        delete newOverrides[eventKey][variableKey][overrideKey];
+        if (Object.keys(newOverrides[eventKey][variableKey]).length === 0) {
+          delete newOverrides[eventKey][variableKey];
+        }
+        if (Object.keys(newOverrides[eventKey]).length === 0) {
+          delete newOverrides[eventKey];
+        }
+      }
+      return newOverrides;
+    });
+  };
+
   const tabs = [
     { id: 'event-data', label: 'Event Data', icon: 'fa-cog' },
     { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
     { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
+    { id: 'content-variables-overrides', label: 'Content Variables Overrides', icon: 'fa-layer-group' },
   ];
 
-  const isInitialLoading = customersLoading || triggersLoading || templatesLoading;
-  const isEventConfigLoading = selectedCustomer && selectedEvent && eventDataLoading;
+  const isInitialLoading = customersLoading;
+  const isEventConfigLoading = selectedCustomer && selectedEvent && (eventDataLoading || specificEventLoading);
 
   return (
     <PageErrorBoundary pageName="Customer Events">
@@ -260,7 +305,7 @@ export const CustomerEvents: React.FC = () => {
                 selectedCustomer={selectedCustomer}
                 selectedEvent={selectedEvent}
                 selectedOrderType={selectedOrderType}
-                eventTriggers={activeEventTriggers}
+                customerEvents={customerEventData}
                 onEventChange={(event) => updateField('selectedEvent', event)}
                 onOrderTypeChange={(orderType) => updateField('selectedOrderType', orderType)}
               />
@@ -306,7 +351,6 @@ export const CustomerEvents: React.FC = () => {
                   <ComponentErrorBoundary componentName="Template Table">
                     <CustomerTemplateTable
                       templateFields={templateFields}
-                      availableTemplates={availableTemplates}
                       onUpdateTemplate={updateTemplateField}
                       onToggleRedefined={toggleTemplateRedefined}
                     />
@@ -320,6 +364,17 @@ export const CustomerEvents: React.FC = () => {
                       onAdd={addContentVariable}
                       onUpdate={updateContentVariable}
                       onRemove={removeContentVariable}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+
+                {activeTab === 'content-variables-overrides' && (
+                  <ComponentErrorBoundary componentName="Content Variables Overrides">
+                    <CustomerContentVariablesOverridesTable
+                      contentVariablesOverrides={contentVariablesOverrides}
+                      onAdd={addContentVariableOverride}
+                      onUpdate={updateContentVariableOverride}
+                      onRemove={removeContentVariableOverride}
                     />
                   </ComponentErrorBoundary>
                 )}

@@ -12,6 +12,7 @@ export type Channel = components['schemas']['Channel'];
 export type AfterHours2 = components['schemas']['AfterHours2'];
 export type EventMapping = components['schemas']['EventMapping'];
 export type CustomerNotificationMapping = components['schemas']['CustomerNotificationMapping'];
+export type CustomerEventMapping = components['schemas']['CustomerEventMapping'];
 export type OptOutLocale = components['schemas']['OptOutLocale'];
 export type OptOutConfig = { [key: string]: { [key: string]: OptOutLocale } };
 

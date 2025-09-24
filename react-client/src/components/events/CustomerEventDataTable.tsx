@@ -1,5 +1,5 @@
 import React from 'react';
-import { EventField } from '../../types/customerEvent';
+import { EventField } from '../../types/components';
 
 interface CustomerEventDataTableProps {
   eventFields: EventField[];
