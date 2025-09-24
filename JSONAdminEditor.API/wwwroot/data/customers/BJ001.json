@@ -29,7 +29,15 @@
   },
   "Events": [
     {
-      "ContentVariablesOverrides": {},
+      "ContentVariablesOverrides": {
+        "sdfsdf": {
+          "ReferenceNumber": {
+            "123": "string",
+            "234": "string",
+            "345": "string"
+          }
+        }
+      },
       "Event": "Final Scheduling Appointment",
       "OrderType": "Delivery",
       "Phone": "$consigneeContact.phone$2",
@@ -39,8 +47,19 @@
         "Sms": "5432qwertysms"
       },
       "IsSuppressed": true,
-      "PreferredCommunication": [],
-      "ContentVariables": {},
+      "PreferredCommunication": [
+        {
+          "Channel": "Sms",
+          "Priority": 2
+        },
+        {
+          "Channel": "Voice",
+          "Priority": 1
+        }
+      ],
+      "ContentVariables": {
+        "customerEventVariable": "string"
+      },
       "TriggerConditions": {}
     },
     {
