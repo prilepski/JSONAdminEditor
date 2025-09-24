@@ -7,6 +7,7 @@ import {
   useAllEventsQuery,
   useEventMutation,
 } from '../hooks/useEventQuery';
+import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import { Template } from '../types';
 import { PageHeader, TabNavigation, SaveButton, LoadingSpinner } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
@@ -43,6 +44,7 @@ export const Events: React.FC = () => {
   const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
   const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery();
   const { data: allEvents = [] } = useAllEventsQuery();
+  const { data: globalContentVariables = {} } = useContentVariablesQuery();
   const { data: eventInfo, isLoading: eventLoading } = useEventQuery(
     selectedEvent,
     selectedOrderType
@@ -195,6 +197,7 @@ export const Events: React.FC = () => {
                   <ComponentErrorBoundary componentName="Content Variables">
                     <ContentVariablesForm
                       contentVariables={eventData.contentVariables || {}}
+                      globalContentVariables={globalContentVariables}
                       onUpdate={updateContentVariables}
                     />
                   </ComponentErrorBoundary>

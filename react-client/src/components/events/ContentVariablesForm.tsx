@@ -2,19 +2,59 @@ import React from 'react';
 
 interface ContentVariablesFormProps {
   contentVariables: Record<string, string>;
+  globalContentVariables?: Record<string, string>;
   onUpdate: (variables: Record<string, string>) => void;
 }
 
 export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
   contentVariables,
+  globalContentVariables = {},
   onUpdate,
 }) => {
+  // Merge global and event-level variables
+  const mergedVariables = React.useMemo(() => {
+    const merged: Record<string, { value: string; isRedefined: boolean; globalValue?: string }> = {};
+    
+    // Add global variables first
+    Object.entries(globalContentVariables).forEach(([key, value]) => {
+      merged[key] = {
+        value: contentVariables[key] || value,
+        isRedefined: key in contentVariables,
+        globalValue: value
+      };
+    });
+    
+    // Add event-only variables
+    Object.entries(contentVariables).forEach(([key, value]) => {
+      if (!(key in globalContentVariables)) {
+        merged[key] = {
+          value,
+          isRedefined: true,
+          globalValue: undefined
+        };
+      }
+    });
+    
+    return merged;
+  }, [contentVariables, globalContentVariables]);
   const updateVariable = (oldKey: string, newKey: string, value: string) => {
     const newVars = { ...contentVariables };
     if (oldKey !== newKey) {
       delete newVars[oldKey];
     }
     newVars[newKey] = value;
+    onUpdate(newVars);
+  };
+  
+  const toggleRedefined = (key: string, isRedefined: boolean) => {
+    const newVars = { ...contentVariables };
+    if (isRedefined) {
+      // Add to event variables with current value
+      newVars[key] = mergedVariables[key]?.value || globalContentVariables[key] || '';
+    } else {
+      // Remove from event variables (use global value)
+      delete newVars[key];
+    }
     onUpdate(newVars);
   };
 
@@ -47,14 +87,14 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
             </tr>
           </thead>
           <tbody>
-            {Object.entries(contentVariables).map(([key, value]) => (
-              <tr key={key}>
+            {Object.entries(mergedVariables).map(([key, data], index) => (
+              <tr key={`content-var-${index}`}>
                 <td>
                   <input
                     type="text"
                     className="form-control form-control-sm"
                     value={key}
-                    onChange={(e) => updateVariable(key, e.target.value, value)}
+                    onChange={(e) => updateVariable(key, e.target.value, data.value)}
                     placeholder="Variable name"
                   />
                 </td>
@@ -62,8 +102,9 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
                   <input
                     type="text"
                     className="form-control form-control-sm"
-                    value={value}
+                    value={data.value}
                     onChange={(e) => updateVariable(key, key, e.target.value)}
+                    disabled={!data.isRedefined}
                     placeholder="Variable value"
                   />
                 </td>
@@ -72,8 +113,8 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
                     <input
                       className="form-check-input"
                       type="checkbox"
-                      checked={true}
-                      readOnly
+                      checked={data.isRedefined}
+                      onChange={(e) => toggleRedefined(key, e.target.checked)}
                     />
                   </div>
                 </td>
