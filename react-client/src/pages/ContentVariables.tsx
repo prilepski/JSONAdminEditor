@@ -33,7 +33,7 @@ export const ContentVariables: React.FC = () => {
       tableData.forEach(row => {
         const name = row['Variable Name'] as string;
         const value = row['Variable Value'] as string;
-        if (name) contentVars[name] = value || '';
+        if (name && name.trim()) contentVars[name] = value || '';
       });
       
       await saveMutation.mutateAsync(contentVars);
@@ -44,20 +44,22 @@ export const ContentVariables: React.FC = () => {
     }
   };
 
-  // Convert ContentVariables to TableData format
-  const tableData = Object.entries(data).map(([name, value]) => ({
-    'Variable Name': name,
-    'Variable Value': value
-  }));
+  // Convert ContentVariables to TableData format - memoized to prevent re-creation
+  const dictionaryData = React.useMemo(() => {
+    const tableData = Object.entries(data).map(([name, value]) => ({
+      'Variable Name': name,
+      'Variable Value': value
+    }));
 
-  const dictionaryData = {
-    columnNames: ['Variable Name', 'Variable Value'],
-    columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text' },
-    tableData,
-    filePath: 'content-variables',
-    fileName: 'content-variables.json',
-    isValidJson: true,
-  };
+    return {
+      columnNames: ['Variable Name', 'Variable Value'],
+      columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text' },
+      tableData,
+      filePath: 'content-variables',
+      fileName: 'content-variables.json',
+      isValidJson: true,
+    };
+  }, [data]);
 
   return (
     <PageErrorBoundary pageName="Content Variables">
