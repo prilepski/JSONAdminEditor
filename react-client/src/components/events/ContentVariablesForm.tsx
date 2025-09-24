@@ -32,16 +32,17 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5>Content Variables</h5>
-        <button type="button" className="btn btn-success btn-sm" onClick={addVariable}>
+        <button type="button" className="btn btn-success" onClick={addVariable}>
           <i className="fas fa-plus me-1"></i>Add Variable
         </button>
       </div>
       <div className="table-responsive">
-        <table className="table table-bordered">
-          <thead className="table-light">
+        <table className="table table-striped table-hover">
+          <thead className="table-dark">
             <tr>
               <th>Variable Name</th>
               <th>Variable Value</th>
+              <th>Is Redefined</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -51,7 +52,7 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
                 <td>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={key}
                     onChange={(e) => updateVariable(key, e.target.value, value)}
                     placeholder="Variable name"
@@ -60,11 +61,21 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
                 <td>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={value}
                     onChange={(e) => updateVariable(key, key, e.target.value)}
                     placeholder="Variable value"
                   />
+                </td>
+                <td className="text-center">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={true}
+                      readOnly
+                    />
+                  </div>
                 </td>
                 <td>
                   <button
