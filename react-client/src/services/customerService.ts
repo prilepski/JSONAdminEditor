@@ -13,10 +13,10 @@ const api = axios.create({
 });
 
 export const customerService = {
-  getCustomers: async (): Promise<string[]> => {
+  getCustomers: async (): Promise<Array<{ customerId: string; companyName: string }>> => {
     try {
-      const response = await api.get<Array<{ customerId: string }>>('/dictionaries/customers');
-      return response.data.map(customer => customer.customerId);
+      const response = await api.get<Array<{ customerId: string; companyName: string }>>('/dictionaries/customers');
+      return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw createApiError(
