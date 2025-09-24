@@ -1,29 +1,47 @@
 [
   {
-    "customerId": "CUST001",
-    "companyName": "Dell Technologies",
-    "contactPerson": "John Smith",
-    "email": "john.smith@dell.com",
-    "phone": "+1-555-0123",
-    "address": "Round Rock, TX",
+    "CustomerId": "CUST001",
+    "CompanyName": "Dell Technologies",
+    "ContactPerson": "John Smith",
+    "Email": "john.smith@dell.com",
+    "Phone": "\u002B1-555-0123",
+    "Address": "Round Rock, TX",
     "IsActive": true
   },
   {
-    "customerId": "CUST002",
-    "companyName": "Microsoft Corporation",
-    "contactPerson": "Jane Doe",
-    "email": "jane.doe@microsoft.com",
-    "phone": "+1-555-0456",
-    "address": "Redmond, WA",
+    "CustomerId": "CUST002",
+    "CompanyName": "Microsoft Corporation",
+    "ContactPerson": "Jane Doe",
+    "Email": "jane.doe@microsoft.com",
+    "Phone": "\u002B1-555-0456",
+    "Address": "Redmond, WA",
     "IsActive": true
   },
   {
-    "customerId": "BJ001",
-    "companyName": "BJ's",
-    "contactPerson": "Joe Doe",
-    "email": "bj@bjs.com",
-    "phone": "12345",
-    "address": "sdfdsfdf",
+    "CustomerId": "BJ001",
+    "CompanyName": "BJ\u0027s",
+    "ContactPerson": "Joe Doe",
+    "Email": "bj@bjs.com",
+    "Phone": "12345",
+    "Address": "sdfdsfdf",
+    "IsActive": true
+  },
+  {
+    "CustomerId": "testcust",
+    "CompanyName": "test company",
+    "ContactPerson": "test user",
+    "Email": "test@test",
+    "Phone": "123445",
+    "Address": "sdsadsa",
+    "IsActive": true
+  },
+  {
+    "CustomerId": "test1",
+    "CompanyName": "test1",
+    "ContactPerson": "test1",
+    "Email": "test1@test1",
+    "Phone": "1244",
+    "Address": "dsadsa",
     "IsActive": true
   }
 ]

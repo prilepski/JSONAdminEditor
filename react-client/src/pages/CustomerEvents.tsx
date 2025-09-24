@@ -361,9 +361,24 @@ export const CustomerEvents: React.FC = () => {
                   <ComponentErrorBoundary componentName="Content Variables Table">
                     <CustomerContentVariablesTable
                       contentVariables={contentVariables}
+                      selectedEvent={selectedEvent}
+                      selectedOrderType={selectedOrderType}
                       onAdd={addContentVariable}
                       onUpdate={updateContentVariable}
                       onRemove={removeContentVariable}
+                      onToggleRedefined={(key, isRedefined) => {
+                        if (isRedefined) {
+                          const existingVar = contentVariables[key];
+                          if (!existingVar) {
+                            setContentVariables(prev => ({
+                              ...prev,
+                              [key]: { name: key, value: '', isRedefined: true }
+                            }));
+                          }
+                        } else {
+                          removeContentVariable(key);
+                        }
+                      }}
                     />
                   </ComponentErrorBoundary>
                 )}
