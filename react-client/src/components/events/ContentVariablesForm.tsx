@@ -92,9 +92,10 @@ export const ContentVariablesForm: React.FC<ContentVariablesFormProps> = ({
                 <td>
                   <input
                     type="text"
-                    className="form-control form-control-sm"
+                    className={`form-control form-control-sm ${data.globalValue ? 'bg-light' : ''}`}
                     value={key}
-                    onChange={(e) => updateVariable(key, e.target.value, data.value)}
+                    readOnly={!!data.globalValue}
+                    onChange={data.globalValue ? undefined : (e) => updateVariable(key, e.target.value, data.value)}
                     placeholder="Variable name"
                   />
                 </td>
