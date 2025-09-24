@@ -17,253 +17,142 @@ namespace JSONAdminEditor.Services
             _dataFolder = Path.Combine(_environment.WebRootPath, "data");
             _customerFolder = Path.Combine(_dataFolder, "customers");
             
-            // Ensure directories exist
-            if (!Directory.Exists(_dataFolder))
-            {
-                Directory.CreateDirectory(_dataFolder);
-            }
-            if (!Directory.Exists(_customerFolder))
-            {
-                Directory.CreateDirectory(_customerFolder);
-            }
+            Directory.CreateDirectory(_dataFolder);
+            Directory.CreateDirectory(_customerFolder);
         }
 
         public async Task<(bool Success, string Message)> UploadFileAsync(FileUploadViewModel uploadModel)
         {
-            try
-            {
-                // Validate file type selection
-                if (uploadModel.FileType == FileType.None)
-                {
-                    return (false, "Please select a valid file type.");
-                }
-
-                string fileName;
-                string filePath;
-
-                switch (uploadModel.FileType)
-                {
-                    case FileType.Templates:
-                        fileName = "templates.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.Customers:
-                        fileName = "customers.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.EventTriggers:
-                        fileName = "event-triggers.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.EventChannels:
-                        fileName = "event-channels.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.OrderTypes:
-                        fileName = "order-types.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.CustomerSettings:
-                        if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
-                        {
-                            return (false, "Customer name is required for Customer Override files.");
-                        }
-                        
-                        // Use CustomerIdForFilename if available, otherwise fall back to CustomerName
-                        var customerIdForFile = !string.IsNullOrWhiteSpace(uploadModel.CustomerIdForFilename) 
-                            ? uploadModel.CustomerIdForFilename 
-                            : uploadModel.CustomerName;
-                        
-                        // Sanitize customer ID for filename
-                        var sanitizedName = SanitizeFileName(customerIdForFile);
-                        fileName = $"{sanitizedName}.json";
-                        filePath = Path.Combine(_customerFolder, fileName);
-                        break;
-                    default:
-                        return (false, "Invalid file type selected.");
-                }
-
-                // Check if file already exists
-                if (File.Exists(filePath))
-                {
-                    return (false, $"File already exists: {GetDisplayPath(filePath)}. Please confirm if you want to overwrite it.");
-                }
-
-                // Save the file
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await uploadModel.JsonFile!.CopyToAsync(stream);
-                }
-
-                return (true, $"File uploaded successfully: {GetDisplayPath(filePath)}");
-            }
-            catch (Exception ex)
-            {
-                return (false, $"Error uploading file: {ex.Message}");
-            }
+            return await ProcessFileAsync(uploadModel, false);
         }
 
         public async Task<(bool Success, string Message)> OverwriteFileAsync(FileUploadViewModel uploadModel)
         {
+            return await ProcessFileAsync(uploadModel, true);
+        }
+
+        private async Task<(bool Success, string Message)> ProcessFileAsync(FileUploadViewModel uploadModel, bool overwrite)
+        {
             try
             {
-                // Validate file type selection
                 if (uploadModel.FileType == FileType.None)
-                {
                     return (false, "Please select a valid file type.");
-                }
 
-                string fileName;
-                string filePath;
+                var filePath = GetFilePathForType(uploadModel);
+                if (filePath.Success == false)
+                    return (false, filePath.Message);
 
-                switch (uploadModel.FileType)
-                {
-                    case FileType.Templates:
-                        fileName = "templates.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.Customers:
-                        fileName = "customers.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.EventTriggers:
-                        fileName = "event-triggers.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.EventChannels:
-                        fileName = "event-channels.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.OrderTypes:
-                        fileName = "order-types.json";
-                        filePath = Path.Combine(_dataFolder, "dictionaries", fileName);
-                        break;
-                    case FileType.CustomerSettings:
-                        if (string.IsNullOrWhiteSpace(uploadModel.CustomerName))
-                        {
-                            return (false, "Customer name is required for Customer Override files.");
-                        }
-                        
-                        // Use CustomerIdForFilename if available, otherwise fall back to CustomerName
-                        var customerIdForFile = !string.IsNullOrWhiteSpace(uploadModel.CustomerIdForFilename) 
-                            ? uploadModel.CustomerIdForFilename 
-                            : uploadModel.CustomerName;
-                        
-                        var sanitizedName = SanitizeFileName(customerIdForFile);
-                        fileName = $"{sanitizedName}.json";
-                        filePath = Path.Combine(_customerFolder, fileName);
-                        break;
-                    default:
-                        return (false, "Invalid file type selected.");
-                }
+                if (!overwrite && File.Exists(filePath.Path))
+                    return (false, $"File already exists: {GetDisplayPath(filePath.Path)}. Please confirm if you want to overwrite it.");
 
-                // Overwrite the file
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await uploadModel.JsonFile!.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(filePath.Path, FileMode.Create);
+                await uploadModel.JsonFile!.CopyToAsync(stream);
 
-                return (true, $"File overwritten successfully: {GetDisplayPath(filePath)}");
+                var action = overwrite ? "overwritten" : "uploaded";
+                return (true, $"File {action} successfully: {GetDisplayPath(filePath.Path)}");
             }
             catch (Exception ex)
             {
-                return (false, $"Error overwriting file: {ex.Message}");
+                return (false, $"Error processing file: {ex.Message}");
             }
+        }
+
+        private (bool Success, string Path, string Message) GetFilePathForType(FileUploadViewModel uploadModel)
+        {
+            var fileName = uploadModel.FileType switch
+            {
+                FileType.Templates => "templates.json",
+                FileType.Customers => "customers.json",
+                FileType.EventTriggers => "event-triggers.json",
+                FileType.EventChannels => "event-channels.json",
+                FileType.OrderTypes => "order-types.json",
+                FileType.CustomerSettings when !string.IsNullOrWhiteSpace(uploadModel.CustomerName) => 
+                    $"{SanitizeFileName(!string.IsNullOrWhiteSpace(uploadModel.CustomerIdForFilename) ? uploadModel.CustomerIdForFilename : uploadModel.CustomerName)}.json",
+                FileType.CustomerSettings => null,
+                _ => null
+            };
+
+            if (fileName == null)
+                return uploadModel.FileType == FileType.CustomerSettings 
+                    ? (false, "", "Customer name is required for Customer Override files.")
+                    : (false, "", "Invalid file type selected.");
+
+            var path = uploadModel.FileType == FileType.CustomerSettings 
+                ? Path.Combine(_customerFolder, fileName)
+                : Path.Combine(_dataFolder, "dictionaries", fileName);
+
+            return (true, path, "");
         }
 
         public async Task<List<ManagedFile>> GetManagedFilesAsync()
         {
-            var files = new List<ManagedFile>();
-
-            // Add main files
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "templates.json"), FileType.Templates);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "customers.json"), FileType.Customers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-triggers.json"), FileType.EventTriggers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-channels.json"), FileType.EventChannels);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "order-types.json"), FileType.OrderTypes);
-
-            // Add customer files
-            if (Directory.Exists(_customerFolder))
-            {
-                var customerFiles = Directory.GetFiles(_customerFolder, "*.json");
-                foreach (var file in customerFiles)
-                {
-                    var customerId = Path.GetFileNameWithoutExtension(file);
-                    
-                    // Look up customer information
-                    var customer = await GetCustomerByIdAsync(customerId);
-                    var displayName = customer != null 
-                        ? $"{customer.CompanyName} ({customer.CustomerId})" 
-                        : customerId;
-                    
-                    files.Add(new ManagedFile
-                    {
-                        FileName = Path.GetFileName(file),
-                        FilePath = file,
-                        DisplayPath = $"customers/{Path.GetFileName(file)}",
-                        FileType = FileType.CustomerSettings,
-                        FileTypeDisplay = "Customer Override",
-                        CustomerName = displayName,
-                        CanDelete = true,
-                        LastModified = File.GetLastWriteTime(file)
-                    });
-                }
-            }
-
+            var files = GetCoreFiles();
+            await AddCustomerFilesAsync(files, true);
             return files.OrderBy(f => f.FileType).ThenBy(f => f.CustomerName).ToList();
         }
 
-        // Keep the synchronous version for backward compatibility, but without customer lookup
         public List<ManagedFile> GetManagedFiles()
         {
+            var files = GetCoreFiles();
+            AddCustomerFilesAsync(files, false).Wait();
+            return files.OrderBy(f => f.FileType).ThenBy(f => f.CustomerName).ToList();
+        }
+
+        private List<ManagedFile> GetCoreFiles()
+        {
             var files = new List<ManagedFile>();
-
-            // Add main files
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "templates.json"), FileType.Templates);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "customers.json"), FileType.Customers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-triggers.json"), FileType.EventTriggers);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "event-channels.json"), FileType.EventChannels);
-            AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", "order-types.json"), FileType.OrderTypes);
-
-            // Add customer files (without lookup for performance)
-            if (Directory.Exists(_customerFolder))
+            var coreFileTypes = new[] 
             {
-                var customerFiles = Directory.GetFiles(_customerFolder, "*.json");
-                foreach (var file in customerFiles)
-                {
-                    var customerId = Path.GetFileNameWithoutExtension(file);
-                    
-                    files.Add(new ManagedFile
-                    {
-                        FileName = Path.GetFileName(file),
-                        FilePath = file,
-                        DisplayPath = $"customers/{Path.GetFileName(file)}",
-                        FileType = FileType.CustomerSettings,
-                        FileTypeDisplay = "Customer Override",
-                        CustomerName = customerId, // Just use customer ID without lookup
-                        CanDelete = true,
-                        LastModified = File.GetLastWriteTime(file)
-                    });
-                }
+                ("templates.json", FileType.Templates),
+                ("customers.json", FileType.Customers),
+                ("event-triggers.json", FileType.EventTriggers),
+                ("event-channels.json", FileType.EventChannels),
+                ("order-types.json", FileType.OrderTypes)
+            };
+
+            foreach (var (fileName, fileType) in coreFileTypes)
+            {
+                AddFileIfExists(files, Path.Combine(_dataFolder, "dictionaries", fileName), fileType);
             }
 
-            return files.OrderBy(f => f.FileType).ThenBy(f => f.CustomerName).ToList();
+            return files;
+        }
+
+        private async Task AddCustomerFilesAsync(List<ManagedFile> files, bool lookupCustomerInfo)
+        {
+            if (!Directory.Exists(_customerFolder)) return;
+
+            var customerFiles = Directory.GetFiles(_customerFolder, "*.json");
+            foreach (var file in customerFiles)
+            {
+                var customerId = Path.GetFileNameWithoutExtension(file);
+                var displayName = customerId;
+
+                if (lookupCustomerInfo)
+                {
+                    var customer = await GetCustomerByIdAsync(customerId);
+                    displayName = customer != null ? $"{customer.CompanyName} ({customer.CustomerId})" : customerId;
+                }
+
+                files.Add(new ManagedFile
+                {
+                    FileName = Path.GetFileName(file),
+                    FilePath = file,
+                    DisplayPath = $"customers/{Path.GetFileName(file)}",
+                    FileType = FileType.CustomerSettings,
+                    FileTypeDisplay = "Customer Override",
+                    CustomerName = displayName,
+                    CanDelete = true,
+                    LastModified = File.GetLastWriteTime(file)
+                });
+            }
         }
 
         public bool DeleteFile(string filePath)
         {
             try
             {
-                if (File.Exists(filePath))
-                {
-                    // Only allow deletion of customer files
-                    if (filePath.StartsWith(_customerFolder))
-                    {
-                        File.Delete(filePath);
-                        return true;
-                    }
-                }
-                return false;
+                return File.Exists(filePath) && filePath.StartsWith(_customerFolder) && (File.Delete(filePath) == default(void));
             }
             catch
             {
@@ -547,16 +436,11 @@ namespace JSONAdminEditor.Services
             return Path.GetFileName(filePath);
         }
 
-        private string SanitizeFileName(string fileName)
+        private static string SanitizeFileName(string fileName)
         {
-            // Remove invalid characters and replace with underscores
             var invalidChars = Path.GetInvalidFileNameChars();
             var sanitized = new string(fileName.Where(c => !invalidChars.Contains(c)).ToArray());
-            
-            // Remove extra spaces and replace with underscores
-            sanitized = Regex.Replace(sanitized, @"\s+", "_");
-            
-            return sanitized.ToUpperInvariant();
+            return Regex.Replace(sanitized, @"\s+", "_").ToUpperInvariant();
         }
     }
 }

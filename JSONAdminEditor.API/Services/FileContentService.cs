@@ -16,71 +16,48 @@ namespace JSONAdminEditor.Services
         private readonly IStorageServiceFactory _storageServiceFactory = storageServiceFactory;
         private readonly StorageSettings _storageSettings = storageSettings.Value;
         private readonly IWebHostEnvironment _environment = environment;
+        private readonly bool _isS3Storage = storageSettings.Value.StorageType.Equals("s3", StringComparison.OrdinalIgnoreCase);
 
         public async Task<string> ReadFileAsync(string filePath)
         {
             try
             {
-                if (_storageSettings.StorageType.ToLower() == "s3")
+                if (_isS3Storage)
                 {
-                    var s3Service = _storageServiceFactory.CreateStorageService() as S3StorageService;
-                    if (s3Service != null)
+                    if (_storageServiceFactory.CreateStorageService() is S3StorageService s3Service)
                     {
-                        var key = MapFilePathToS3Key(filePath);
-                        try
-                        {
-                            var content = await s3Service.GetFileContentAsync(key);
-                            return content ?? "";
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"ERROR in FileContentService.ReadFileAsync: {ex.GetType().Name}: {ex.Message}");
-                            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                            return "";
-                        }
+                        var content = await s3Service.GetFileContentAsync(MapFilePathToS3Key(filePath));
+                        return content ?? "";
                     }
                     return "";
                 }
-                else
-                {
-                    // File system - map relative paths to absolute paths
-                    var absolutePath = MapToFileSystemPath(filePath);
-                    if (File.Exists(absolutePath))
-                    {
-                        return await File.ReadAllTextAsync(absolutePath);
-                    }
-                    return "";
-                }
+                
+                var absolutePath = MapToFileSystemPath(filePath);
+                return File.Exists(absolutePath) ? await File.ReadAllTextAsync(absolutePath) : "";
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"OUTER ERROR in FileContentService.ReadFileAsync: {ex.GetType().Name}: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return "";
             }
         }
 
         public async Task<bool> WriteFileAsync(string filePath, string content)
         {
-            if (_storageSettings.StorageType.ToLower() == "s3")
+            try
             {
-                var s3Service = _storageServiceFactory.CreateStorageService() as S3StorageService;
-                if (s3Service != null)
+                if (_isS3Storage)
                 {
-                    var key = MapFilePathToS3Key(filePath);
-                    await s3Service.UploadTextToS3Async(content, key);
-                    return true;
+                    if (_storageServiceFactory.CreateStorageService() is S3StorageService s3Service)
+                    {
+                        await s3Service.UploadTextToS3Async(content, MapFilePathToS3Key(filePath));
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
-            }
-            else
-            {
-                // File system - map relative paths to absolute paths
-                var absolutePath = MapToFileSystemPath(filePath);
                 
-                // Ensure directory exists
+                var absolutePath = MapToFileSystemPath(filePath);
                 var directory = Path.GetDirectoryName(absolutePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
@@ -88,80 +65,44 @@ namespace JSONAdminEditor.Services
                 await File.WriteAllTextAsync(absolutePath, content);
                 return true;
             }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<bool> FileExistsAsync(string filePath)
         {
-            if (_storageSettings.StorageType.ToLower() == "s3")
+            if (_isS3Storage)
             {
-                var s3Service = _storageServiceFactory.CreateStorageService() as S3StorageService;
-                if (s3Service != null)
+                if (_storageServiceFactory.CreateStorageService() is S3StorageService s3Service)
                 {
-                    var key = MapFilePathToS3Key(filePath);
-                    return await s3Service.FileExistsAsync(key);
+                    return await s3Service.FileExistsAsync(MapFilePathToS3Key(filePath));
                 }
                 return false;
             }
-            else
-            {
-                // File system - map relative paths to absolute paths
-                var absolutePath = MapToFileSystemPath(filePath);
-                return File.Exists(absolutePath);
-            }
-        }
-
-        public string MapToStoragePath(string filePath)
-        {
-            if (_storageSettings.StorageType.ToLower() == "s3")
-            {
-                return MapFilePathToS3Key(filePath);
-            }
-            return MapToFileSystemPath(filePath);
-        }
-
-        private string MapToFileSystemPath(string filePath)
-        {
-            // If it's already an absolute path, return as-is
-            if (Path.IsPathRooted(filePath))
-            {
-                return filePath;
-            }
             
-            // Map relative paths to wwwroot
-            return Path.Combine(_environment.WebRootPath, filePath);
+            return File.Exists(MapToFileSystemPath(filePath));
         }
+
+        public string MapToStoragePath(string filePath) => 
+            _isS3Storage ? MapFilePathToS3Key(filePath) : MapToFileSystemPath(filePath);
+
+        private string MapToFileSystemPath(string filePath) => 
+            Path.IsPathRooted(filePath) ? filePath : Path.Combine(_environment.WebRootPath, filePath);
 
         private string MapFilePathToS3Key(string filePath)
         {
-            // Convert Windows/Unix file paths to S3 keys
-            // Remove drive letters and leading slashes, replace backslashes with forward slashes
             var key = filePath.Replace('\\', '/');
             
-            // Remove common path prefixes to get relative paths
-            if (key.Contains("/wwwroot/data/"))
+            return key switch
             {
-                var index = key.IndexOf("/wwwroot/data/") + "/wwwroot/data/".Length;
-                key = key.Substring(index);
-            }
-            else if (key.Contains("wwwroot/data/"))
-            {
-                var index = key.IndexOf("wwwroot/data/") + "wwwroot/data/".Length;
-                key = key.Substring(index);
-            }
-            else if (key.StartsWith("data/"))
-            {
-                // Already relative to data folder
-                key = key.Substring("data/".Length);
-            }
-            else if (key.StartsWith("/data/"))
-            {
-                key = key.Substring("/data/".Length);
-            }
-            
-            // Remove leading slashes
-            key = key.TrimStart('/');
-            
-            return key;
+                var k when k.Contains("/wwwroot/data/") => k.Substring(k.IndexOf("/wwwroot/data/") + 14),
+                var k when k.Contains("wwwroot/data/") => k.Substring(k.IndexOf("wwwroot/data/") + 13),
+                var k when k.StartsWith("data/") => k.Substring(5),
+                var k when k.StartsWith("/data/") => k.Substring(6),
+                _ => key
+            }.TrimStart('/');
         }
     }
 }
