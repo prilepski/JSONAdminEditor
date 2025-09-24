@@ -47,13 +47,12 @@ export const ContentVariables: React.FC = () => {
   // Convert ContentVariables to TableData format
   const tableData = Object.entries(data).map(([name, value]) => ({
     'Variable Name': name,
-    'Variable Value': value,
-    'Description': ''
+    'Variable Value': value
   }));
 
   const dictionaryData = {
-    columnNames: ['Variable Name', 'Variable Value', 'Description'],
-    columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text', Description: 'text' },
+    columnNames: ['Variable Name', 'Variable Value'],
+    columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text' },
     tableData,
     filePath: 'content-variables',
     fileName: 'content-variables.json',
