@@ -1,16 +1,11 @@
 import React from 'react';
 import { useOktaAuth } from '@okta/okta-react';
-import { isAuthEnabled } from './config';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  if (!isAuthEnabled()) {
-    // Return children directly when auth is disabled
-    return <>{children}</>;
-  }
 
   const { oktaAuth, authState } = useOktaAuth();
 

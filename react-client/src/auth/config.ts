@@ -7,13 +7,6 @@ export interface AuthConfig {
 }
 
 export const getAuthConfig = (): AuthConfig | null => {
-  const env = import.meta.env.VITE_APP_ENV;
-  
-  // Disable auth for development environment
-  if (env === 'local') {
-    return null;
-  }
-
   return {
     issuer: import.meta.env.VITE_OKTA_ISSUER || '',
     clientId: import.meta.env.VITE_OKTA_CLIENT_ID || '',

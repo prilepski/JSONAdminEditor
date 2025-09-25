@@ -29,85 +29,31 @@
   },
   "Events": [
     {
-      "ContentVariablesOverrides": {
-        "sdfsdf": {
-          "ReferenceNumber": {
-            "123": "string",
-            "234": "string",
-            "345": "string"
-          }
-        }
-      },
-      "Event": "Final Scheduling Appointment",
-      "OrderType": "Delivery",
-      "Phone": "$consigneeContact.phone$2",
-      "Email": "$consigneeContact.email$1",
+      "ContentVariablesOverrides": {},
+      "Event": "Ready For Scheduling",
+      "OrderType": "Pickup",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
       "Templates": {
-        "Email": "5432qwerty",
-        "Sms": "5432qwertysms"
+        "Email": "d-e162b3e6181545fead5e643982628504"
       },
-      "IsSuppressed": true,
+      "IsSuppressed": false,
       "PreferredCommunication": [],
       "ContentVariables": {
-        "customerEventVariable": "string",
-        "new_var_1758706338996": "ssss",
-        "new_var_1758706970964": "test"
+        "event cust var": "event cust var"
       },
       "TriggerConditions": {}
     },
     {
       "ContentVariablesOverrides": {},
-      "Event": "Schedule Appointment",
+      "Event": "Ready For Scheduling",
       "OrderType": "Delivery",
-      "Phone": "",
-      "Email": "",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
       "Templates": {},
       "IsSuppressed": false,
       "PreferredCommunication": [],
-      "ContentVariables": {
-        "cust_name": "$Customer.FriendlyName$"
-      },
-      "TriggerConditions": {}
-    },
-    {
-      "ContentVariablesOverrides": {
-        "event_1758730945315": {
-          "variable_1758730945315": {
-            "override_1758730945315": ""
-          }
-        }
-      },
-      "Event": "Ready For Scheduling",
-      "OrderType": "ALL",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Templates": {
-        "Email": "d-e162b3e6181545fead5e643982628504"
-      },
-      "IsSuppressed": true,
-      "PreferredCommunication": [],
-      "ContentVariables": {
-        "new_var_1758730992937": "2222"
-      },
-      "TriggerConditions": {}
-    },
-    {
-      "ContentVariablesOverrides": {
-        "event_1758736139904": {}
-      },
-      "Event": "Ready For Scheduling",
-      "OrderType": "Delivery",
-      "Phone": "$consigneeContact.phone$",
-      "Email": "$consigneeContact.email$",
-      "Templates": {
-        "Email": "d-e162b3e6181545fead5e643982628504"
-      },
-      "IsSuppressed": false,
-      "PreferredCommunication": [],
-      "ContentVariables": {
-        "new_var_1758735755437sbbbbgb": "dadas",
-        "sdsdfs": "fghrgef"
-      },
+      "ContentVariables": {},
       "TriggerConditions": {}
     }
   ],
