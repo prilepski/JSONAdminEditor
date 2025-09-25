@@ -3,24 +3,16 @@ using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Application.Models.Dictionaries;
 using JSONAdminEditor.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
 [Route("api/dictionaries")]
 [Produces("application/json")]
-public class DictionariesController : ControllerBase
+public class DictionariesController(IFileContentService fileContentService, IJsonFileService jsonFileService) : ControllerBase
 {
-    private readonly IFileContentService _fileContentService;
-    private readonly IJsonFileService _jsonFileService;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public DictionariesController(IFileContentService fileContentService, IJsonFileService jsonFileService)
-    {
-        _fileContentService = fileContentService;
-        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
-    }
+    private readonly IFileContentService _fileContentService = fileContentService;
+    private readonly IJsonFileService _jsonFileService = jsonFileService;
 
     // Templates endpoints
     [HttpGet("templates")]
@@ -132,13 +124,9 @@ public class DictionariesController : ControllerBase
         return await SaveDictionaryData(logoUrls, GetFilePathForType(FileType.LogoUrlMappings), "Logo URL mappings");
     }
 
-    private async Task<ActionResult<List<T>>> GetDictionaryData<T>(string filePath)
+    private async Task<ActionResult<List<T>>> GetDictionaryData<T>(string filePath) where T : class, new()
     {
-        var content = await _fileContentService.ReadFileAsync(filePath);
-        if (string.IsNullOrEmpty(content))
-            return Ok(new List<T>());
-
-        var data = JsonSerializer.Deserialize<List<T>>(content, _jsonOptions);
+        var data = await _jsonFileService.LoadJsonFileAsync<List<T>>(filePath);
         return Ok(data ?? new List<T>());
     }
 

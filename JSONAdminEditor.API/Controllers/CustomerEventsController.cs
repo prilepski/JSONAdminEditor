@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
-using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
-using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Controllers;
@@ -10,18 +8,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/customers/{customerId}/events")]
 [Produces("application/json")]
-public class CustomerEventsController : ControllerBase
+public class CustomerEventsController(IJsonFileService jsonFileService) : ControllerBase
 {
-    private readonly IFileContentService _fileService;
-    private readonly IJsonFileService _jsonFileService;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public CustomerEventsController(IFileContentService fileService, IJsonFileService jsonFileService)
-    {
-        _fileService = fileService;
-        _jsonFileService = jsonFileService;
-        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
-    }
+    private readonly IJsonFileService _jsonFileService = jsonFileService;
 
     private static bool IsValidCustomerId(string customerId) =>
         !string.IsNullOrWhiteSpace(customerId) && 
@@ -30,8 +19,7 @@ public class CustomerEventsController : ControllerBase
 
     private async Task<CustomerNotificationMapping?> GetCustomerDataAsync(string customerId)
     {
-        var content = await _fileService.ReadFileAsync($"data/customers/{customerId}.json");
-        return string.IsNullOrEmpty(content) ? null : JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
+        return await _jsonFileService.LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
     }
 
     private CustomerEventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
@@ -49,7 +37,7 @@ public class CustomerEventsController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        return Ok(customerData?.EventMappings ?? new List<CustomerEventMapping>());
+        return Ok(customerData?.EventMappings ?? []);
     }
 
     [HttpGet("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]

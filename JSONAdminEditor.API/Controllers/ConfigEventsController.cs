@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
-using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Controllers;
@@ -9,30 +7,16 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/events")]
 [Produces("application/json")]
-public class ConfigEventsController : ControllerBase
+public class ConfigEventsController(IJsonFileService jsonFileService) : ControllerBase
 {
-    private readonly IFileContentService _fileService;
-    private readonly IJsonFileService _jsonFileService;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public ConfigEventsController(IFileContentService fileService, IJsonFileService jsonFileService)
-    {
-        _fileService = fileService;
-        _jsonFileService = jsonFileService;
-        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
-    }
+    private readonly IJsonFileService _jsonFileService = jsonFileService;
 
     private async Task<NotificationMapping> GetConfigAsync()
     {
-        var content = await _fileService.ReadFileAsync("data/notifications.json");
-        return string.IsNullOrEmpty(content) 
-            ? new NotificationMapping() 
-            : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
+        return await _jsonFileService.LoadJsonFileAsync<NotificationMapping>("data/notifications.json") ?? new NotificationMapping();
     }
 
-
-
-    private EventMapping? FindEventMapping(NotificationMapping config, string eventName, string orderType)
+    private static EventMapping? FindEventMapping(NotificationMapping config, string eventName, string orderType)
     {
         return config.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 

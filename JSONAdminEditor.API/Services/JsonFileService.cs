@@ -24,13 +24,6 @@ public class JsonFileService : IJsonFileService
         }
     }
 
-    public async Task<T> LoadJsonFileAsync<T>(string filePath)
-    {
-        var jsonContent = await _fileContentService.ReadFileAsync(filePath);
-        // Try to parse and convert to table format
-        return JsonConvert.DeserializeObject<T>(jsonContent);
-    }
-
     public async Task<bool> SaveJsonFileAsync<T>(string filePath, T data)
     {
         try
@@ -41,6 +34,22 @@ public class JsonFileService : IJsonFileService
         catch
         {
             return false;
+        }
+    }
+
+    public async Task<T?> LoadJsonFileAsync<T>(string filePath) where T : class, new()
+    {
+        try
+        {
+            var jsonContent = await _fileContentService.ReadFileAsync(filePath);
+            if (string.IsNullOrEmpty(jsonContent))
+                return new T();
+            
+            return JsonConvert.DeserializeObject<T>(jsonContent) ?? new T();
+        }
+        catch
+        {
+            return new T();
         }
     }
 
