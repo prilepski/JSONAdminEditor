@@ -1,17 +1,13 @@
+using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Models;
 using Microsoft.Extensions.Options;
 
 namespace JSONAdminEditor.Services
 {
-    public interface IFileContentService
-    {
-        Task<string> ReadFileAsync(string filePath);
-        Task<bool> WriteFileAsync(string filePath, string content);
-        Task<bool> FileExistsAsync(string filePath);
-        string MapToStoragePath(string filePath);
-    }
-
-    public class FileContentService(IStorageServiceFactory storageServiceFactory, IOptions<StorageSettings> storageSettings, IWebHostEnvironment environment) : IFileContentService
+    public class FileContentService(
+        IStorageServiceFactory storageServiceFactory, 
+        IOptions<StorageSettings> storageSettings, 
+        IWebHostEnvironment environment) : IFileContentService
     {
         private readonly IStorageServiceFactory _storageServiceFactory = storageServiceFactory;
         private readonly IWebHostEnvironment _environment = environment;

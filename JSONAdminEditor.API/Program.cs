@@ -1,16 +1,13 @@
 using JSONAdminEditor.Services;
 using JSONAdminEditor.Models;
-using JSONAdminEditor.Middleware;
 using JSONAdminEditor.API.Middleware;
 using JSONAdminEditor.Application.Models;
 using Amazon.S3;
 using Amazon;
-using Amazon.Extensions.NETCore.Setup;
 using JSONAdminEditor.API;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.OpenApi.Models;
+using JSONAdminEditor.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

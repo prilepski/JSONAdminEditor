@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using JSONAdminEditor.Services;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
+using JSONAdminEditor.Application.Interfaces;
 
 namespace JSONAdminEditor.Controllers;
 

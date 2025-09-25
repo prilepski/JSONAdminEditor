@@ -3,6 +3,7 @@ using JSONAdminEditor.Services;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
+using JSONAdminEditor.Application.Interfaces;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -40,7 +41,6 @@ public class CustomersController : ControllerBase
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
     [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<CustomerNotificationMapping>> GetCustomerConfig(string customerId)
     {
@@ -48,10 +48,7 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData);
+        return Ok(customerData ?? new CustomerNotificationMapping());
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}")]
@@ -75,7 +72,6 @@ public class CustomersController : ControllerBase
     [HttpGet("{customerId:minlength(1):maxlength(50)}/preferred-communication")]
     [ProducesResponseType(200, Type = typeof(List<PreferredCommunication>))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<PreferredCommunication>>> GetCustomerPreferredCommunication(string customerId)
     {
@@ -83,10 +79,7 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData.PreferredCommunication);
+        return Ok(customerData?.PreferredCommunication ?? new List<PreferredCommunication>());
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/preferred-communication")]
@@ -119,7 +112,6 @@ public class CustomersController : ControllerBase
     [HttpGet("{customerId:minlength(1):maxlength(50)}/content-variables")]
     [ProducesResponseType(200, Type = typeof(Dictionary<string, string>))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, string>>> GetCustomerContentVariables(string customerId)
     {
@@ -127,10 +119,7 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData.ContentVariables);
+        return Ok(customerData?.ContentVariables ?? new Dictionary<string, string>());
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/content-variables")]
@@ -157,9 +146,8 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/after-hours")]
-    [ProducesResponseType(204)]
+    [ProducesResponseType(200, Type = typeof(AfterHours))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<AfterHours?>> GetCustomerAfterHours(string customerId)
     {
@@ -167,10 +155,7 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData.AfterHours);
+        return Ok(customerData?.AfterHours);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/after-hours")]
@@ -203,7 +188,6 @@ public class CustomersController : ControllerBase
     [HttpGet("{customerId:minlength(1):maxlength(50)}/from-email")]
     [ProducesResponseType(200, Type = typeof(string))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<string?>> GetCustomerFromEmail(string customerId)
     {
@@ -211,10 +195,7 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData.FromEmail);
+        return Ok(customerData?.FromEmail ?? "");
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/from-email")]
@@ -240,7 +221,6 @@ public class CustomersController : ControllerBase
     [HttpGet("{customerId:minlength(1):maxlength(50)}/content-variables-overrides")]
     [ProducesResponseType(200, Type = typeof(Dictionary<string, Dictionary<string, Dictionary<string, string>>>))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>> GetCustomerContentVariablesOverrides(string customerId)
     {
@@ -248,10 +228,7 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData.ContentVariablesOverrides);
+        return Ok(customerData?.ContentVariablesOverrides ?? new Dictionary<string, Dictionary<string, Dictionary<string, string>>>());
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/content-variables-overrides")]

@@ -1,13 +1,9 @@
+using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Models;
 using Microsoft.Extensions.Options;
 
 namespace JSONAdminEditor.Services
 {
-    public interface IStorageServiceFactory
-    {
-        IStorageService CreateStorageService();
-    }
-
     public class StorageServiceFactory : IStorageServiceFactory
     {
         private readonly IServiceProvider _serviceProvider;

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
+using JSONAdminEditor.Application.Interfaces;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -43,41 +44,31 @@ public class CustomerEventsController : ControllerBase
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 
     [HttpGet]
-    [ProducesResponseType(200, Type = typeof(List<EventMapping>))]
+    [ProducesResponseType(200, Type = typeof(List<CustomerEventMapping>))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<List<EventMapping>>> GetCustomerEvents(string customerId)
+    public async Task<ActionResult<List<CustomerEventMapping>>> GetCustomerEvents(string customerId)
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
-
-        return Ok(customerData.EventMappings);
+        return Ok(customerData?.EventMappings ?? new List<CustomerEventMapping>());
     }
 
     [HttpGet("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
-    [ProducesResponseType(200, Type = typeof(EventMapping))]
+    [ProducesResponseType(200, Type = typeof(CustomerEventMapping))]
     [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult<EventMapping>> GetCustomerEvent(string customerId, string eventName, string orderType)
+    public async Task<ActionResult<CustomerEventMapping>> GetCustomerEvent(string customerId, string eventName, string orderType)
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
         var customerData = await GetCustomerDataAsync(customerId);
-        if (customerData == null)
-            return NotFound("Customer not found");
+        var eventMapping = customerData != null ? FindEventMapping(customerData, eventName, orderType) : null;
 
-        var eventMapping = FindEventMapping(customerData, eventName, orderType);
-        if (eventMapping == null)
-            return NotFound("Event mapping not found");
-
-        return Ok(eventMapping);
+        return Ok(eventMapping ?? new CustomerEventMapping { Event = eventName, OrderType = orderType });
     }
 
     [HttpPut("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]

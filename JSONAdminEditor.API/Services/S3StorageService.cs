@@ -1,5 +1,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Models;
 using Microsoft.Extensions.Options;
 using System.Text;
@@ -108,31 +110,31 @@ namespace JSONAdminEditor.Services
                 await AddFileIfExistsAsync(files, "dictionaries/order-types.json", FileType.OrderTypes);
 
                 // Add customer files
-                var customerFiles = await ListCustomerFilesAsync();
-                foreach (var key in customerFiles)
-                {
-                    var customerId = GetCustomerIdFromKey(key);
+                //var customerFiles = await ListCustomerFilesAsync();
+                //foreach (var key in customerFiles)
+                //{
+                //    var customerId = GetCustomerIdFromKey(key);
                     
-                    // Look up customer information
-                    var customer = await GetCustomerByIdAsync(customerId);
-                    var displayName = customer != null 
-                        ? $"{customer.CompanyName} ({customer.CustomerId})" 
-                        : customerId;
+                //    // Look up customer information
+                //    var customer = await GetCustomerByIdAsync(customerId);
+                //    var displayName = customer != null 
+                //        ? $"{customer.CompanyName} ({customer.CustomerId})" 
+                //        : customerId;
 
-                    var lastModified = await GetFileLastModifiedAsync(key);
+                //    var lastModified = await GetFileLastModifiedAsync(key);
                     
-                    files.Add(new ManagedFile
-                    {
-                        FileName = GetFileNameFromKey(key),
-                        FilePath = key,
-                        DisplayPath = GetDisplayPath(key),
-                        FileType = FileType.CustomerSettings,
-                        FileTypeDisplay = "Customer Override",
-                        CustomerName = displayName,
-                        CanDelete = true,
-                        LastModified = lastModified
-                    });
-                }
+                //    files.Add(new ManagedFile
+                //    {
+                //        FileName = GetFileNameFromKey(key),
+                //        FilePath = key,
+                //        DisplayPath = GetDisplayPath(key),
+                //        FileType = FileType.CustomerSettings,
+                //        FileTypeDisplay = "Customer Override",
+                //        CustomerName = displayName,
+                //        CanDelete = true,
+                //        LastModified = lastModified
+                //    });
+                //}
             }
             catch (Exception)
             {
@@ -175,215 +177,215 @@ namespace JSONAdminEditor.Services
 
         public string GetDataFolderPath() => $"s3://{_bucketName}/";
 
-        public async Task<Customer?> GetCustomerByIdAsync(string customerId)
-        {
-            if (string.IsNullOrWhiteSpace(customerId))
-                return null;
+        //public async Task<Customer?> GetCustomerByIdAsync(string customerId)
+        //{
+        //    if (string.IsNullOrWhiteSpace(customerId))
+        //        return null;
 
-            try
-            {
-                var customersJson = await GetFileContentAsync("dictionaries/customers.json");
-                if (string.IsNullOrEmpty(customersJson))
-                    return null;
+        //    try
+        //    {
+        //        var customersJson = await GetFileContentAsync("dictionaries/customers.json");
+        //        if (string.IsNullOrEmpty(customersJson))
+        //            return null;
 
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
+        //        var options = new JsonSerializerOptions
+        //        {
+        //            PropertyNameCaseInsensitive = true
+        //        };
                 
-                var customers = JsonSerializer.Deserialize<List<Customer>>(customersJson, options);
+        //        var customers = JsonSerializer.Deserialize<List<Customer>>(customersJson, options);
                 
-                if (customers == null) return null;
+        //        if (customers == null) return null;
 
-                return customers.FirstOrDefault(c => 
-                    string.Equals(c.CustomerId, customerId, StringComparison.OrdinalIgnoreCase));
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
+        //        return customers.FirstOrDefault(c => 
+        //            string.Equals(c.CustomerId, customerId, StringComparison.OrdinalIgnoreCase));
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return null;
+        //    }
+        //}
 
-        public async Task<List<CustomerLookupResult>> SearchCustomersAsync(string searchTerm)
-        {
-            var results = new List<CustomerLookupResult>();
+        //public async Task<List<CustomerLookupResult>> SearchCustomersAsync(string searchTerm)
+        //{
+        //    var results = new List<CustomerLookupResult>();
             
-            if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
-                return results;
+        //    if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
+        //        return results;
 
-            try
-            {
-                var customersJson = await GetFileContentAsync("dictionaries/customers.json");
-                if (string.IsNullOrEmpty(customersJson))
-                    return results;
+        //    try
+        //    {
+        //        var customersJson = await GetFileContentAsync("dictionaries/customers.json");
+        //        if (string.IsNullOrEmpty(customersJson))
+        //            return results;
 
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
+        //        var options = new JsonSerializerOptions
+        //        {
+        //            PropertyNameCaseInsensitive = true
+        //        };
                 
-                var customers = JsonSerializer.Deserialize<List<Customer>>(customersJson, options);
+        //        var customers = JsonSerializer.Deserialize<List<Customer>>(customersJson, options);
                 
-                if (customers == null) return results;
+        //        if (customers == null) return results;
 
-                // Check if the search term is in the display format "Company Name (Customer ID)"
-                var companyNameFromDisplay = "";
-                var customerIdFromDisplay = "";
-                var match = Regex.Match(searchTerm, @"^(.+)\s\(([^)]+)\)$");
+        //        // Check if the search term is in the display format "Company Name (Customer ID)"
+        //        var companyNameFromDisplay = "";
+        //        var customerIdFromDisplay = "";
+        //        var match = Regex.Match(searchTerm, @"^(.+)\s\(([^)]+)\)$");
                 
-                if (match.Success)
-                {
-                    // Extract company name and customer ID from display format
-                    companyNameFromDisplay = match.Groups[1].Value.Trim().ToLowerInvariant();
-                    customerIdFromDisplay = match.Groups[2].Value.Trim().ToLowerInvariant();
-                }
-                else
-                {
-                    // Use the original search term
-                    searchTerm = searchTerm.ToLowerInvariant();
-                }
+        //        if (match.Success)
+        //        {
+        //            // Extract company name and customer ID from display format
+        //            companyNameFromDisplay = match.Groups[1].Value.Trim().ToLowerInvariant();
+        //            customerIdFromDisplay = match.Groups[2].Value.Trim().ToLowerInvariant();
+        //        }
+        //        else
+        //        {
+        //            // Use the original search term
+        //            searchTerm = searchTerm.ToLowerInvariant();
+        //        }
 
-                foreach (var customer in customers)
-                {
-                    bool isMatch = false;
-                    string matchType = "";
+        //        foreach (var customer in customers)
+        //        {
+        //            bool isMatch = false;
+        //            string matchType = "";
                     
-                    if (match.Success)
-                    {
-                        // If search term is in display format, search for exact matches or partial matches
-                        var customerIdMatch = customer.CustomerId?.ToLowerInvariant().Contains(customerIdFromDisplay) == true;
-                        var companyNameMatch = customer.CompanyName?.ToLowerInvariant().Contains(companyNameFromDisplay) == true;
+        //            if (match.Success)
+        //            {
+        //                // If search term is in display format, search for exact matches or partial matches
+        //                var customerIdMatch = customer.CustomerId?.ToLowerInvariant().Contains(customerIdFromDisplay) == true;
+        //                var companyNameMatch = customer.CompanyName?.ToLowerInvariant().Contains(companyNameFromDisplay) == true;
                         
-                        // Also check if either part matches the customer data
-                        var customerIdMatchesCompany = customer.CustomerId?.ToLowerInvariant().Contains(companyNameFromDisplay) == true;
-                        var companyNameMatchesId = customer.CompanyName?.ToLowerInvariant().Contains(customerIdFromDisplay) == true;
+        //                // Also check if either part matches the customer data
+        //                var customerIdMatchesCompany = customer.CustomerId?.ToLowerInvariant().Contains(companyNameFromDisplay) == true;
+        //                var companyNameMatchesId = customer.CompanyName?.ToLowerInvariant().Contains(customerIdFromDisplay) == true;
                         
-                        isMatch = customerIdMatch || companyNameMatch || customerIdMatchesCompany || companyNameMatchesId;
-                        matchType = customerIdMatch ? "CustomerId" : "CompanyName";
-                    }
-                    else
-                    {
-                        // Regular search against both fields
-                        var customerIdMatch = customer.CustomerId?.ToLowerInvariant().Contains(searchTerm) == true;
-                        var companyNameMatch = customer.CompanyName?.ToLowerInvariant().Contains(searchTerm) == true;
+        //                isMatch = customerIdMatch || companyNameMatch || customerIdMatchesCompany || companyNameMatchesId;
+        //                matchType = customerIdMatch ? "CustomerId" : "CompanyName";
+        //            }
+        //            else
+        //            {
+        //                // Regular search against both fields
+        //                var customerIdMatch = customer.CustomerId?.ToLowerInvariant().Contains(searchTerm) == true;
+        //                var companyNameMatch = customer.CompanyName?.ToLowerInvariant().Contains(searchTerm) == true;
                         
-                        isMatch = customerIdMatch || companyNameMatch;
-                        matchType = customerIdMatch ? "CustomerId" : "CompanyName";
-                    }
+        //                isMatch = customerIdMatch || companyNameMatch;
+        //                matchType = customerIdMatch ? "CustomerId" : "CompanyName";
+        //            }
                     
-                    if (isMatch)
-                    {
-                        results.Add(new CustomerLookupResult
-                        {
-                            CustomerId = customer.CustomerId ?? "",
-                            CompanyName = customer.CompanyName ?? "",
-                            MatchType = matchType
-                        });
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Return empty list on error
-            }
+        //            if (isMatch)
+        //            {
+        //                results.Add(new CustomerLookupResult
+        //                {
+        //                    CustomerId = customer.CustomerId ?? "",
+        //                    CompanyName = customer.CompanyName ?? "",
+        //                    MatchType = matchType
+        //                });
+        //            }
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        // Return empty list on error
+        //    }
 
-            return results.Take(10).ToList(); // Limit to 10 results
-        }
+        //    return results.Take(10).ToList(); // Limit to 10 results
+        //}
 
-        public async Task<bool> ValidateCustomerExistsAsync(string customerName)
-        {
-            if (string.IsNullOrWhiteSpace(customerName))
-                return false;
+        //public async Task<bool> ValidateCustomerExistsAsync(string customerName)
+        //{
+        //    if (string.IsNullOrWhiteSpace(customerName))
+        //        return false;
 
-            // Extract customer ID from display format "Company Name (CustomerID)" if needed
-            var customerIdToCheck = customerName.Trim();
+        //    // Extract customer ID from display format "Company Name (CustomerID)" if needed
+        //    var customerIdToCheck = customerName.Trim();
             
-            // Check if the input is in the display format "Company Name (CustomerID)"
-            var match = Regex.Match(customerName, @"^.+\s\(([^)]+)\)$");
-            if (match.Success)
-            {
-                customerIdToCheck = match.Groups[1].Value.Trim();
-            }
+        //    // Check if the input is in the display format "Company Name (CustomerID)"
+        //    var match = Regex.Match(customerName, @"^.+\s\(([^)]+)\)$");
+        //    if (match.Success)
+        //    {
+        //        customerIdToCheck = match.Groups[1].Value.Trim();
+        //    }
             
-            // Get the customer directly by ID for exact validation
-            var customer = await GetCustomerByIdAsync(customerIdToCheck);
-            if (customer != null)
-            {
-                return true;
-            }
+        //    // Get the customer directly by ID for exact validation
+        //    var customer = await GetCustomerByIdAsync(customerIdToCheck);
+        //    if (customer != null)
+        //    {
+        //        return true;
+        //    }
             
-            // If not found by exact ID match, try searching by company name
-            try
-            {
-                var customersJson = await GetFileContentAsync("dictionaries/customers.json");
-                if (string.IsNullOrEmpty(customersJson))
-                    return false;
+        //    // If not found by exact ID match, try searching by company name
+        //    try
+        //    {
+        //        var customersJson = await GetFileContentAsync("dictionaries/customers.json");
+        //        if (string.IsNullOrEmpty(customersJson))
+        //            return false;
 
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
+        //        var options = new JsonSerializerOptions
+        //        {
+        //            PropertyNameCaseInsensitive = true
+        //        };
                 
-                var customers = JsonSerializer.Deserialize<List<Customer>>(customersJson, options);
+        //        var customers = JsonSerializer.Deserialize<List<Customer>>(customersJson, options);
                 
-                if (customers == null) return false;
+        //        if (customers == null) return false;
 
-                // Check for exact matches (case-insensitive)
-                return customers.Any(c => 
-                    string.Equals(c.CustomerId, customerIdToCheck, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(c.CompanyName, customerIdToCheck, StringComparison.OrdinalIgnoreCase));
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+        //        // Check for exact matches (case-insensitive)
+        //        return customers.Any(c => 
+        //            string.Equals(c.CustomerId, customerIdToCheck, StringComparison.OrdinalIgnoreCase) ||
+        //            string.Equals(c.CompanyName, customerIdToCheck, StringComparison.OrdinalIgnoreCase));
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return false;
+        //    }
+        //}
 
-        public async Task<Dictionary<string, object>?> GetCustomerDataAsync(string customerId)
-        {
-            try
-            {
-                var sanitizedId = SanitizeFileName(customerId);
-                var key = $"customers/{sanitizedId}.json";
+        //public async Task<Dictionary<string, object>?> GetCustomerDataAsync(string customerId)
+        //{
+        //    try
+        //    {
+        //        var sanitizedId = SanitizeFileName(customerId);
+        //        var key = $"customers/{sanitizedId}.json";
                 
-                var jsonContent = await GetFileContentAsync(key);
-                if (string.IsNullOrEmpty(jsonContent))
-                {
-                    return new Dictionary<string, object>();
-                }
+        //        var jsonContent = await GetFileContentAsync(key);
+        //        if (string.IsNullOrEmpty(jsonContent))
+        //        {
+        //            return new Dictionary<string, object>();
+        //        }
 
-                var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
-                return data ?? new Dictionary<string, object>();
-            }
-            catch (Exception)
-            {
-                return new Dictionary<string, object>();
-            }
-        }
+        //        var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
+        //        return data ?? new Dictionary<string, object>();
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return new Dictionary<string, object>();
+        //    }
+        //}
 
-        public async Task<bool> SaveCustomerDataAsync(string customerId, Dictionary<string, object> customerData)
-        {
-            try
-            {
-                var sanitizedId = SanitizeFileName(customerId);
-                var key = $"customers/{sanitizedId}.json";
+        //public async Task<bool> SaveCustomerDataAsync(string customerId, Dictionary<string, object> customerData)
+        //{
+        //    try
+        //    {
+        //        var sanitizedId = SanitizeFileName(customerId);
+        //        var key = $"customers/{sanitizedId}.json";
 
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = null
-                };
+        //        var options = new JsonSerializerOptions
+        //        {
+        //            WriteIndented = true,
+        //            PropertyNamingPolicy = null
+        //        };
 
-                var jsonContent = JsonSerializer.Serialize(customerData, options);
-                await UploadTextToS3Async(jsonContent, key);
+        //        var jsonContent = JsonSerializer.Serialize(customerData, options);
+        //        await UploadTextToS3Async(jsonContent, key);
                 
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+        //        return true;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return false;
+        //    }
+        //}
 
         #region Private Helper Methods
 
@@ -414,6 +416,7 @@ namespace JSONAdminEditor.Services
             return $"customers/{sanitizedName}.json";
         }
 
+        //check if file exists
         public async Task<bool> FileExistsAsync(string key)
         {
             try
@@ -448,6 +451,7 @@ namespace JSONAdminEditor.Services
             await _s3Client.PutObjectAsync(request);
         }
 
+        //upload files
         public async Task UploadTextToS3Async(string content, string key)
         {
             var bytes = Encoding.UTF8.GetBytes(content);
@@ -464,6 +468,7 @@ namespace JSONAdminEditor.Services
             await _s3Client.PutObjectAsync(request);
         }
 
+        //read files
         public async Task<string> GetFileContentAsync(string key)
         {
             try

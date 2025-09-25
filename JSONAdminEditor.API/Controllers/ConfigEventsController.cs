@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using JSONAdminEditor.Services;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
+using JSONAdminEditor.Application.Interfaces;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -51,17 +51,13 @@ public class ConfigEventsController : ControllerBase
 
     [HttpGet("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
     [ProducesResponseType(200, Type = typeof(EventMapping))]
-    [ProducesResponseType(404)]
     [ProducesResponseType(500)]
     public async Task<ActionResult<EventMapping>> GetEvent(string eventName, string orderType)
     {
         var config = await GetConfigAsync();
         var eventMapping = FindEventMapping(config, eventName, orderType);
         
-        if (eventMapping == null)
-            return NotFound(new { error = "Event mapping not found" });
-        
-        return Ok(eventMapping);
+        return Ok(eventMapping ?? new EventMapping { Event = eventName, OrderType = orderType });
     }
 
     [HttpPut("{eventName:minlength(1)}/order-types/{orderType:minlength(1)}")]
