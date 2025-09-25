@@ -57,7 +57,7 @@ export const PreferredCommunicationForm: React.FC<PreferredCommunicationFormProp
                     }}
                   >
                     <option value="">Select Channel</option>
-                    {channelOptions.map(channel => (
+                    {channelOptions.map((channel: string) => (
                       <option key={channel} value={channel}>{channel}</option>
                     ))}
                   </select>

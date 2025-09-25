@@ -2,6 +2,7 @@
 /obj
 /react-client/node_modules
 /react-client/build
+/react-client/dist
 wwwroot/.DS_Store
 wwwroot/data/.DS_Store
 

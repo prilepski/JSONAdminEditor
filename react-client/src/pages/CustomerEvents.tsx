@@ -91,7 +91,7 @@ export const CustomerEvents: React.FC = () => {
     }
     setContentVariables(vars);
 
-    setContentVariablesOverrides(specificEventData?.contentVariablesOverrides || {});
+    setContentVariablesOverrides({});
   }, [selectedEvent, selectedOrderType, specificEventData]);
 
   const handleSave = async () => {
@@ -257,7 +257,6 @@ export const CustomerEvents: React.FC = () => {
                 selectedCustomer={selectedCustomer}
                 selectedEvent={selectedEvent}
                 selectedOrderType={selectedOrderType}
-                customerEvents={customerEventData}
                 onEventChange={(event) => updateField('selectedEvent', event)}
                 onOrderTypeChange={(orderType) => updateField('selectedOrderType', orderType)}
               />

@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { handleError, getUserFriendlyMessage } from '../utils/errorHandler';
-import { ErrorSeverity } from '../types/errors';
+
 
 interface Props {
   children: ReactNode;
