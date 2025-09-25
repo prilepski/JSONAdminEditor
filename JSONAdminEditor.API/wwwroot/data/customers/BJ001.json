@@ -45,7 +45,18 @@
       "TriggerConditions": {}
     },
     {
-      "ContentVariablesOverrides": {},
+      "ContentVariablesOverrides": {
+        "testtrwst": {
+          "var key": {
+            "override key": "value"
+          }
+        },
+        "event_1758815462718": {
+          "variable_1758815462718": {
+            "override_1758815462718": ""
+          }
+        }
+      },
       "Event": "Ready For Scheduling",
       "OrderType": "Delivery",
       "Phone": "$consigneeContact.phone$",
@@ -53,7 +64,9 @@
       "Templates": {},
       "IsSuppressed": false,
       "PreferredCommunication": [],
-      "ContentVariables": {},
+      "ContentVariables": {
+        "cust event level": "123123213"
+      },
       "TriggerConditions": {}
     }
   ],

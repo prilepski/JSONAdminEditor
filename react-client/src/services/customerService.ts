@@ -55,9 +55,9 @@ export const customerService = {
     }
   },
 
-  getCustomerEvent: async (customerId: string, eventName: string, orderType: string): Promise<EventMapping | null> => {
+  getCustomerEvent: async (customerId: string, eventName: string, orderType: string): Promise<CustomerEventMapping | null> => {
     try {
-      const response = await api.get<EventMapping>(`/config/customers/${customerId}/events/${eventName}/order-types/${orderType}`);
+      const response = await api.get<CustomerEventMapping>(`/config/customers/${customerId}/events/${eventName}/order-types/${orderType}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {

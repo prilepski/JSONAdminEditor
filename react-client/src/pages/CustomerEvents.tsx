@@ -91,7 +91,7 @@ export const CustomerEvents: React.FC = () => {
     }
     setContentVariables(vars);
 
-    setContentVariablesOverrides({});
+    setContentVariablesOverrides(specificEventData?.contentVariablesOverrides || {});
   }, [selectedEvent, selectedOrderType, specificEventData]);
 
   const handleSave = async () => {
@@ -207,6 +207,31 @@ export const CustomerEvents: React.FC = () => {
         }
       }
     }));
+  };
+
+  const updateContentVariableOverrideKey = (oldEventKey: string, oldVariableKey: string, oldOverrideKey: string, newEventKey: string, newVariableKey: string, newOverrideKey: string) => {
+    setContentVariablesOverrides((prev) => {
+      const newOverrides = { ...prev };
+      const value = prev[oldEventKey]?.[oldVariableKey]?.[oldOverrideKey] || '';
+      
+      // Remove old entry
+      if (newOverrides[oldEventKey]?.[oldVariableKey]) {
+        delete newOverrides[oldEventKey][oldVariableKey][oldOverrideKey];
+        if (Object.keys(newOverrides[oldEventKey][oldVariableKey]).length === 0) {
+          delete newOverrides[oldEventKey][oldVariableKey];
+        }
+        if (Object.keys(newOverrides[oldEventKey]).length === 0) {
+          delete newOverrides[oldEventKey];
+        }
+      }
+      
+      // Add new entry
+      if (!newOverrides[newEventKey]) newOverrides[newEventKey] = {};
+      if (!newOverrides[newEventKey][newVariableKey]) newOverrides[newEventKey][newVariableKey] = {};
+      newOverrides[newEventKey][newVariableKey][newOverrideKey] = value;
+      
+      return newOverrides;
+    });
   };
 
   const removeContentVariableOverride = (eventKey: string, variableKey: string, overrideKey: string) => {
@@ -340,6 +365,7 @@ export const CustomerEvents: React.FC = () => {
                       contentVariablesOverrides={contentVariablesOverrides}
                       onAdd={addContentVariableOverride}
                       onUpdate={updateContentVariableOverride}
+                      onUpdateKey={updateContentVariableOverrideKey}
                       onRemove={removeContentVariableOverride}
                     />
                   </ComponentErrorBoundary>

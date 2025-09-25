@@ -4,6 +4,7 @@ interface CustomerContentVariablesOverridesTableProps {
   contentVariablesOverrides: Record<string, Record<string, Record<string, string>>>;
   onAdd: () => void;
   onUpdate: (eventKey: string, variableKey: string, overrideKey: string, value: string) => void;
+  onUpdateKey: (oldEventKey: string, oldVariableKey: string, oldOverrideKey: string, newEventKey: string, newVariableKey: string, newOverrideKey: string) => void;
   onRemove: (eventKey: string, variableKey: string, overrideKey: string) => void;
 }
 
@@ -11,6 +12,7 @@ export const CustomerContentVariablesOverridesTable: React.FC<CustomerContentVar
   contentVariablesOverrides,
   onAdd,
   onUpdate,
+  onUpdateKey,
   onRemove,
 }) => {
   const flattenedOverrides = React.useMemo(() => {
@@ -64,29 +66,29 @@ export const CustomerContentVariablesOverridesTable: React.FC<CustomerContentVar
             </thead>
             <tbody>
               {flattenedOverrides.map((override, index) => (
-                <tr key={`${override.displayKey}-${index}`}>
+                <tr key={index}>
                   <td>
                     <input
                       type="text"
                       className="form-control form-control-sm"
-                      value={override.eventKey}
-                      readOnly
+                      defaultValue={override.eventKey}
+                      onBlur={(e) => onUpdateKey(override.eventKey, override.variableKey, override.overrideKey, e.target.value, override.variableKey, override.overrideKey)}
                     />
                   </td>
                   <td>
                     <input
                       type="text"
                       className="form-control form-control-sm"
-                      value={override.variableKey}
-                      readOnly
+                      defaultValue={override.variableKey}
+                      onBlur={(e) => onUpdateKey(override.eventKey, override.variableKey, override.overrideKey, override.eventKey, e.target.value, override.overrideKey)}
                     />
                   </td>
                   <td>
                     <input
                       type="text"
                       className="form-control form-control-sm"
-                      value={override.overrideKey}
-                      readOnly
+                      defaultValue={override.overrideKey}
+                      onBlur={(e) => onUpdateKey(override.eventKey, override.variableKey, override.overrideKey, override.eventKey, override.variableKey, e.target.value)}
                     />
                   </td>
                   <td>
