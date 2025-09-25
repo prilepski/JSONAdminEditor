@@ -1,0 +1,21 @@
+{
+  "PreferredCommunication": [],
+  "ContentVariables": {},
+  "ContentVariablesOverrides": {},
+  "Events": [
+    {
+      "ContentVariablesOverrides": {},
+      "Event": "Ready For Scheduling",
+      "OrderType": "Delivery",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Templates": {},
+      "IsSuppressed": false,
+      "PreferredCommunication": [],
+      "ContentVariables": {},
+      "TriggerConditions": {}
+    }
+  ],
+  "AfterHours": null,
+  "FromEmail": null
+}
