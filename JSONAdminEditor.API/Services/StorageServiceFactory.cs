@@ -1,19 +1,15 @@
+namespace JSONAdminEditor.Services;
+
 using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Models;
 using Microsoft.Extensions.Options;
 
-namespace JSONAdminEditor.Services;
-
-public class StorageServiceFactory : IStorageServiceFactory
+public class StorageServiceFactory(
+    IServiceProvider serviceProvider,
+    IOptions<StorageSettings> storageSettings) : IStorageServiceFactory
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly StorageSettings _storageSettings;
-
-    public StorageServiceFactory(IServiceProvider serviceProvider, IOptions<StorageSettings> storageSettings)
-    {
-        _serviceProvider = serviceProvider;
-        _storageSettings = storageSettings.Value;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly StorageSettings _storageSettings = storageSettings.Value;
 
     public IStorageService CreateStorageService()
     {

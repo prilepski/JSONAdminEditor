@@ -1,10 +1,12 @@
-using JSONAdminEditor.Application.Interfaces;
-using JSONAdminEditor.Application.Models;
-using JSONAdminEditor.Application.Models.Dictionaries;
-using JSONAdminEditor.Services;
-using Microsoft.AspNetCore.Mvc;
-
-namespace JSONAdminEditor.Controllers;
+namespace JSONAdminEditor.Controllers
+{
+    using JSONAdminEditor.Application.Interfaces;
+    using JSONAdminEditor.Application.Models;
+    using JSONAdminEditor.Application.Models.Dictionaries;
+    using JSONAdminEditor.Services;
+    using JSONAdminEditor.API.Constants;
+    using JSONAdminEditor.API.Exceptions;
+    using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/dictionaries")]
@@ -126,8 +128,15 @@ public class DictionariesController(IFileContentService fileContentService, IJso
 
     private async Task<ActionResult<List<T>>> GetDictionaryData<T>(string filePath) where T : class, new()
     {
-        var data = await _jsonFileService.LoadJsonFileAsync<List<T>>(filePath);
-        return Ok(data ?? new List<T>());
+        try
+        {
+            var data = await _jsonFileService.LoadJsonFileAsync<List<T>>(filePath);
+            return Ok(data ?? new List<T>());
+        }
+        catch (JsonFileException ex)
+        {
+            return StatusCode(500, $"Error loading data: {ex.Message}");
+        }
     }
 
     private async Task<IActionResult> SaveDictionaryData<T>(List<T> data, string filePath, string dataType)
@@ -138,8 +147,15 @@ public class DictionariesController(IFileContentService fileContentService, IJso
         if (!ModelState.IsValid)
             return BadRequest($"Invalid {dataType.ToLower()} data");
 
-        await _jsonFileService.SaveJsonFileAsync(filePath, data);
-        return NoContent();
+        try
+        {
+            await _jsonFileService.SaveJsonFileAsync(filePath, data);
+            return NoContent();
+        }
+        catch (JsonFileException ex)
+        {
+            return StatusCode(500, $"Error saving {dataType.ToLower()}: {ex.Message}");
+        }
     }
 
     // File Upload endpoint (generic for all dictionary types)
@@ -177,12 +193,13 @@ public class DictionariesController(IFileContentService fileContentService, IJso
 
     private static string GetFilePathForType(FileType fileType) => fileType switch
     {
-        FileType.Templates => "data/dictionaries/templates.json",
-        FileType.EventTriggers => "data/dictionaries/event-triggers.json",
-        FileType.EventChannels => "data/dictionaries/event-channels.json",
-        FileType.OrderTypes => "data/dictionaries/order-types.json",
-        FileType.Customers => "data/dictionaries/customers.json",
-        FileType.LogoUrlMappings => "data/dictionaries/logo-url-mappings.json",
+        FileType.Templates => FilePaths.Templates,
+        FileType.EventTriggers => FilePaths.EventTriggers,
+        FileType.EventChannels => FilePaths.EventChannels,
+        FileType.OrderTypes => FilePaths.OrderTypes,
+        FileType.Customers => FilePaths.Customers,
+        FileType.LogoUrlMappings => FilePaths.LogoUrlMappings,
         _ => throw new ArgumentException($"Unknown file type: {fileType}")
     };
+}
 }

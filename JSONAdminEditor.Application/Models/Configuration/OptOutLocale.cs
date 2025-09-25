@@ -40,9 +40,11 @@ public class OptOutLocale
     [Required]
     [JsonPropertyName("optInPhrase")]
     public string OptInPhrase { get; set; } = string.Empty;
+
     [Required]
     [JsonPropertyName("optInMessage")]
     public string OptInMessage { get; set; } = string.Empty;
+
     [Required]
     [JsonPropertyName("helpPhrase")]
     public string HelpPhrase { get; set; } = string.Empty;

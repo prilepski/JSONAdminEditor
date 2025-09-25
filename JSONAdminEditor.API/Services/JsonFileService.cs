@@ -1,7 +1,8 @@
-using JSONAdminEditor.Application.Interfaces;
-using System.Text.Json;
-
 namespace JSONAdminEditor.Services;
+
+using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.API.Exceptions;
+using System.Text.Json;
 
 public class JsonFileService : IJsonFileService
 {
@@ -34,9 +35,9 @@ public class JsonFileService : IJsonFileService
             var jsonString = JsonSerializer.Serialize(data, _jsonOptions);
             return await _fileContentService.WriteFileAsync(filePath, jsonString);
         }
-        catch
+        catch (Exception ex)
         {
-            return false;
+            throw new JsonFileException($"Failed to save JSON file: {filePath}", ex);
         }
     }
 
@@ -50,24 +51,22 @@ public class JsonFileService : IJsonFileService
 
             return JsonSerializer.Deserialize<T>(jsonContent, _jsonOptions) ?? new T();
         }
-        catch
+        catch (Exception ex)
         {
-            return new T();
+            throw new JsonFileException($"Failed to load JSON file: {filePath}", ex);
         }
     }
 
     public List<string> GetUploadedFiles()
     {
         if (!Directory.Exists(_uploadsFolder))
-            return new List<string>();
+            return [];
 
-        return Directory.GetFiles(_uploadsFolder, "*.json")
+        return [.. Directory.GetFiles(_uploadsFolder, "*.json")
                        .Select(Path.GetFileName)
                        .Where(name => name != null)
-                       .Cast<string>()
-                       .ToList();
+                       .Cast<string>()];
     }
 
     public string GetUploadsFolderPath() => _uploadsFolder;
-
 }

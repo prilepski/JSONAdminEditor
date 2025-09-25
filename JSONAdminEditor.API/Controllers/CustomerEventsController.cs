@@ -22,7 +22,7 @@ public class CustomerEventsController(IJsonFileService jsonFileService) : Contro
         return await _jsonFileService.LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
     }
 
-    private CustomerEventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
+    private static CustomerEventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
         customerData.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));

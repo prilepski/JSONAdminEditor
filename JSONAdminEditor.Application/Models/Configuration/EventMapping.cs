@@ -9,7 +9,7 @@ public class EventMapping
 
     [Required]
     public string OrderType { get; set; }
-    
+
     public string Phone { get; set; }
 
     public string Email { get; set; }

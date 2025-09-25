@@ -1,10 +1,9 @@
-using JSONAdminEditor.Services;
-using JSONAdminEditor.Models;
-using JSONAdminEditor.API.Middleware;
-using Amazon.S3;
-using Amazon;
+
 using JSONAdminEditor.API;
-using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.API.Constants;
+using JSONAdminEditor.API.Extensions;
+using JSONAdminEditor.API.Middleware;
+using JSONAdminEditor.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +13,7 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 
 // Configure storage settings
 builder.Services.Configure<StorageSettings>(
-    builder.Configuration.GetSection("StorageSettings"));
+    builder.Configuration.GetSection(ConfigurationKeys.StorageSettings));
 
 // Configure Okta settings
 //builder.Services.Configure<OktaSettings>(builder.Configuration.GetSection("Okta"));
@@ -68,71 +67,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<OpenApiDocumentTransformer>();
 
 // Register storage services
-builder.Services.AddScoped<FileManagementService>();
-builder.Services.AddScoped<S3StorageService>();
-builder.Services.AddScoped<IStorageServiceFactory, StorageServiceFactory>();
-builder.Services.AddScoped<IFileContentService, FileContentService>();
+builder.Services.AddStorageServices();
 
-// Register other services with updated dependencies
-builder.Services.AddScoped<IJsonFileService, JsonFileService>();
-
-// Configure AWS S3 client (always register to satisfy dependency injection)
-var storageSettings = builder.Configuration.GetSection("StorageSettings").Get<StorageSettings>();
-var s3Settings = storageSettings?.S3Settings ?? new S3Settings 
-{ 
-    Region = "us-east-1", 
-    BucketName = "default-bucket", 
-    UseCredentialsFromEnvironment = true 
-};
-
-// Debug: Show what configuration values are actually loaded
-Console.WriteLine("=== Configuration Debug Info ===");
-Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
-Console.WriteLine($"StorageType: {storageSettings?.StorageType}");
-Console.WriteLine($"BucketName: '{s3Settings.BucketName}'");
-Console.WriteLine($"AccessKey: '{s3Settings.AccessKey}'");
-Console.WriteLine($"SecretKey length: {s3Settings.SecretKey?.Length ?? 0}");
-Console.WriteLine($"UseCredentialsFromEnvironment: {s3Settings.UseCredentialsFromEnvironment}");
-Console.WriteLine("===============================");
-
-builder.Services.AddSingleton<IAmazonS3>(provider =>
-{
-    try
-    {
-        Console.WriteLine("Creating AWS S3 Client...");
-        var config = new AmazonS3Config
-        {
-            RegionEndpoint = RegionEndpoint.GetBySystemName(s3Settings.Region)
-        };
-        
-        Console.WriteLine($"S3 Region: {s3Settings.Region}");
-        Console.WriteLine($"UseCredentialsFromEnvironment: {s3Settings.UseCredentialsFromEnvironment}");
-        Console.WriteLine($"AccessKey provided: {!string.IsNullOrEmpty(s3Settings.AccessKey)}");
-        Console.WriteLine($"SecretKey provided: {!string.IsNullOrEmpty(s3Settings.SecretKey)}");
-        
-        // Use explicit credentials if they are provided, otherwise use environment credentials
-        if (!string.IsNullOrEmpty(s3Settings.AccessKey) && !string.IsNullOrEmpty(s3Settings.SecretKey))
-        {
-            Console.WriteLine("Using explicit AWS credentials");
-            return new AmazonS3Client(s3Settings.AccessKey, s3Settings.SecretKey, config);
-        }
-        else if (s3Settings.UseCredentialsFromEnvironment)
-        {
-            Console.WriteLine("Using environment AWS credentials");
-            return new AmazonS3Client(config);
-        }
-        else
-        {
-            throw new InvalidOperationException("No AWS credentials configured. Either provide AccessKey/SecretKey or set UseCredentialsFromEnvironment=true");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"ERROR creating AWS S3 Client: {ex.GetType().Name}: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
-        throw;
-    }
-});
+// Configure AWS S3 client
+var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+builder.Services.AddAwsS3Client(builder.Configuration, logger);
 
 var app = builder.Build();
 
@@ -169,4 +108,4 @@ app.MapControllers();
 // Serve React app for SPA routes
 app.MapFallbackToFile("index.html");
 
-app.Run();
+    app.Run();

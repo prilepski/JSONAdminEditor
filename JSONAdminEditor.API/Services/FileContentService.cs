@@ -1,12 +1,12 @@
+namespace JSONAdminEditor.Services;
+
 using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Models;
 using Microsoft.Extensions.Options;
 
-namespace JSONAdminEditor.Services;
-
 public class FileContentService(
-    IStorageServiceFactory storageServiceFactory, 
-    IOptions<StorageSettings> storageSettings, 
+    IStorageServiceFactory storageServiceFactory,
+    IOptions<StorageSettings> storageSettings,
     IWebHostEnvironment environment) : IFileContentService
 {
     private readonly IStorageServiceFactory _storageServiceFactory = storageServiceFactory;

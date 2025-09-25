@@ -22,8 +22,6 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
         return await _jsonFileService.LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
     }
 
-
-
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
     [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
     [ProducesResponseType(400)]
