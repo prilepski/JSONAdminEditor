@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { customerService } from '../services';
-import { EventMapping, CustomerNotificationMapping, CustomerEventMapping } from '../types';
+import { CustomerNotificationMapping, CustomerEventMapping } from '../types';
 import { useErrorHandler } from './useErrorHandler';
 
 export const useCustomersQuery = () => {

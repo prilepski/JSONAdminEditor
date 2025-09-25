@@ -41,7 +41,7 @@ export const Events: React.FC = () => {
   const { handleError } = useErrorHandler({ context: 'Events' });
 
   const [eventData, setEventData] = useState<EventData | null>(null);
-  const { selectedEvent, selectedOrderType, activeTab, isNewEvent } = pageState;
+  const { selectedEvent, selectedOrderType, activeTab } = pageState;
   const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery();
   const { data: allEvents = [] } = useAllEventsQuery();
   const { data: globalContentVariables = {} } = useContentVariablesQuery();
@@ -53,7 +53,10 @@ export const Events: React.FC = () => {
 
   useEffect(() => {
     if (eventInfo) {
-      setEventData(eventInfo);
+      setEventData({
+        ...eventInfo,
+        preferredCommunication: (eventInfo.preferredCommunication as Array<{ channel: string; priority: number }>) || []
+      });
       updateField('isNewEvent', false);
     } else if (selectedEvent && selectedOrderType) {
       updateField('isNewEvent', true);
@@ -64,7 +67,7 @@ export const Events: React.FC = () => {
         email: '$consigneeContact.email$',
         templates: {},
         isSuppressed: false,
-        preferredCommunication: [],
+        preferredCommunication: [] as Array<{ channel: string; priority: number }>,
         contentVariables: {},
         triggerConditions: {},
         contentVariablesOverrides: {},

@@ -10,7 +10,7 @@ export const getAuthConfig = (): AuthConfig | null => {
   const env = import.meta.env.VITE_APP_ENV;
   
   // Disable auth for development environment
-  if (env === 'development') {
+  if (env === 'local') {
     return null;
   }
 
