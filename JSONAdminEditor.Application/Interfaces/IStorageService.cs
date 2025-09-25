@@ -10,9 +10,4 @@ public interface IStorageService
     List<ManagedFile> GetManagedFiles();
     bool DeleteFile(string filePath);
     string GetDataFolderPath();
-    //Task<Customer?> GetCustomerByIdAsync(string customerId);
-    //Task<List<CustomerLookupResult>> SearchCustomersAsync(string searchTerm);
-    //Task<bool> ValidateCustomerExistsAsync(string customerName);
-    //Task<Dictionary<string, object>?> GetCustomerDataAsync(string customerId);
-    //Task<bool> SaveCustomerDataAsync(string customerId, Dictionary<string, object> customerData);
 }
