@@ -4,6 +4,7 @@ import {
   useCustomerContentVariablesQuery,
   useCustomerContentVariablesMutation,
 } from '../hooks/useCustomerQuery';
+import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import {
   PageHeader,
@@ -17,16 +18,32 @@ import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common'
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [contentVariables, setContentVariables] = useState<Record<string, string>>({});
+  const [editingKeys, setEditingKeys] = useState<Record<string, string>>({});
   const { handleError } = useErrorHandler({ context: 'CustomerSettings' });
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
   const { data: customerContentVars = {}, isLoading: settingsLoading } =
     useCustomerContentVariablesQuery(selectedCustomer);
+  const { data: globalContentVariables = {} } = useContentVariablesQuery();
   const saveMutation = useCustomerContentVariablesMutation();
 
+  const mergedVariables = React.useMemo(() => {
+    const merged: Record<string, { value: string; isRedefined: boolean; globalValue?: string }> = {};
+    
+    Object.entries(globalContentVariables).forEach(([key, value]) => {
+      merged[key] = { value, isRedefined: false, globalValue: value };
+    });
+    
+    Object.entries(contentVariables).forEach(([key, value]) => {
+      merged[key] = { value, isRedefined: true, globalValue: merged[key]?.globalValue };
+    });
+    
+    return merged;
+  }, [JSON.stringify(globalContentVariables), JSON.stringify(contentVariables)]);
+
   useEffect(() => {
-    setContentVariables(customerContentVars);
-  }, [customerContentVars]);
+    setContentVariables(selectedCustomer ? customerContentVars || {} : {});
+  }, [selectedCustomer, JSON.stringify(customerContentVars)]);
 
   const handleSave = async () => {
     if (!selectedCustomer) return;
@@ -47,20 +64,29 @@ export const CustomerSettings: React.FC = () => {
   };
 
   const updateVariable = (oldKey: string, newKey: string, value: string) => {
-    setContentVariables((prev) => {
+    setContentVariables(prev => {
       const newVars = { ...prev };
-      if (oldKey !== newKey) {
-        delete newVars[oldKey];
-      }
+      if (oldKey !== newKey) delete newVars[oldKey];
       newVars[newKey] = value;
       return newVars;
     });
   };
 
   const removeVariable = (key: string) => {
-    setContentVariables((prev) => {
+    setContentVariables(prev => {
+      const { [key]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const toggleRedefined = (key: string, isRedefined: boolean) => {
+    setContentVariables(prev => {
       const newVars = { ...prev };
-      delete newVars[key];
+      if (isRedefined) {
+        newVars[key] = mergedVariables[key]?.value || globalContentVariables[key] || '';
+      } else {
+        delete newVars[key];
+      }
       return newVars;
     });
   };
@@ -119,45 +145,69 @@ export const CustomerSettings: React.FC = () => {
                     </div>
                   </div>
 
-                  {Object.keys(contentVariables).length > 0 ? (
+                  {Object.keys(mergedVariables).length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-striped table-hover">
                         <thead className="table-dark">
                           <tr>
-                            <th style={{ width: '40%' }}>Variable Name</th>
-                            <th style={{ width: '50%' }}>Value</th>
-                            <th style={{ width: '10%' }}>Actions</th>
+                            <th style={{ width: '30%' }}>Variable Name</th>
+                            <th style={{ width: '40%' }}>Value</th>
+                            <th style={{ width: '15%' }}>Is Redefined</th>
+                            <th style={{ width: '15%' }}>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(contentVariables).map(([key, value]) => (
+                          {Object.entries(mergedVariables).map(([key, data]) => (
                             <tr key={key}>
-                              <td>
-                                <input
-                                  type="text"
-                                  className="form-control form-control-sm"
-                                  value={key}
-                                  onChange={(e) => updateVariable(key, e.target.value, value)}
-                                />
-                              </td>
-                              <td>
-                                <input
-                                  type="text"
-                                  className="form-control form-control-sm"
-                                  value={value}
-                                  onChange={(e) => updateVariable(key, key, e.target.value)}
-                                />
-                              </td>
-                              <td className="text-center">
-                                <button
-                                  type="button"
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => removeVariable(key)}
-                                >
-                                  <i className="fas fa-trash"></i>
-                                </button>
-                              </td>
-                            </tr>
+                                <td>
+                                  <input
+                                    type="text"
+                                    className={`form-control form-control-sm ${data.globalValue ? 'bg-light' : ''}`}
+                                    value={editingKeys[key] !== undefined ? editingKeys[key] : key}
+                                    readOnly={!!data.globalValue}
+                                    onChange={data.globalValue ? undefined : (e) => 
+                                      setEditingKeys(prev => ({ ...prev, [key]: e.target.value }))
+                                    }
+                                    onBlur={() => {
+                                      if (editingKeys[key] !== undefined && editingKeys[key] !== key) {
+                                        updateVariable(key, editingKeys[key], data.value);
+                                      }
+                                      setEditingKeys(prev => {
+                                        const { [key]: _, ...rest } = prev;
+                                        return rest;
+                                      });
+                                    }}
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    value={data.value}
+                                    onChange={(e) => updateVariable(key, key, e.target.value)}
+                                    disabled={!data.isRedefined}
+                                  />
+                                </td>
+                                <td className="text-center">
+                                  <div className="form-check">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      checked={data.isRedefined}
+                                      onChange={(e) => toggleRedefined(key, e.target.checked)}
+                                    />
+                                  </div>
+                                </td>
+                                <td className="text-center">
+                                  <button
+                                    type="button"
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => removeVariable(key)}
+                                  >
+                                    <i className="fas fa-trash"></i>
+                                  </button>
+                                </td>
+                              </tr>
                           ))}
                         </tbody>
                       </table>

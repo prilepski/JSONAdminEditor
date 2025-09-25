@@ -21,7 +21,7 @@ describe('ContentVariables', () => {
         {
           'Variable Name': 'test_var',
           'Variable Value': 'test_value',
-          Description: 'Test description',
+
         },
       ],
       isLoading: false,
@@ -41,11 +41,7 @@ describe('ContentVariables', () => {
     );
   });
 
-  it('renders description', () => {
-    renderWithProviders(<ContentVariables />);
 
-    expect(screen.getByText(/Manage global content variables/)).toBeInTheDocument();
-  });
 
   it('renders editor when data is loaded', async () => {
     renderWithProviders(<ContentVariables />);

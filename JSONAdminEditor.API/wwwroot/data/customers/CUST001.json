@@ -1,1 +1,12 @@
-{}
+{
+  "PreferredCommunication": [],
+  "ContentVariables": {
+    "test global level": "!saasdsvdff",
+    "new_var_1758717561119": "dsadsa",
+    "new_var_1758726075425": "ffff"
+  },
+  "ContentVariablesOverrides": {},
+  "Events": [],
+  "AfterHours": null,
+  "FromEmail": null
+}

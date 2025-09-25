@@ -68,6 +68,47 @@
         "cust_name": "$Customer.FriendlyName$"
       },
       "TriggerConditions": {}
+    },
+    {
+      "ContentVariablesOverrides": {
+        "event_1758730945315": {
+          "variable_1758730945315": {
+            "override_1758730945315": ""
+          }
+        }
+      },
+      "Event": "Ready For Scheduling",
+      "OrderType": "ALL",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Templates": {
+        "Email": "d-e162b3e6181545fead5e643982628504"
+      },
+      "IsSuppressed": true,
+      "PreferredCommunication": [],
+      "ContentVariables": {
+        "new_var_1758730992937": "2222"
+      },
+      "TriggerConditions": {}
+    },
+    {
+      "ContentVariablesOverrides": {
+        "event_1758736139904": {}
+      },
+      "Event": "Ready For Scheduling",
+      "OrderType": "Delivery",
+      "Phone": "$consigneeContact.phone$",
+      "Email": "$consigneeContact.email$",
+      "Templates": {
+        "Email": "d-e162b3e6181545fead5e643982628504"
+      },
+      "IsSuppressed": false,
+      "PreferredCommunication": [],
+      "ContentVariables": {
+        "new_var_1758735755437sbbbbgb": "dadas",
+        "sdsdfs": "fghrgef"
+      },
+      "TriggerConditions": {}
     }
   ],
   "AfterHours": {

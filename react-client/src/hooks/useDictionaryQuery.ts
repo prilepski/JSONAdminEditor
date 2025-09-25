@@ -58,3 +58,23 @@ export const useChannelOptionsQuery = () => {
     queryFn: dictionaryService.getChannelOptions,
   });
 };
+
+export const useEventTriggersQuery = () => {
+  return useQuery({
+    queryKey: ['eventTriggers'],
+    queryFn: async () => {
+      const response = await fetch('/api/dictionaries/event-triggers');
+      return response.json();
+    },
+  });
+};
+
+export const useOrderTypesQuery = () => {
+  return useQuery({
+    queryKey: ['orderTypes'],
+    queryFn: async () => {
+      const response = await fetch('/api/dictionaries/order-types');
+      return response.json();
+    },
+  });
+};

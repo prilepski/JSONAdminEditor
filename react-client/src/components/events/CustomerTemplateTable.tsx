@@ -1,5 +1,6 @@
 import React from 'react';
 import { TemplateField } from '../../types/components';
+import { useTemplatesQuery } from '../../hooks/useEventQuery';
 
 interface CustomerTemplateTableProps {
   templateFields: TemplateField[];
@@ -12,6 +13,7 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
   onUpdateTemplate,
   onToggleRedefined,
 }) => {
+  const { data: templates = [] } = useTemplatesQuery();
 
   return (
     <div>
@@ -37,14 +39,21 @@ export const CustomerTemplateTable: React.FC<CustomerTemplateTableProps> = ({
                   <strong>{template.channel}</strong>
                 </td>
                 <td>
-                  <input
-                    type="text"
+                  <select
                     className="form-control"
                     value={template.value}
                     disabled={!template.isRedefined}
                     onChange={(e) => onUpdateTemplate(template.channel, e.target.value)}
-                    placeholder="Enter template ID..."
-                  />
+                  >
+                    <option value="">Select template...</option>
+                    {templates
+                      .filter(t => t.channelType?.toLowerCase() === template.channel.toLowerCase())
+                      .map((t) => (
+                        <option key={t.templateId} value={t.templateId}>
+                          {t.templateName}
+                        </option>
+                      ))}
+                  </select>
                 </td>
                 <td className="text-center">
                   <div className="form-check">

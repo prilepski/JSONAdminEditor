@@ -1,5 +1,10 @@
 import axios from 'axios';
 import { EventMapping, CustomerNotificationMapping, CustomerEventMapping } from '../types';
+import type { paths } from '../generated/api';
+
+// Generated API types
+type CustomerContentVariablesResponse = paths['/api/config/customers/{customerId}/content-variables']['get']['responses']['200']['content']['application/json'];
+type CustomerContentVariablesRequest = paths['/api/config/customers/{customerId}/content-variables']['put']['requestBody']['content']['application/json'];
 import { createApiError, createServiceError } from '../utils/errorHandler';
 
 const api = axios.create({
@@ -8,10 +13,10 @@ const api = axios.create({
 });
 
 export const customerService = {
-  getCustomers: async (): Promise<string[]> => {
+  getCustomers: async (): Promise<Array<{ customerId: string; companyName: string }>> => {
     try {
-      const response = await api.get<Array<{ customerId: string }>>('/dictionaries/customers');
-      return response.data.map(customer => customer.customerId);
+      const response = await api.get<Array<{ customerId: string; companyName: string }>>('/dictionaries/customers');
+      return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw createApiError(
@@ -116,11 +121,10 @@ export const customerService = {
     }
   },
 
-  getCustomerContentVariables: async (customerId: string): Promise<Record<string, string>> => {
+  getCustomerContentVariables: async (customerId: string): Promise<CustomerContentVariablesResponse> => {
     try {
-      const response = await api.get<Array<{ key: string; value: string }>>(`/config/customers/${customerId}/content-variables`);
-      const data = response.data || [];
-      return data.reduce((acc, item) => ({ ...acc, [item.key]: item.value }), {});
+      const response = await api.get<CustomerContentVariablesResponse>(`/config/customers/${customerId}/content-variables`);
+      return response.data || {};
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw createApiError(
@@ -138,7 +142,7 @@ export const customerService = {
     }
   },
 
-  saveCustomerContentVariables: async (customerId: string, data: Record<string, string>): Promise<{ success: boolean }> => {
+  saveCustomerContentVariables: async (customerId: string, data: CustomerContentVariablesRequest): Promise<{ success: boolean }> => {
     try {
       await api.put<void>(`/config/customers/${customerId}/content-variables`, data);
       return { success: true };
