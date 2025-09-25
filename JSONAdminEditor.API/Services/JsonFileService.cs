@@ -1,5 +1,5 @@
-using Newtonsoft.Json;
 using JSONAdminEditor.Application.Interfaces;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Services;
 
@@ -7,6 +7,7 @@ public class JsonFileService : IJsonFileService
 {
     private readonly IWebHostEnvironment _environment;
     private readonly IFileContentService _fileContentService;
+    private readonly JsonSerializerOptions _jsonOptions;
     private readonly string _uploadsFolder;
 
     public JsonFileService(
@@ -16,6 +17,8 @@ public class JsonFileService : IJsonFileService
         _environment = environment;
         _fileContentService = fileContentService;
         _uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+
+        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
 
         // Ensure uploads directory exists (always local for temporary files)
         if (!Directory.Exists(_uploadsFolder))
@@ -28,7 +31,7 @@ public class JsonFileService : IJsonFileService
     {
         try
         {
-            var jsonString = JsonConvert.SerializeObject(data, Formatting.Indented);
+            var jsonString = JsonSerializer.Serialize(data, _jsonOptions);
             return await _fileContentService.WriteFileAsync(filePath, jsonString);
         }
         catch
@@ -44,8 +47,8 @@ public class JsonFileService : IJsonFileService
             var jsonContent = await _fileContentService.ReadFileAsync(filePath);
             if (string.IsNullOrEmpty(jsonContent))
                 return new T();
-            
-            return JsonConvert.DeserializeObject<T>(jsonContent) ?? new T();
+
+            return JsonSerializer.Deserialize<T>(jsonContent, _jsonOptions) ?? new T();
         }
         catch
         {
