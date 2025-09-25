@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
 using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -12,11 +13,13 @@ namespace JSONAdminEditor.Controllers;
 public class CustomerEventsController : ControllerBase
 {
     private readonly IFileContentService _fileService;
+    private readonly IJsonFileService _jsonFileService;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public CustomerEventsController(IFileContentService fileService)
+    public CustomerEventsController(IFileContentService fileService, IJsonFileService jsonFileService)
     {
         _fileService = fileService;
+        _jsonFileService = jsonFileService;
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
@@ -31,13 +34,7 @@ public class CustomerEventsController : ControllerBase
         return string.IsNullOrEmpty(content) ? null : JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
     }
 
-    private async Task SaveCustomerDataAsync(string customerId, CustomerNotificationMapping customerData)
-    {
-        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
-        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
-    }
-
-    private EventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
+    private CustomerEventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
         customerData.EventMappings.FirstOrDefault(e => 
             e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
             e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
@@ -104,7 +101,7 @@ public class CustomerEventsController : ControllerBase
         else
             customerData.EventMappings.Add(eventMapping);
 
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 
@@ -130,7 +127,7 @@ public class CustomerEventsController : ControllerBase
             return NotFound("Event mapping not found");
 
         customerData.EventMappings.RemoveAt(existingIndex);
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
 using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -11,11 +12,13 @@ namespace JSONAdminEditor.Controllers;
 public class ConfigEventsController : ControllerBase
 {
     private readonly IFileContentService _fileService;
+    private readonly IJsonFileService _jsonFileService;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public ConfigEventsController(IFileContentService fileService)
+    public ConfigEventsController(IFileContentService fileService, IJsonFileService jsonFileService)
     {
         _fileService = fileService;
+        _jsonFileService = jsonFileService;
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
@@ -27,11 +30,7 @@ public class ConfigEventsController : ControllerBase
             : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
     }
 
-    private async Task SaveConfigAsync(NotificationMapping config)
-    {
-        var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await _fileService.WriteFileAsync("data/notifications.json", json);
-    }
+
 
     private EventMapping? FindEventMapping(NotificationMapping config, string eventName, string orderType)
     {
@@ -87,7 +86,7 @@ public class ConfigEventsController : ControllerBase
         else
             config.EventMappings.Add(eventMapping);
 
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -106,7 +105,7 @@ public class ConfigEventsController : ControllerBase
             return NotFound("Event mapping not found");
 
         config.EventMappings.RemoveAt(existingIndex);
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 }

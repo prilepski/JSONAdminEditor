@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using JSONAdminEditor.Application.Models.Dictionaries;
 using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Application.Models.Dictionaries;
+using JSONAdminEditor.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -12,9 +13,10 @@ namespace JSONAdminEditor.Controllers;
 public class DictionariesController : ControllerBase
 {
     private readonly IFileContentService _fileContentService;
+    private readonly IJsonFileService _jsonFileService;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public DictionariesController(IFileContentService fileContentService)
+    public DictionariesController(IFileContentService fileContentService, IJsonFileService jsonFileService)
     {
         _fileContentService = fileContentService;
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
@@ -148,8 +150,7 @@ public class DictionariesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest($"Invalid {dataType.ToLower()} data");
 
-        var json = JsonSerializer.Serialize(data, _jsonOptions);
-        await _fileContentService.WriteFileAsync(filePath, json);
+        await _jsonFileService.SaveJsonFileAsync(filePath, data);
         return NoContent();
     }
 

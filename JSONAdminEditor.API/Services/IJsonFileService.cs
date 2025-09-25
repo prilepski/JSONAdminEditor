@@ -4,9 +4,9 @@ namespace JSONAdminEditor.Services;
 
 public interface IJsonFileService
 {
-    Task<JsonFileViewModel> ProcessJsonFileAsync(IFormFile file);
-    Task<JsonFileViewModel> LoadJsonFileAsync(string filePath);
-    Task<bool> SaveJsonFileAsync(string filePath, List<Dictionary<string, object>> tableData);
+    //Task<JsonFileViewModel> ProcessJsonFileAsync(IFormFile file);
+    Task<T> LoadJsonFileAsync<T>(string filePath);
+    Task<bool> SaveJsonFileAsync<T>(string filePath, T data);
     List<string> GetUploadedFiles();
     string GetUploadsFolderPath();
 }

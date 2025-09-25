@@ -20,38 +20,41 @@ builder.Services.Configure<StorageSettings>(
     builder.Configuration.GetSection("StorageSettings"));
 
 // Configure Okta settings
-builder.Services.Configure<OktaSettings>(builder.Configuration.GetSection("Okta"));
+//builder.Services.Configure<OktaSettings>(builder.Configuration.GetSection("Okta"));
 
-// Add authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = "Cookies";
-    options.DefaultChallengeScheme = "oidc";
-})
-.AddCookie("Cookies")
-.AddOpenIdConnect("oidc", options =>
-{
-    var oktaSettings = builder.Configuration.GetSection("Okta").Get<OktaSettings>();
-    options.Authority = oktaSettings?.Domain;
-    options.ClientId = oktaSettings?.ClientId;
-    options.ClientSecret = oktaSettings?.ClientSecret;
-    options.ResponseType = "code";
-    options.SaveTokens = true;
-    options.Scope.Add("openid");
-    options.Scope.Add("profile");
-    options.Scope.Add("email");
-});
+//// Add authentication
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultScheme = "Cookies";
+//    options.DefaultChallengeScheme = "oidc";
+//})
+//.AddCookie("Cookies")
+//.AddOpenIdConnect("oidc", options =>
+//{
+//    var oktaSettings = builder.Configuration.GetSection("Okta").Get<OktaSettings>();
+//    options.Authority = oktaSettings?.Domain;
+//    options.ClientId = oktaSettings?.ClientId;
+//    options.ClientSecret = oktaSettings?.ClientSecret;
+//    options.ResponseType = "code";
+//    options.SaveTokens = true;
+//    options.Scope.Add("openid");
+//    options.Scope.Add("profile");
+//    options.Scope.Add("email");
+//})
+;
 
-builder.Services.AddAuthorization();
+//builder.Services.AddAuthorization();
 
 // Add services to the container.
-builder.Services.AddControllers(config =>
-{
-    var policy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-    config.Filters.Add(new AuthorizeFilter(policy));
-});
+builder.Services.AddControllers(
+//    config =>
+//{
+//    var policy = new AuthorizationPolicyBuilder()
+//        .RequireAuthenticatedUser()
+//        .Build();
+//    config.Filters.Add(new AuthorizeFilter(policy));
+//}
+);
 
 // Add modern Microsoft OpenAPI support
 builder.Services.AddOpenApi("v1", options =>
@@ -158,7 +161,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseAuthentication();
+//app.UseAuthentication();
 app.UseAuthorization();
 
 // Serve React static files

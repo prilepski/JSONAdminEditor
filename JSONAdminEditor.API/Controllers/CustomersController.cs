@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
 using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -12,11 +13,13 @@ namespace JSONAdminEditor.Controllers;
 public class CustomersController : ControllerBase
 {
     private readonly IFileContentService _fileService;
+    private readonly IJsonFileService _jsonFileService;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public CustomersController(IFileContentService fileService)
+    public CustomersController(IFileContentService fileService, IJsonFileService jsonFileService)
     {
         _fileService = fileService;
+        _jsonFileService = jsonFileService;
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
@@ -31,11 +34,7 @@ public class CustomersController : ControllerBase
         return string.IsNullOrEmpty(content) ? null : JsonSerializer.Deserialize<CustomerNotificationMapping>(content, _jsonOptions);
     }
 
-    private async Task SaveCustomerDataAsync(string customerId, CustomerNotificationMapping customerData)
-    {
-        var json = JsonSerializer.Serialize(customerData, _jsonOptions);
-        await _fileService.WriteFileAsync($"data/customers/{customerId}.json", json);
-    }
+
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
     [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
@@ -64,7 +63,7 @@ public class CustomersController : ControllerBase
         if (customerData == null)
             return BadRequest("Customer data is required");
         
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 
@@ -104,7 +103,7 @@ public class CustomersController : ControllerBase
             return NotFound("Customer not found");
         
         customerData.PreferredCommunication = data;
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 
@@ -140,7 +139,7 @@ public class CustomersController : ControllerBase
             return NotFound("Customer not found");
         
         customerData.ContentVariables = contentVariables;
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 
@@ -180,7 +179,7 @@ public class CustomersController : ControllerBase
             return NotFound("Customer not found");
         
         customerData.AfterHours = afterHours;
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 
@@ -213,7 +212,7 @@ public class CustomersController : ControllerBase
             return NotFound("Customer not found");
         
         customerData.FromEmail = fromEmail;
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 
@@ -249,7 +248,7 @@ public class CustomersController : ControllerBase
             return NotFound("Customer not found");
         
         customerData.ContentVariablesOverrides = contentVariablesOverrides;
-        await SaveCustomerDataAsync(customerId, customerData);
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
         return NoContent();
     }
 }

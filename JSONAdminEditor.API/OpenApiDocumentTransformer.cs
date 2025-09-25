@@ -19,10 +19,10 @@ public class OpenApiDocumentTransformer : IOpenApiDocumentTransformer
         };
 
         // Add server information
-        document.Servers = new List<OpenApiServer>
-        {
+        document.Servers =
+        [
             new() { Url = "/", Description = "Current server" }
-        };
+        ];
 
         // Enhance schema generation for better client generation
         if (document.Components?.Schemas != null)

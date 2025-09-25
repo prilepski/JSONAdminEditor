@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using JSONAdminEditor.Application.Models.Configuration;
 using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.Services;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -14,11 +15,13 @@ namespace JSONAdminEditor.Controllers;
 public class ConfigController : ControllerBase
 {
     private readonly IFileContentService _fileService;
+    private readonly IJsonFileService _jsonFileService;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public ConfigController(IFileContentService fileService)
+    public ConfigController(IFileContentService fileService, IJsonFileService jsonFileService)
     {
         _fileService = fileService;
+        _jsonFileService = jsonFileService;
         _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
     }
 
@@ -28,11 +31,7 @@ public class ConfigController : ControllerBase
         return string.IsNullOrEmpty(content) ? new NotificationMapping() : JsonSerializer.Deserialize<NotificationMapping>(content, _jsonOptions);
     }
 
-    private async Task SaveConfigAsync(NotificationMapping config)
-    {
-        var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await _fileService.WriteFileAsync("data/notifications.json", json);
-    }
+
 
     /// <summary>
     /// Gets the complete default notification configuration
@@ -66,7 +65,7 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid configuration data");
 
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -104,7 +103,7 @@ public class ConfigController : ControllerBase
 
         var config = await GetConfigAsync();
         config.PreferredCommunication = data;
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -138,7 +137,7 @@ public class ConfigController : ControllerBase
 
         var config = await GetConfigAsync();
         config.ContentVariables = contentVariables;
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -176,7 +175,7 @@ public class ConfigController : ControllerBase
 
         var config = await GetConfigAsync();
         config.OptOut = optOut;
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -213,7 +212,7 @@ public class ConfigController : ControllerBase
 
         var config = await GetConfigAsync();
         config.AfterHours = afterHours;
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -247,7 +246,7 @@ public class ConfigController : ControllerBase
 
         var config = await GetConfigAsync();
         config.FromEmail = fromEmail;
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 
@@ -281,7 +280,7 @@ public class ConfigController : ControllerBase
 
         var config = await GetConfigAsync();
         config.Agents = agents;
-        await SaveConfigAsync(config);
+        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
         return NoContent();
     }
 }
