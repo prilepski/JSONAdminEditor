@@ -3,13 +3,22 @@
     {
       "Channel": "Email",
       "Priority": 1
+    },
+    {
+      "Channel": "Voice",
+      "Priority": 2
+    },
+    {
+      "Channel": "Sms",
+      "Priority": 3
     }
   ],
   "ContentVariables": {
     "sdsdfs": "sdsdfsdf",
     "cust_name": "$Customer.FriendlyName$",
     "test1": "$test",
-    "test global level": "!saasds"
+    "test global level": "!saasds",
+    "test global level1": "test global level"
   },
   "Events": [
     {
@@ -34,7 +43,8 @@
         "bringg_sched_url": "$appointmentInformation.scheduleURL$",
         "agent_phone_num": "$agentContact.phone$",
         "ait_tracking_num": "$shipmentInfo[0].shipmentId$",
-        "test global event level": "dfsfedfs"
+        "test global level1": "test global event",
+        "test var": "test var"
       },
       "TriggerConditions": {}
     },
