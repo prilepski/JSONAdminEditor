@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using JSONAdminEditor.Application.Models;
 
 namespace JSONAdminEditor.Models;
