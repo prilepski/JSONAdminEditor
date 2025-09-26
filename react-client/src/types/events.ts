@@ -3,12 +3,8 @@ import { ChannelType } from './common';
 // Re-export ChannelType for convenience
 export type { ChannelType } from './common';
 
-// Template-related types
-export interface Template {
-  templateId: string;
-  templateName: string;
-  channelType: ChannelType;
-}
+// Template-related types (using API Template type)
+// Template type is imported from api.ts
 
 export interface TemplateSet {
   Email?: string;

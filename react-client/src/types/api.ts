@@ -1,4 +1,5 @@
 import { components } from '../generated/api';
+import { ValidationError } from './errors';
 
 // Generated API types
 export type Template = components['schemas']['Template'];
@@ -25,11 +26,7 @@ export interface ApiResponse<T = any> {
   validationErrors?: ValidationError[];
 }
 
-export interface ValidationError {
-  rowIndex: number;
-  fieldName: string;
-  message: string;
-}
+// ValidationError is imported from errors.ts
 
 
 
