@@ -63,16 +63,6 @@ export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
     return merged;
   }, [contentVariables, globalContentVariables, eventContentVariables, redefinedStates]);
 
-  const getRedefinedVariables = (): Record<string, string> => {
-    const redefined: Record<string, string> = {};
-    Object.entries(contentVariables).forEach(([key, value]) => {
-      if (redefinedStates[key]) {
-        redefined[key] = value;
-      }
-    });
-    return redefined;
-  };
-
   const updateVariable = (oldKey: string, newKey: string, value: string) => {
     const newVars = { ...contentVariables };
     if (oldKey !== newKey) {
