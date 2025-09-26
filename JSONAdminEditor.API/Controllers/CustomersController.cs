@@ -8,24 +8,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/customers")]
 [Produces("application/json")]
-public class CustomersController(IJsonFileService jsonFileService) : ControllerBase
+public class CustomersController(IConfigRepository repository) : ControllerBase
 {
-    private readonly IJsonFileService _jsonFileService = jsonFileService;
-
-    private static bool IsValidCustomerId(string customerId) =>
-        !string.IsNullOrWhiteSpace(customerId) && 
-        Regex.IsMatch(customerId, @"^[a-zA-Z0-9_-]+$") && 
-        customerId.Length <= 50;
-
-    private async Task<CustomerNotificationMapping?> GetCustomerDataAsync(string customerId)
-    {
-        return await _jsonFileService.LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
-    }
-
-    private async Task SaveCustomerAsync(string customerId, CustomerNotificationMapping customerData)
-    {
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
-    }
+    private readonly IConfigRepository _repository = repository;
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
     [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
@@ -33,10 +18,10 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<ActionResult<CustomerNotificationMapping>> GetCustomerConfig(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         return Ok(customerData ?? new CustomerNotificationMapping());
     }
 
@@ -48,16 +33,14 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerConfig(string customerId, [FromBody] CustomerNotificationMapping customerData)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
         if (customerData == null)
             return BadRequest("Customer data is required");
 
-        await SaveCustomerAsync(customerId, customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
-
-        
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/preferred-communication")]
@@ -66,10 +49,10 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<PreferredCommunication>>> GetCustomerPreferredCommunication(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.PreferredCommunication ?? new List<PreferredCommunication>());
     }
 
@@ -82,7 +65,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerPreferredCommunication(string customerId, [FromBody] List<PreferredCommunication> data)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
         
         if (data == null)
@@ -91,12 +74,12 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid preferred communication data");
         
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.PreferredCommunication = data;
-        await SaveCustomerAsync(customerId, customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -106,11 +89,11 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, string>>> GetCustomerContentVariables(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
-        return Ok(customerData?.ContentVariables ?? new Dictionary<string, string>());
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        return Ok(customerData?.ContentVariables ?? []);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/content-variables")]
@@ -121,18 +104,18 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerContentVariables(string customerId, [FromBody] Dictionary<string, string> contentVariables)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
         
         if (contentVariables == null)
             return BadRequest("Content variables data is required");
         
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.ContentVariables = contentVariables;
-        await SaveCustomerAsync(customerId, customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -142,10 +125,10 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<ActionResult<AfterHours?>> GetCustomerAfterHours(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.AfterHours);
     }
 
@@ -158,7 +141,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerAfterHours(string customerId, [FromBody] AfterHours afterHours)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
         
         if (afterHours == null)
@@ -167,12 +150,12 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid after hours data");
         
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.AfterHours = afterHours;
-        await SaveCustomerAsync(customerId, customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -182,10 +165,10 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<ActionResult<string?>> GetCustomerFromEmail(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.FromEmail ?? "");
     }
 
@@ -197,15 +180,15 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerFromEmail(string customerId, [FromBody] string fromEmail)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
         
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.FromEmail = fromEmail;
-        await SaveCustomerAsync(customerId, customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -215,11 +198,11 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>> GetCustomerContentVariablesOverrides(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
-        return Ok(customerData?.ContentVariablesOverrides ?? new Dictionary<string, Dictionary<string, Dictionary<string, string>>>());
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        return Ok(customerData?.ContentVariablesOverrides ?? []);
     }
 
     [HttpPut("{customerId:minlength(1):maxlength(50)}/content-variables-overrides")]
@@ -230,18 +213,18 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerContentVariablesOverrides(string customerId, [FromBody] Dictionary<string, Dictionary<string, Dictionary<string, string>>> contentVariablesOverrides)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
         
         if (contentVariablesOverrides == null)
             return BadRequest("Content variables overrides data is required");
         
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.ContentVariablesOverrides = contentVariablesOverrides;
-        await SaveCustomerAsync(customerId, customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 }

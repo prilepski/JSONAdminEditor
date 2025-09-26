@@ -10,14 +10,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config")]
 [Produces("application/json")]
-public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
+public class ConfigController(IConfigRepository repository) : ControllerBase
 {
-    private readonly IJsonFileService _jsonFileService = jsonFileService;
-
-    private async Task<NotificationMapping> GetConfigAsync()
-    {
-        return await _jsonFileService.LoadJsonFileAsync<NotificationMapping>("data/notifications.json") ?? new NotificationMapping();
-    }
+    private readonly IConfigRepository _repository = repository;
 
     /// <summary>
     /// Gets the complete default notification configuration
@@ -28,7 +23,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<NotificationMapping>> GetConfig()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config);
     }
 
@@ -51,7 +46,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid configuration data");
 
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -64,7 +59,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<PreferredCommunication>>> GetPreferredCommunication()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config.PreferredCommunication);
     }
 
@@ -87,9 +82,9 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid preferred communication data");
 
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         config.PreferredCommunication = data;
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -102,7 +97,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, string>>> GetContentVariables()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config.ContentVariables);
     }
 
@@ -121,9 +116,9 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (contentVariables == null)
             return BadRequest("Content variables data is required");
 
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         config.ContentVariables = contentVariables;
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -136,7 +131,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<OptOut>> GetOptOut()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config.OptOut);
     }
 
@@ -159,9 +154,9 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid opt-out data");
 
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         config.OptOut = optOut;
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -173,7 +168,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<AfterHours?>> GetAfterHours()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config.AfterHours);
     }
 
@@ -196,9 +191,9 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid after hours data");
 
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         config.AfterHours = afterHours;
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -211,7 +206,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<string>> GetFromEmail()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config.FromEmail ?? "");
     }
 
@@ -230,9 +225,9 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (string.IsNullOrEmpty(fromEmail))
             return BadRequest("From email is required");
 
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         config.FromEmail = fromEmail;
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -245,7 +240,7 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<Dictionary<string, bool>>> GetAgents()
     {
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         return Ok(config.Agents);
     }
 
@@ -264,9 +259,9 @@ public class ConfigController(IJsonFileService jsonFileService) : ControllerBase
         if (agents == null)
             return BadRequest("Agents data is required");
 
-        var config = await GetConfigAsync();
+        var config = await _repository.GetGlobalConfigAsync();
         config.Agents = agents;
-        await _jsonFileService.SaveJsonFileAsync("data/notifications.json", config);
+        await _repository.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 }

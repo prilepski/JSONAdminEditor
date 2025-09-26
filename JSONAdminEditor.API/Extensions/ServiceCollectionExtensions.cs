@@ -16,7 +16,7 @@ namespace JSONAdminEditor.API.Extensions
             services.AddScoped<S3StorageService>();
             services.AddScoped<IStorageServiceFactory, StorageServiceFactory>();
             services.AddScoped<IFileContentService, FileContentService>();
-            services.AddScoped<IJsonFileService, JsonFileService>();
+            services.AddScoped<IConfigRepository, ConfigRepository>();
             return services;
         }
 

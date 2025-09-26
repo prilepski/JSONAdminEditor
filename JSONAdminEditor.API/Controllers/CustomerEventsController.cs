@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
 using JSONAdminEditor.Application.Models.Configuration;
 using JSONAdminEditor.Services;
 
@@ -8,24 +7,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/customers/{customerId}/events")]
 [Produces("application/json")]
-public class CustomerEventsController(IJsonFileService jsonFileService) : ControllerBase
+public class CustomerEventsController(IConfigRepository repository) : ControllerBase
 {
-    private readonly IJsonFileService _jsonFileService = jsonFileService;
-
-    private static bool IsValidCustomerId(string customerId) =>
-        !string.IsNullOrWhiteSpace(customerId) && 
-        Regex.IsMatch(customerId, @"^[a-zA-Z0-9_-]+$") && 
-        customerId.Length <= 50;
-
-    private async Task<CustomerNotificationMapping?> GetCustomerDataAsync(string customerId)
-    {
-        return await _jsonFileService.LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
-    }
-
-    private static CustomerEventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
-        customerData.EventMappings.FirstOrDefault(e => 
-            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
-            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+    private readonly IConfigRepository _repository = repository;
 
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(List<CustomerEventMapping>))]
@@ -33,10 +17,10 @@ public class CustomerEventsController(IJsonFileService jsonFileService) : Contro
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<CustomerEventMapping>>> GetCustomerEvents(string customerId)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.EventMappings ?? []);
     }
 
@@ -46,10 +30,10 @@ public class CustomerEventsController(IJsonFileService jsonFileService) : Contro
     [ProducesResponseType(500)]
     public async Task<ActionResult<CustomerEventMapping>> GetCustomerEvent(string customerId, string eventName, string orderType)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         var eventMapping = customerData != null ? FindEventMapping(customerData, eventName, orderType) : null;
 
         return Ok(eventMapping ?? new CustomerEventMapping { Event = eventName, OrderType = orderType });
@@ -64,7 +48,7 @@ public class CustomerEventsController(IJsonFileService jsonFileService) : Contro
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomerEvent(string customerId, string eventName, string orderType, [FromBody] CustomerEventMapping eventMapping)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
         if (eventMapping == null)
@@ -73,23 +57,20 @@ public class CustomerEventsController(IJsonFileService jsonFileService) : Contro
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid event mapping data");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
 
         eventMapping.Event = eventName;
         eventMapping.OrderType = orderType;
-
-        var existingIndex = customerData.EventMappings.FindIndex(e => 
-            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
-            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+        int existingIndex = FindIndex(customerData, eventName, orderType);
 
         if (existingIndex >= 0)
             customerData.EventMappings[existingIndex] = eventMapping;
         else
             customerData.EventMappings.Add(eventMapping);
 
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -100,22 +81,31 @@ public class CustomerEventsController(IJsonFileService jsonFileService) : Contro
     [ProducesResponseType(500)]
     public async Task<IActionResult> DeleteCustomerEvent(string customerId, string eventName, string orderType)
     {
-        if (!IsValidCustomerId(customerId))
+        if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await GetCustomerDataAsync(customerId);
+        var customerData = await _repository.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
 
-        var existingIndex = customerData.EventMappings.FindIndex(e => 
-            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) && 
-            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+        int existingIndex = FindIndex(customerData, eventName, orderType);
 
         if (existingIndex < 0)
             return NotFound("Event mapping not found");
 
         customerData.EventMappings.RemoveAt(existingIndex);
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await _repository.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
+
+
+    private static CustomerEventMapping? FindEventMapping(CustomerNotificationMapping customerData, string eventName, string orderType) =>
+        customerData.EventMappings.FirstOrDefault(e =>
+            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) &&
+            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
+
+    private static int FindIndex(CustomerNotificationMapping customerData, string eventName, string orderType) =>
+        customerData.EventMappings.FindIndex(e =>
+            e.Event.Equals(eventName, StringComparison.OrdinalIgnoreCase) &&
+            e.OrderType.Equals(orderType, StringComparison.OrdinalIgnoreCase));
 }

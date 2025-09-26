@@ -2,7 +2,6 @@ namespace JSONAdminEditor.Controllers;
 
 using JSONAdminEditor.API.Constants;
 using JSONAdminEditor.API.Exceptions;
-using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Application.Models.Dictionaries;
 using JSONAdminEditor.Services;
@@ -11,10 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/dictionaries")]
 [Produces("application/json")]
-public class DictionariesController(IFileContentService fileContentService, IJsonFileService jsonFileService) : ControllerBase
+public class DictionariesController(IConfigRepository repository) : ControllerBase
 {
-    private readonly IFileContentService _fileContentService = fileContentService;
-    private readonly IJsonFileService _jsonFileService = jsonFileService;
+    private readonly IConfigRepository _repository = repository;
 
     // Templates endpoints
     [HttpGet("templates")]
@@ -22,7 +20,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Template>>> GetTemplates()
     {
-        return await GetDictionaryData<Template>(FileType.Templates);
+        return await _repository.GetDictionaryDataAsync<Template>(FileType.Templates);
     }
 
     [HttpPut("templates")]
@@ -46,7 +44,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventTrigger>>> GetEventTriggers()
     {
-        return await GetDictionaryData<EventTrigger>(FileType.EventTriggers);
+        return await _repository.GetDictionaryDataAsync<EventTrigger>(FileType.EventTriggers);
     }
 
     [HttpPut("event-triggers")]
@@ -69,7 +67,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
     {
-        return await GetDictionaryData<EventChannel>(FileType.EventChannels);
+        return await _repository.GetDictionaryDataAsync<EventChannel>(FileType.EventChannels);
     }
 
     [HttpPut("event-channels")]
@@ -92,7 +90,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
     {
-        return await GetDictionaryData<OrderType>(FileType.OrderTypes);
+        return await _repository.GetDictionaryDataAsync<OrderType>(FileType.OrderTypes);
     }
 
     [HttpPut("order-types")]
@@ -115,7 +113,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Customer>>> GetCustomers()
     {
-        return await GetDictionaryData<Customer>(FileType.Customers);
+        return await _repository.GetDictionaryDataAsync<Customer>(FileType.Customers);
     }
 
     [HttpPut("customers")]
@@ -138,7 +136,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<LogoUrl>>> GetLogoUrlMappings()
     {
-        return await GetDictionaryData<LogoUrl>(FileType.LogoUrlMappings);
+        return await _repository.GetDictionaryDataAsync<LogoUrl>(FileType.LogoUrlMappings);
     }
 
     [HttpPut("logo-url")]
@@ -181,23 +179,8 @@ public class DictionariesController(IFileContentService fileContentService, IJso
         using var reader = new StreamReader(stream);
         var jsonContent = await reader.ReadToEndAsync();
 
-        await SaveTypedDictionaryData(upload.FileType, jsonContent);
+        await _repository.SaveDictionaryRawDataAsync(upload.FileType, jsonContent);
         return NoContent();
-    }
-
-    private async Task<ActionResult<List<T>>> GetDictionaryData<T>(FileType fileType) where T : class, new()
-    {
-        string filePath = GetFilePathForType(fileType);
-
-        try
-        {
-            var data = await _jsonFileService.LoadJsonFileAsync<List<T>>(filePath);
-            return Ok(data ?? new List<T>());
-        }
-        catch (JsonFileException ex)
-        {
-            return StatusCode(500, $"Error loading data: {ex.Message}");
-        }
     }
 
     private async Task<IActionResult> SaveDictionaryData<T>(List<T> data, FileType fileType)
@@ -210,22 +193,15 @@ public class DictionariesController(IFileContentService fileContentService, IJso
         if (!ModelState.IsValid)
             return BadRequest($"Invalid {dataType.ToLower()} data");
 
-        string filePath = GetFilePathForType(fileType);
-
         try
         {
-            await _jsonFileService.SaveJsonFileAsync(filePath, data);
+            await _repository.SaveDictionaryDataAsync(fileType, data);
             return NoContent();
         }
         catch (JsonFileException ex)
         {
             return StatusCode(500, $"Error saving {dataType.ToLower()}: {ex.Message}");
         }
-    }
-
-    private async Task SaveTypedDictionaryData(FileType fileType, string jsonData)
-    {
-        await _fileContentService.WriteFileAsync(GetFilePathForType(fileType), jsonData);
     }
 
     private static string GetFileTypeDisplay(FileType fileType) => fileType switch
@@ -239,16 +215,5 @@ public class DictionariesController(IFileContentService fileContentService, IJso
         FileType.LogoUrlMappings => "Logo URLs",
         FileType.CustomerSettings => "Customer Override",
         _ => fileType.ToString()
-    };
-
-    private static string GetFilePathForType(FileType fileType) => fileType switch
-    {
-        FileType.Templates => FilePaths.Templates,
-        FileType.EventTriggers => FilePaths.EventTriggers,
-        FileType.EventChannels => FilePaths.EventChannels,
-        FileType.OrderTypes => FilePaths.OrderTypes,
-        FileType.Customers => FilePaths.Customers,
-        FileType.LogoUrlMappings => FilePaths.LogoUrlMappings,
-        _ => throw new ArgumentException($"Unknown file type: {fileType}")
     };
 }
