@@ -92,20 +92,19 @@ export const CustomerSettings: React.FC = () => {
                 <TableSkeleton rows={5} columns={4} />
               ) : (
                 <>
-                  <div className="d-flex justify-content-end mb-3">
-                    <SaveButton
-                      onClick={handleSave}
-                      loading={saveMutation.isPending}
-                      text="Save Variables"
-                    />
-                  </div>
-
                   <ContentVariablesTable
                     contentVariables={contentVariables}
                     globalContentVariables={globalContentVariables}
                     onUpdate={setContentVariables}
                     onRedefinedStatesChange={setRedefinedStates}
                     title="Content Variables Editor"
+                    saveButton={
+                      <SaveButton
+                        onClick={handleSave}
+                        loading={saveMutation.isPending}
+                        text="Save Variables"
+                      />
+                    }
                   />
                 </>
               )}

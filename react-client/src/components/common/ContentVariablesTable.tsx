@@ -8,6 +8,7 @@ interface ContentVariablesTableProps {
   onRedefinedStatesChange?: (states: Record<string, boolean>) => void;
   title?: string;
   showAddButton?: boolean;
+  saveButton?: React.ReactNode;
 }
 
 export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
@@ -18,6 +19,7 @@ export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
   onRedefinedStatesChange,
   title = "Content Variables",
   showAddButton = true,
+  saveButton,
 }) => {
   const [redefinedStates, setRedefinedStates] = React.useState<Record<string, boolean>>({});
   const [editingKeys, setEditingKeys] = React.useState<Record<string, string>>({});
@@ -119,11 +121,14 @@ export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
         <h5>
           <i className="fas fa-code me-2"></i>{title}
         </h5>
-        {showAddButton && (
-          <button type="button" className="btn btn-success" onClick={addVariable}>
-            <i className="fas fa-plus me-1"></i>Add Variable
-          </button>
-        )}
+        <div className="d-flex gap-2">
+          {showAddButton && (
+            <button type="button" className="btn btn-success" onClick={addVariable}>
+              <i className="fas fa-plus me-1"></i>Add Variable
+            </button>
+          )}
+          {saveButton}
+        </div>
       </div>
       
       {Object.keys(mergedVariables).length > 0 ? (

@@ -42,16 +42,9 @@ export const ContentVariables: React.FC = () => {
       ) : (
         <div className="card">
           <div className="card-header">
-            <div className="d-flex justify-content-between align-items-center">
-              <h3>
-                <i className="fas fa-edit me-2"></i>Global Content Variables
-              </h3>
-              <SaveButton
-                onClick={handleSave}
-                loading={saveMutation.isPending}
-                text="Save Variables"
-              />
-            </div>
+            <h3>
+              <i className="fas fa-edit me-2"></i>Global Content Variables
+            </h3>
           </div>
           <div className="card-body">
             <ComponentErrorBoundary componentName="Content Variables Editor">
@@ -61,6 +54,13 @@ export const ContentVariables: React.FC = () => {
                 onRedefinedStatesChange={setRedefinedStates}
                 title="Global Content Variables"
                 showAddButton={true}
+                saveButton={
+                  <SaveButton
+                    onClick={handleSave}
+                    loading={saveMutation.isPending}
+                    text="Save Variables"
+                  />
+                }
               />
             </ComponentErrorBoundary>
           </div>
