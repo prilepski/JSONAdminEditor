@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { customerService } from '../services';
-import { CustomerNotificationMapping, CustomerEventMapping } from '../types';
+import { CustomerNotificationMapping, CustomerEventMapping, AfterHours2 } from '../types';
 import { useErrorHandler } from './useErrorHandler';
 
 export const useCustomersQuery = () => {
@@ -109,6 +109,31 @@ export const useCustomerSettingsMutation = () => {
     },
     onError: (error) => {
       handleError(error, 'Failed to save customer settings');
+    },
+  });
+};
+
+export const useCustomerAfterHoursQuery = (customerId: string) => {
+  return useQuery({
+    queryKey: ['customerAfterHours', customerId],
+    queryFn: () => customerService.getCustomerAfterHours(customerId),
+    enabled: !!customerId,
+  });
+};
+
+export const useCustomerAfterHoursMutation = () => {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerAfterHours' });
+
+  return useMutation({
+    mutationFn: ({ customerId, data }: { customerId: string; data: AfterHours2 }) =>
+      customerService.saveCustomerAfterHours(customerId, data),
+    onSuccess: (_, { customerId }) => {
+      queryClient.invalidateQueries({ queryKey: ['customerAfterHours', customerId] });
+      toast.success(`Customer after hours settings saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer after hours settings');
     },
   });
 };

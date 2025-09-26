@@ -13,6 +13,7 @@ import { CustomerEvents } from './pages/CustomerEvents';
 import { CustomerSettings } from './pages/CustomerSettings';
 import { PreferredCommunication } from './pages/PreferredCommunication';
 import { AfterHours } from './pages/AfterHours';
+import { CustomerAfterHours } from './pages/CustomerAfterHours';
 import { OptOut } from './pages/OptOut';
 import { AuthProvider, ProtectedRoute, LoginCallback } from './auth';
 import { setupGlobalErrorHandling, cleanupGlobalErrorHandling } from './utils/globalErrorHandler';
@@ -86,6 +87,7 @@ function App() {
                                     element={<PreferredCommunication />}
                                   />
                                   <Route path="/after-hours" element={<AfterHours />} />
+                                  <Route path="/customer-after-hours" element={<CustomerAfterHours />} />
                                   <Route path="/opt-out" element={<OptOut />} />
                                 </Routes>
                               </div>

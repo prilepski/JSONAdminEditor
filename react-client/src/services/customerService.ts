@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { EventMapping, CustomerNotificationMapping, CustomerEventMapping } from '../types';
+import { EventMapping, CustomerNotificationMapping, CustomerEventMapping, AfterHours2 } from '../types';
 import type { paths } from '../generated/api';
 
 // Generated API types
@@ -171,5 +171,47 @@ export const customerService = {
   saveCustomerSettings: async (customerId: string, data: CustomerNotificationMapping): Promise<{ success: boolean }> => {
     await api.put<void>(`/config/customers/${customerId}`, data);
     return { success: true };
+  },
+
+  getCustomerAfterHours: async (customerId: string): Promise<AfterHours2> => {
+    try {
+      const response = await api.get<AfterHours2>(`/config/customers/${customerId}/after-hours`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/after-hours`,
+          'GET'
+        );
+      }
+      throw createServiceError(
+        'Failed to load customer after hours settings',
+        'customerService',
+        'getCustomerAfterHours'
+      );
+    }
+  },
+
+  saveCustomerAfterHours: async (customerId: string, data: AfterHours2): Promise<{ success: boolean }> => {
+    try {
+      await api.put<void>(`/config/customers/${customerId}/after-hours`, data);
+      return { success: true };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/after-hours`,
+          'PUT'
+        );
+      }
+      throw createServiceError(
+        'Failed to save customer after hours settings',
+        'customerService',
+        'saveCustomerAfterHours'
+      );
+    }
   },
 };
