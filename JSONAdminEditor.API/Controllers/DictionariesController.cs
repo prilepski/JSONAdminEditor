@@ -1,12 +1,12 @@
-namespace JSONAdminEditor.Controllers
-{
-    using JSONAdminEditor.Application.Interfaces;
-    using JSONAdminEditor.Application.Models;
-    using JSONAdminEditor.Application.Models.Dictionaries;
-    using JSONAdminEditor.Services;
-    using JSONAdminEditor.API.Constants;
-    using JSONAdminEditor.API.Exceptions;
-    using Microsoft.AspNetCore.Mvc;
+namespace JSONAdminEditor.Controllers;
+
+using JSONAdminEditor.API.Constants;
+using JSONAdminEditor.API.Exceptions;
+using JSONAdminEditor.Application.Interfaces;
+using JSONAdminEditor.Application.Models;
+using JSONAdminEditor.Application.Models.Dictionaries;
+using JSONAdminEditor.Services;
+using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/dictionaries")]
@@ -22,7 +22,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Template>>> GetTemplates()
     {
-        return await GetDictionaryData<Template>(GetFilePathForType(FileType.Templates));
+        return await GetDictionaryData<Template>(FileType.Templates);
     }
 
     [HttpPut("templates")]
@@ -32,7 +32,12 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateTemplates([FromBody] List<Template> templates)
     {
-        return await SaveDictionaryData(templates, GetFilePathForType(FileType.Templates), "Templates");
+        if (Validator.HasUniqueKeys(templates, x => x.TemplateId))
+        {
+            return BadRequest("Templates contains duplication");
+        }
+
+        return await SaveDictionaryData(templates, FileType.Templates);
     }
 
     // Event Triggers endpoints
@@ -41,7 +46,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventTrigger>>> GetEventTriggers()
     {
-        return await GetDictionaryData<EventTrigger>(GetFilePathForType(FileType.EventTriggers));
+        return await GetDictionaryData<EventTrigger>(FileType.EventTriggers);
     }
 
     [HttpPut("event-triggers")]
@@ -51,7 +56,12 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateEventTriggers([FromBody] List<EventTrigger> eventTriggers)
     {
-        return await SaveDictionaryData(eventTriggers, GetFilePathForType(FileType.EventTriggers), "Event triggers");
+        if (Validator.HasUniqueKeys(eventTriggers, x => x.EventName))
+        {
+            return BadRequest("Event triggers contains duplication");
+        }
+
+        return await SaveDictionaryData(eventTriggers, FileType.EventTriggers);
     }
 
     [HttpGet("event-channels")]
@@ -59,7 +69,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
     {
-        return await GetDictionaryData<EventChannel>(GetFilePathForType(FileType.EventChannels));
+        return await GetDictionaryData<EventChannel>(FileType.EventChannels);
     }
 
     [HttpPut("event-channels")]
@@ -69,7 +79,12 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateEventChannels([FromBody] List<EventChannel> eventChannels)
     {
-        return await SaveDictionaryData(eventChannels, GetFilePathForType(FileType.EventChannels), "Event channels");
+        if (Validator.HasUniqueKeys(eventChannels, x => x.ChannelName))
+        {
+            return BadRequest("Event channels contains duplication");
+        }
+
+        return await SaveDictionaryData(eventChannels, FileType.EventChannels);
     }
 
     [HttpGet("order-types")]
@@ -77,7 +92,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
     {
-        return await GetDictionaryData<OrderType>(GetFilePathForType(FileType.OrderTypes));
+        return await GetDictionaryData<OrderType>(FileType.OrderTypes);
     }
 
     [HttpPut("order-types")]
@@ -87,7 +102,12 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateOrderTypes([FromBody] List<OrderType> orderTypes)
     {
-        return await SaveDictionaryData(orderTypes, GetFilePathForType(FileType.OrderTypes), "Order types");
+        if (Validator.HasUniqueKeys(orderTypes, x => x.Name))
+        {
+            return BadRequest("Order types contains duplication");
+        }
+
+        return await SaveDictionaryData(orderTypes, FileType.OrderTypes);
     }
 
     [HttpGet("customers")]
@@ -95,7 +115,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Customer>>> GetCustomers()
     {
-        return await GetDictionaryData<Customer>(GetFilePathForType(FileType.Customers));
+        return await GetDictionaryData<Customer>(FileType.Customers);
     }
 
     [HttpPut("customers")]
@@ -105,7 +125,12 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateCustomers([FromBody] List<Customer> customers)
     {
-        return await SaveDictionaryData(customers, GetFilePathForType(FileType.Customers), "Customers");
+        if (Validator.HasUniqueKeys(customers, x => x.CustomerId))
+        {
+            return BadRequest("Customers contains duplication");
+        }
+
+        return await SaveDictionaryData(customers, FileType.Customers);
     }
 
     [HttpGet("logo-url")]
@@ -113,7 +138,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<LogoUrl>>> GetLogoUrlMappings()
     {
-        return await GetDictionaryData<LogoUrl>(GetFilePathForType(FileType.LogoUrlMappings));
+        return await GetDictionaryData<LogoUrl>(FileType.LogoUrlMappings);
     }
 
     [HttpPut("logo-url")]
@@ -123,40 +148,14 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     [ProducesResponseType(500)]
     public async Task<IActionResult> UpdateLogoUrlMappings([FromBody] List<LogoUrl> logoUrls)
     {
-        return await SaveDictionaryData(logoUrls, GetFilePathForType(FileType.LogoUrlMappings), "Logo URL mappings");
+        if (Validator.HasUniqueKeys(logoUrls, x => x.FileName))
+        {
+            return BadRequest("Logo urls contains duplication");
+        }
+
+        return await SaveDictionaryData(logoUrls, FileType.LogoUrlMappings);
     }
 
-    private async Task<ActionResult<List<T>>> GetDictionaryData<T>(string filePath) where T : class, new()
-    {
-        try
-        {
-            var data = await _jsonFileService.LoadJsonFileAsync<List<T>>(filePath);
-            return Ok(data ?? new List<T>());
-        }
-        catch (JsonFileException ex)
-        {
-            return StatusCode(500, $"Error loading data: {ex.Message}");
-        }
-    }
-
-    private async Task<IActionResult> SaveDictionaryData<T>(List<T> data, string filePath, string dataType)
-    {
-        if (data == null)
-            return BadRequest($"{dataType} data is required");
-
-        if (!ModelState.IsValid)
-            return BadRequest($"Invalid {dataType.ToLower()} data");
-
-        try
-        {
-            await _jsonFileService.SaveJsonFileAsync(filePath, data);
-            return NoContent();
-        }
-        catch (JsonFileException ex)
-        {
-            return StatusCode(500, $"Error saving {dataType.ToLower()}: {ex.Message}");
-        }
-    }
 
     // File Upload endpoint (generic for all dictionary types)
     [HttpPost("upload")]
@@ -168,7 +167,7 @@ public class DictionariesController(IFileContentService fileContentService, IJso
     {
         if (upload == null)
             return BadRequest("Upload data is required");
-            
+
         if (upload.FileType == FileType.None)
             return BadRequest("Please select a valid dictionary type");
 
@@ -181,15 +180,66 @@ public class DictionariesController(IFileContentService fileContentService, IJso
         using var stream = upload.JsonFile.OpenReadStream();
         using var reader = new StreamReader(stream);
         var jsonContent = await reader.ReadToEndAsync();
-        
+
         await SaveTypedDictionaryData(upload.FileType, jsonContent);
         return NoContent();
+    }
+
+    private async Task<ActionResult<List<T>>> GetDictionaryData<T>(FileType fileType) where T : class, new()
+    {
+        string filePath = GetFilePathForType(fileType);
+
+        try
+        {
+            var data = await _jsonFileService.LoadJsonFileAsync<List<T>>(filePath);
+            return Ok(data ?? new List<T>());
+        }
+        catch (JsonFileException ex)
+        {
+            return StatusCode(500, $"Error loading data: {ex.Message}");
+        }
+    }
+
+    private async Task<IActionResult> SaveDictionaryData<T>(List<T> data, FileType fileType)
+    {
+        string dataType = GetFileTypeDisplay(fileType);
+
+        if (data == null)
+            return BadRequest($"{dataType} data is required");
+
+        if (!ModelState.IsValid)
+            return BadRequest($"Invalid {dataType.ToLower()} data");
+
+        string filePath = GetFilePathForType(fileType);
+
+        try
+        {
+            await _jsonFileService.SaveJsonFileAsync(filePath, data);
+            return NoContent();
+        }
+        catch (JsonFileException ex)
+        {
+            return StatusCode(500, $"Error saving {dataType.ToLower()}: {ex.Message}");
+        }
     }
 
     private async Task SaveTypedDictionaryData(FileType fileType, string jsonData)
     {
         await _fileContentService.WriteFileAsync(GetFilePathForType(fileType), jsonData);
     }
+
+    private static string GetFileTypeDisplay(FileType fileType) => fileType switch
+    {
+        FileType.None => "None",
+        FileType.Templates => "Notification Templates",
+        FileType.EventTriggers => "Event Triggers",
+        FileType.EventChannels => "Event Channels",
+        FileType.OrderTypes => "Order Types",
+        FileType.Customers => "Customers",
+        FileType.LogoUrlMappings => "Logo URLs",
+        FileType.CustomerSettings => "Customer Override",
+        _ => fileType.ToString()
+    };
 
     private static string GetFilePathForType(FileType fileType) => fileType switch
     {
@@ -201,5 +251,4 @@ public class DictionariesController(IFileContentService fileContentService, IJso
         FileType.LogoUrlMappings => FilePaths.LogoUrlMappings,
         _ => throw new ArgumentException($"Unknown file type: {fileType}")
     };
-}
 }

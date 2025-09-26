@@ -22,6 +22,11 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
         return await _jsonFileService.LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
     }
 
+    private async Task SaveCustomerAsync(string customerId, CustomerNotificationMapping customerData)
+    {
+        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+    }
+
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
     [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
     [ProducesResponseType(400)]
@@ -45,12 +50,14 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
     {
         if (!IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
-        
+
         if (customerData == null)
             return BadRequest("Customer data is required");
-        
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+
+        await SaveCustomerAsync(customerId, customerData);
         return NoContent();
+
+        
     }
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}/preferred-communication")]
@@ -89,7 +96,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
             return NotFound("Customer not found");
         
         customerData.PreferredCommunication = data;
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await SaveCustomerAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -125,7 +132,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
             return NotFound("Customer not found");
         
         customerData.ContentVariables = contentVariables;
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await SaveCustomerAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -165,7 +172,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
             return NotFound("Customer not found");
         
         customerData.AfterHours = afterHours;
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await SaveCustomerAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -198,7 +205,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
             return NotFound("Customer not found");
         
         customerData.FromEmail = fromEmail;
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await SaveCustomerAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -234,7 +241,7 @@ public class CustomersController(IJsonFileService jsonFileService) : ControllerB
             return NotFound("Customer not found");
         
         customerData.ContentVariablesOverrides = contentVariablesOverrides;
-        await _jsonFileService.SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        await SaveCustomerAsync(customerId, customerData);
         return NoContent();
     }
 }

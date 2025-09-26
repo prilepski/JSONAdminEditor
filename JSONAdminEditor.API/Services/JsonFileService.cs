@@ -6,26 +6,17 @@ using System.Text.Json;
 
 public class JsonFileService : IJsonFileService
 {
-    private readonly IWebHostEnvironment _environment;
     private readonly IFileContentService _fileContentService;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly string _uploadsFolder;
 
-    public JsonFileService(
-        IWebHostEnvironment environment,
-        IFileContentService fileContentService)
+    public JsonFileService(IFileContentService fileContentService)
     {
-        _environment = environment;
         _fileContentService = fileContentService;
-        _uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-
-        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
-
-        // Ensure uploads directory exists (always local for temporary files)
-        if (!Directory.Exists(_uploadsFolder))
+        _jsonOptions = new JsonSerializerOptions
         {
-            Directory.CreateDirectory(_uploadsFolder);
-        }
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
     }
 
     public async Task<bool> SaveJsonFileAsync<T>(string filePath, T data)
@@ -56,17 +47,4 @@ public class JsonFileService : IJsonFileService
             throw new JsonFileException($"Failed to load JSON file: {filePath}", ex);
         }
     }
-
-    public List<string> GetUploadedFiles()
-    {
-        if (!Directory.Exists(_uploadsFolder))
-            return [];
-
-        return [.. Directory.GetFiles(_uploadsFolder, "*.json")
-                       .Select(Path.GetFileName)
-                       .Where(name => name != null)
-                       .Cast<string>()];
-    }
-
-    public string GetUploadsFolderPath() => _uploadsFolder;
 }

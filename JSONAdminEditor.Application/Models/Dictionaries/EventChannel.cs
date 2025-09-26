@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace JSONAdminEditor.Application.Models.Dictionaries;
 
 public class EventChannel
 {
-    public string ChannelName { get; set; } = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public Channel ChannelName { get; set; }
 
     public bool IsActive { get; set; }
 }
