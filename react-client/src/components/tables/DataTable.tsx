@@ -35,6 +35,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       : 'form-control form-control-sm';
 
     if (columnType === 'boolean') {
+      const isReadOnly = selectedFileType === FileType.Templates;
       return (
         <div className="form-check">
           <input
@@ -42,6 +43,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             className="form-check-input"
             checked={cellValue === true || cellValue === 'true'}
             onChange={(e) => onUpdateCell(rowIndex, column, e.target.checked)}
+            disabled={isReadOnly}
           />
         </div>
       );
@@ -50,10 +52,11 @@ export const DataTable: React.FC<DataTableProps> = ({
     if (column.toLowerCase() === 'channeltype' && selectedFileType === FileType.Templates) {
       return (
         <select
-          className="form-select form-select-sm"
+          className="form-select form-select-sm bg-light"
           value={cellValue.toString()}
           onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
           required
+          disabled
         >
           <option value="">Select Channel...</option>
           {channelOptions.map((channel) => (
@@ -89,11 +92,12 @@ export const DataTable: React.FC<DataTableProps> = ({
     }
 
     if (columnType === 'number') {
-      const isReadOnly = selectedFileType === FileType.EventChannels;
+      const isReadOnly = selectedFileType === FileType.EventChannels || selectedFileType === FileType.Templates;
+      const disabledClass = isReadOnly ? `${inputClass} bg-light` : inputClass;
       return (
         <input
           type="number"
-          className={inputClass}
+          className={disabledClass}
           value={cellValue.toString()}
           onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
           min="1"
@@ -102,11 +106,12 @@ export const DataTable: React.FC<DataTableProps> = ({
       );
     }
 
-    const isReadOnly = selectedFileType === FileType.EventChannels;
+    const isReadOnly = selectedFileType === FileType.EventChannels || selectedFileType === FileType.Templates;
+    const disabledClass = isReadOnly ? `${inputClass} bg-light` : inputClass;
     return (
       <input
         type="text"
-        className={inputClass}
+        className={disabledClass}
         value={cellValue.toString()}
         onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
         readOnly={isReadOnly}
@@ -142,7 +147,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                 );
               })}
               <td>
-                {selectedFileType !== FileType.EventChannels && (
+                {selectedFileType !== FileType.EventChannels && selectedFileType !== FileType.Templates && (
                   <button
                     type="button"
                     className="btn btn-danger btn-sm"
