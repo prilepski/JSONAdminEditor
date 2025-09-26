@@ -74,7 +74,7 @@ export const Sidebar: React.FC = () => {
           </li>
           <li className="nav-item">
             <span
-              className={`nav-link nav-header ${isParentActive(['/customer-settings', '/customer-events', '/customer-after-hours', '/customer-preferred-communication', '/customer-from-email']) ? 'parent-active' : ''}`}
+              className={`nav-link nav-header ${isParentActive(['/customer-settings', '/customer-events', '/customer-after-hours', '/customer-preferred-communication', '/customer-from-email', '/customer-content-variables-overrides']) ? 'parent-active' : ''}`}
               onClick={() => setCustomerOverridesOpen(!customerOverridesOpen)}
             >
               <i className="fas fa-users me-2"></i>Customer Overrides
@@ -121,6 +121,14 @@ export const Sidebar: React.FC = () => {
                   to="/customer-from-email"
                 >
                   <i className="fas fa-envelope me-2"></i>Customer From Email
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/customer-content-variables-overrides') ? 'active' : ''}`}
+                  to="/customer-content-variables-overrides"
+                >
+                  <i className="fas fa-layer-group me-2"></i>Customer Content Variables Overrides
                 </Link>
               </li>
             </ul>

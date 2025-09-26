@@ -17,8 +17,10 @@
       "ReferenceNumber": {
         "123": "string",
         "234": "string",
-        "345": "string"
-      }
+        "345": "string",
+        "new_var_1758891316918": ""
+      },
+      "test": {}
     }
   },
   "Events": [

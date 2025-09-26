@@ -12,3 +12,6 @@ export { ConfirmModal } from './ConfirmModal';
 export { ToggleButtonGroup } from './ToggleButtonGroup';
 export { ToggleButton } from './ToggleButton';
 export { ContentVariablesTable, getRedefinedVariables } from './ContentVariablesTable';
+export { NestedVariablesNavigator } from './NestedVariablesNavigator';
+export { AddCategoryModal } from './AddCategoryModal';
+export { NestedVariablesEditor } from './NestedVariablesEditor';

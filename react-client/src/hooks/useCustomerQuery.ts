@@ -187,3 +187,28 @@ export const useCustomerFromEmailMutation = () => {
     },
   });
 };
+
+export const useCustomerContentVariablesOverridesQuery = (customerId: string) => {
+  return useQuery({
+    queryKey: ['customerContentVariablesOverrides', customerId],
+    queryFn: () => customerService.getCustomerContentVariablesOverrides(customerId),
+    enabled: !!customerId,
+  });
+};
+
+export const useCustomerContentVariablesOverridesMutation = () => {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerContentVariablesOverrides' });
+
+  return useMutation({
+    mutationFn: ({ customerId, data }: { customerId: string; data: Record<string, Record<string, Record<string, string>>> }) =>
+      customerService.saveCustomerContentVariablesOverrides(customerId, data),
+    onSuccess: (_, { customerId }) => {
+      queryClient.invalidateQueries({ queryKey: ['customerContentVariablesOverrides', customerId] });
+      toast.success(`Customer content variables overrides saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer content variables overrides');
+    },
+  });
+};

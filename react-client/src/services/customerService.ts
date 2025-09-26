@@ -298,4 +298,46 @@ export const customerService = {
       );
     }
   },
+
+  getCustomerContentVariablesOverrides: async (customerId: string): Promise<Record<string, Record<string, Record<string, string>>>> => {
+    try {
+      const response = await api.get<Record<string, Record<string, Record<string, string>>>>(`/config/customers/${customerId}/content-variables-overrides`);
+      return response.data || {};
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/content-variables-overrides`,
+          'GET'
+        );
+      }
+      throw createServiceError(
+        'Failed to load customer content variables overrides',
+        'customerService',
+        'getCustomerContentVariablesOverrides'
+      );
+    }
+  },
+
+  saveCustomerContentVariablesOverrides: async (customerId: string, data: Record<string, Record<string, Record<string, string>>>): Promise<ApiResponse> => {
+    try {
+      await api.put<void>(`/config/customers/${customerId}/content-variables-overrides`, data);
+      return { success: true };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/content-variables-overrides`,
+          'PUT'
+        );
+      }
+      throw createServiceError(
+        'Failed to save customer content variables overrides',
+        'customerService',
+        'saveCustomerContentVariablesOverrides'
+      );
+    }
+  },
 };
