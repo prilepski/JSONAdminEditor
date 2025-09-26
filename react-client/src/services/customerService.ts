@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { EventMapping, CustomerNotificationMapping, CustomerEventMapping, AfterHours2, PreferredCommunication } from '../types';
+import { EventMapping, CustomerNotificationMapping, CustomerEventMapping, AfterHours2, PreferredCommunication, ApiResponse } from '../types';
 import type { paths } from '../generated/api';
 
 // Generated API types
@@ -253,6 +253,48 @@ export const customerService = {
         'Failed to save customer preferred communication',
         'customerService',
         'saveCustomerPreferredCommunication'
+      );
+    }
+  },
+
+  getCustomerFromEmail: async (customerId: string): Promise<string> => {
+    try {
+      const response = await api.get<string>(`/config/customers/${customerId}/from-email`);
+      return response.data || '';
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/from-email`,
+          'GET'
+        );
+      }
+      throw createServiceError(
+        'Failed to load customer from email',
+        'customerService',
+        'getCustomerFromEmail'
+      );
+    }
+  },
+
+  saveCustomerFromEmail: async (customerId: string, email: string): Promise<ApiResponse> => {
+    try {
+      await api.put<void>(`/config/customers/${customerId}/from-email`, email);
+      return { success: true };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/from-email`,
+          'PUT'
+        );
+      }
+      throw createServiceError(
+        'Failed to save customer from email',
+        'customerService',
+        'saveCustomerFromEmail'
       );
     }
   },

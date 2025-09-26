@@ -201,6 +201,6 @@
       "End": "08:00"
     }
   },
-  "FromEmail": null,
+  "FromEmail": "global@aitworldwide.com",
   "Agents": {}
 }

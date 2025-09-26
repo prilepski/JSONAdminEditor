@@ -162,3 +162,28 @@ export const useCustomerPreferredCommunicationMutation = () => {
     },
   });
 };
+
+export const useCustomerFromEmailQuery = (customerId: string) => {
+  return useQuery({
+    queryKey: ['customerFromEmail', customerId],
+    queryFn: () => customerService.getCustomerFromEmail(customerId),
+    enabled: !!customerId,
+  });
+};
+
+export const useCustomerFromEmailMutation = () => {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerFromEmail' });
+
+  return useMutation({
+    mutationFn: ({ customerId, email }: { customerId: string; email: string }) =>
+      customerService.saveCustomerFromEmail(customerId, email),
+    onSuccess: (_, { customerId }) => {
+      queryClient.invalidateQueries({ queryKey: ['customerFromEmail', customerId] });
+      toast.success(`Customer from email saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer from email');
+    },
+  });
+};

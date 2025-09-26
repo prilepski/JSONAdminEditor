@@ -15,7 +15,7 @@ export const Sidebar: React.FC = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <span
-              className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events', '/after-hours', '/opt-out']) ? 'parent-active' : ''}`}
+              className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events', '/after-hours', '/from-email', '/opt-out']) ? 'parent-active' : ''}`}
               onClick={() => setGlobalSettingsOpen(!globalSettingsOpen)}
             >
               <i className="fas fa-globe me-2"></i>Global Settings
@@ -56,6 +56,14 @@ export const Sidebar: React.FC = () => {
               </li>
               <li className="nav-item">
                 <Link
+                  className={`nav-link submenu-link ${isActive('/from-email') ? 'active' : ''}`}
+                  to="/from-email"
+                >
+                  <i className="fas fa-envelope me-2"></i>From Email
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
                   className={`nav-link submenu-link ${isActive('/opt-out') ? 'active' : ''}`}
                   to="/opt-out"
                 >
@@ -66,7 +74,7 @@ export const Sidebar: React.FC = () => {
           </li>
           <li className="nav-item">
             <span
-              className={`nav-link nav-header ${isParentActive(['/customer-settings', '/customer-events', '/customer-after-hours', '/customer-preferred-communication']) ? 'parent-active' : ''}`}
+              className={`nav-link nav-header ${isParentActive(['/customer-settings', '/customer-events', '/customer-after-hours', '/customer-preferred-communication', '/customer-from-email']) ? 'parent-active' : ''}`}
               onClick={() => setCustomerOverridesOpen(!customerOverridesOpen)}
             >
               <i className="fas fa-users me-2"></i>Customer Overrides
@@ -105,6 +113,14 @@ export const Sidebar: React.FC = () => {
                   to="/customer-after-hours"
                 >
                   <i className="fas fa-clock me-2"></i>Customer After Hours
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/customer-from-email') ? 'active' : ''}`}
+                  to="/customer-from-email"
+                >
+                  <i className="fas fa-envelope me-2"></i>Customer From Email
                 </Link>
               </li>
             </ul>
