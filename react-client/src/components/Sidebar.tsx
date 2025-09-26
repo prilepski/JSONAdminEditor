@@ -15,7 +15,7 @@ export const Sidebar: React.FC = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <span
-              className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events', '/after-hours', '/from-email', '/opt-out']) ? 'parent-active' : ''}`}
+              className={`nav-link nav-header ${isParentActive(['/preferred-communication', '/content-variables', '/events', '/after-hours', '/from-email', '/agents', '/opt-out']) ? 'parent-active' : ''}`}
               onClick={() => setGlobalSettingsOpen(!globalSettingsOpen)}
             >
               <i className="fas fa-globe me-2"></i>Global Settings
@@ -60,6 +60,14 @@ export const Sidebar: React.FC = () => {
                   to="/from-email"
                 >
                   <i className="fas fa-envelope me-2"></i>From Email
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link
+                  className={`nav-link submenu-link ${isActive('/agents') ? 'active' : ''}`}
+                  to="/agents"
+                >
+                  <i className="fas fa-robot me-2"></i>Agents
                 </Link>
               </li>
               <li className="nav-item">

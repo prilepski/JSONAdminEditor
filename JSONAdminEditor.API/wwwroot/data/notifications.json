@@ -202,5 +202,7 @@
     }
   },
   "FromEmail": "global@aitworldwide.com",
-  "Agents": {}
+  "Agents": {
+    "test": true
+  }
 }

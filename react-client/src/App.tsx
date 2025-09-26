@@ -18,6 +18,7 @@ import { CustomerPreferredCommunication } from './pages/CustomerPreferredCommuni
 import { FromEmail } from './pages/FromEmail';
 import { CustomerFromEmail } from './pages/CustomerFromEmail';
 import { CustomerContentVariablesOverrides } from './pages/CustomerContentVariablesOverrides';
+import { Agents } from './pages/Agents';
 import { OptOut } from './pages/OptOut';
 import { AuthProvider, ProtectedRoute, LoginCallback } from './auth';
 import { setupGlobalErrorHandling, cleanupGlobalErrorHandling } from './utils/globalErrorHandler';
@@ -92,6 +93,7 @@ function App() {
                                   />
                                   <Route path="/after-hours" element={<AfterHours />} />
                                   <Route path="/from-email" element={<FromEmail />} />
+                                  <Route path="/agents" element={<Agents />} />
                                   <Route path="/customer-after-hours" element={<CustomerAfterHours />} />
                                   <Route path="/customer-preferred-communication" element={<CustomerPreferredCommunication />} />
                                   <Route path="/customer-from-email" element={<CustomerFromEmail />} />
