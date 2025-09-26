@@ -23,7 +23,11 @@ export const NestedVariablesNavigator: React.FC<NestedVariablesNavigatorProps> =
     <div className="card">
       <div className="card-header d-flex justify-content-between align-items-center">
         <h6 className="mb-0">Categories</h6>
-        <button className="btn btn-primary btn-sm" onClick={onAddCategory}>
+        <button 
+          className="btn btn-primary btn-sm" 
+          onClick={onAddCategory}
+          style={{ width: '32px', height: '32px' }}
+        >
           <i className="fas fa-plus"></i>
         </button>
       </div>
@@ -31,7 +35,7 @@ export const NestedVariablesNavigator: React.FC<NestedVariablesNavigatorProps> =
         <div className="list-group list-group-flush">
           {Object.keys(data).map((category) => (
             <div key={category}>
-              <div className="list-group-item d-flex justify-content-between align-items-center p-2">
+              <div className="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
                 <button
                   className="btn btn-link text-start p-0 text-decoration-none flex-grow-1"
                   onClick={() => onToggleCategory(category)}
@@ -42,18 +46,24 @@ export const NestedVariablesNavigator: React.FC<NestedVariablesNavigatorProps> =
                 <button
                   className="btn btn-success btn-sm"
                   onClick={() => onAddSubcategory(category)}
+                  style={{ width: '32px', height: '32px' }}
                 >
                   <i className="fas fa-plus"></i>
                 </button>
               </div>
               {expandedCategories.has(category) && Object.keys(data[category] || {}).map((subcategory) => (
-                <button
+                <div
                   key={`${category}/${subcategory}`}
-                  className={`list-group-item list-group-item-action ps-4 ${selectedPath === `${category}/${subcategory}` ? 'active' : ''}`}
-                  onClick={() => onPathSelect(`${category}/${subcategory}`)}
+                  className={`list-group-item d-flex justify-content-between align-items-center py-2 ps-5 pe-3 ${selectedPath === `${category}/${subcategory}` ? 'active' : ''}`}
                 >
-                  <i className="fas fa-file me-2"></i>{subcategory}
-                </button>
+                  <button
+                    className="btn btn-link text-start p-0 text-decoration-none flex-grow-1"
+                    onClick={() => onPathSelect(`${category}/${subcategory}`)}
+                  >
+                    <i className="fas fa-file me-2"></i>{subcategory}
+                  </button>
+                  <div style={{ width: '32px' }}></div>
+                </div>
               ))}
             </div>
           ))}

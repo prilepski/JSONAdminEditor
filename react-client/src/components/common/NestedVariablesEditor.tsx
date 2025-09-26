@@ -53,9 +53,20 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
     setShowAddSubcategory('');
   };
 
-  const handleSave = async (variables: Record<string, string>) => {
+  const [currentVariablesState, setCurrentVariablesState] = useState<Record<string, string>>({});
+
+  // Update local state when currentVariables changes
+  React.useEffect(() => {
+    setCurrentVariablesState(currentVariables);
+  }, [JSON.stringify(currentVariables)]);
+
+  const handleUpdate = (variables: Record<string, string>) => {
+    setCurrentVariablesState(variables);
+  };
+
+  const handleSave = async () => {
     if (category && subcategory) {
-      await onSave(category, subcategory, variables);
+      await onSave(category, subcategory, currentVariablesState);
     }
   };
 
@@ -102,12 +113,12 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
         <div className="col-md-8">
           {selectedPath ? (
             <ContentVariablesTable
-              contentVariables={currentVariables}
-              onUpdate={handleSave}
+              contentVariables={currentVariablesState}
+              onUpdate={handleUpdate}
               title={`${category} > ${subcategory}`}
               saveButton={
                 <SaveButton
-                  onClick={() => {}}
+                  onClick={handleSave}
                   loading={isSaving}
                   text="Save Changes"
                 />

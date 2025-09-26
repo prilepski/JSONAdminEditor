@@ -21,6 +21,11 @@
         "new_var_1758891316918": ""
       },
       "test": {}
+    },
+    "logo": {
+      "ref#": {
+        "url": "test url"
+      }
     }
   },
   "Events": [
