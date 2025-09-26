@@ -96,7 +96,7 @@ export const Sidebar: React.FC = () => {
                   className={`nav-link submenu-link ${isActive('/customer-settings') ? 'active' : ''}`}
                   to="/customer-settings"
                 >
-                  <i className="fas fa-code me-2"></i>Customer Content Variables
+                  <i className="fas fa-tags me-2"></i>Customer Content Variables
                 </Link>
               </li>
               <li className="nav-item">
