@@ -9,12 +9,12 @@ import {
 } from '../hooks/useEventQuery';
 import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
 import { Template } from '../types';
-import { PageHeader, TabNavigation, SaveButton, LoadingSpinner } from '../components/common';
+import { PageHeader, TabNavigation, SaveButton, LoadingSpinner, ContentVariablesTable, getRedefinedVariables } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { EventSelector } from '../components/events/EventSelector';
 import { EventDataForm } from '../components/events/EventDataForm';
 import { TemplateSelectionForm } from '../components/events/TemplateSelectionForm';
-import { ContentVariablesForm } from '../components/events/ContentVariablesForm';
+
 import { PreferredCommunicationForm } from '../components/events/PreferredCommunicationForm';
 import { TriggerConditionsForm } from '../components/events/TriggerConditionsForm';
 
@@ -41,6 +41,7 @@ export const Events: React.FC = () => {
   const { handleError } = useErrorHandler({ context: 'Events' });
 
   const [eventData, setEventData] = useState<EventData | null>(null);
+  const [contentVariableRedefinedStates, setContentVariableRedefinedStates] = useState<Record<string, boolean>>({});
   const { selectedEvent, selectedOrderType, activeTab } = pageState;
   const { data: availableTemplates = [] as Template[], isLoading: templatesLoading } = useTemplatesQuery();
   const { data: allEvents = [] } = useAllEventsQuery();
@@ -57,6 +58,7 @@ export const Events: React.FC = () => {
         ...eventInfo,
         preferredCommunication: (eventInfo.preferredCommunication as Array<{ channel: string; priority: number }>) || []
       });
+
       updateField('isNewEvent', false);
     } else if (selectedEvent && selectedOrderType) {
       updateField('isNewEvent', true);
@@ -81,11 +83,16 @@ export const Events: React.FC = () => {
   const handleSaveEventData = async () => {
     if (!eventData || !selectedEvent) return;
 
+    const dataToSave = {
+      ...eventData,
+      contentVariables: getRedefinedVariables(eventData.contentVariables || {}, contentVariableRedefinedStates)
+    };
+
     try {
       await eventMutation.mutateAsync({
         eventName: selectedEvent,
         orderType: selectedOrderType,
-        eventData,
+        eventData: dataToSave,
       });
       
       updateField('isNewEvent', false);
@@ -198,10 +205,11 @@ export const Events: React.FC = () => {
 
                 {activeTab === 'content-variables' && (
                   <ComponentErrorBoundary componentName="Content Variables">
-                    <ContentVariablesForm
+                    <ContentVariablesTable
                       contentVariables={eventData.contentVariables || {}}
                       globalContentVariables={globalContentVariables}
                       onUpdate={updateContentVariables}
+                      onRedefinedStatesChange={setContentVariableRedefinedStates}
                     />
                   </ComponentErrorBoundary>
                 )}

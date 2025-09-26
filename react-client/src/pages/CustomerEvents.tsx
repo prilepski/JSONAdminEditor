@@ -7,7 +7,9 @@ import {
   useCustomerEventMutation,
 } from '../hooks/useCustomerQuery';
 import { CustomerEventMapping } from '../types';
-import { EventField, TemplateField, ContentVariable } from '../types/components';
+import { EventField, TemplateField } from '../types/components';
+import { useContentVariablesQuery } from '../hooks/useContentVariableQuery';
+import { useEventQuery } from '../hooks/useEventQuery';
 import {
   PageHeader,
   CustomerSelector,
@@ -15,12 +17,14 @@ import {
   TabNavigation,
   LoadingSpinner,
   TableSkeleton,
+  ContentVariablesTable,
+  getRedefinedVariables,
 } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
 import { CustomerEventDataTable } from '../components/events/CustomerEventDataTable';
 import { CustomerTemplateTable } from '../components/events/CustomerTemplateTable';
-import { CustomerContentVariablesTable } from '../components/events/CustomerContentVariablesTable';
+
 import { CustomerContentVariablesOverridesTable } from '../components/events/CustomerContentVariablesOverridesTable';
 
 export const CustomerEvents: React.FC = () => {
@@ -34,12 +38,15 @@ export const CustomerEvents: React.FC = () => {
 
   const [eventFields, setEventFields] = useState<EventField[]>([]);
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
-  const [contentVariables, setContentVariables] = useState<Record<string, ContentVariable>>({});
+  const [contentVariables, setContentVariables] = useState<Record<string, string>>({});
   const [contentVariablesOverrides, setContentVariablesOverrides] = useState<Record<string, Record<string, Record<string, string>>>>({});
+  const [contentVariableRedefinedStates, setContentVariableRedefinedStates] = useState<Record<string, boolean>>({});
 
   const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
+  const { data: globalContentVariables = {} } = useContentVariablesQuery();
+  const { data: eventData } = useEventQuery(selectedEvent, selectedOrderType);
   const saveMutation = useCustomerEventMutation();
   const { data: specificEventData, isLoading: specificEventLoading } = useCustomerEventQuery(
     selectedCustomer,
@@ -83,10 +90,10 @@ export const CustomerEvents: React.FC = () => {
     }));
     setTemplateFields(templates);
 
-    const vars: Record<string, ContentVariable> = {};
+    const vars: Record<string, string> = {};
     if (specificEventData?.contentVariables) {
       Object.entries(specificEventData.contentVariables).forEach(([key, value]) => {
-        vars[key] = { name: key, value: String(value), isRedefined: true };
+        vars[key] = String(value);
       });
     }
     setContentVariables(vars);
@@ -113,10 +120,7 @@ export const CustomerEvents: React.FC = () => {
     });
     if (Object.keys(templates).length > 0) saveData.templates = templates;
 
-    const vars: Record<string, string> = {};
-    Object.entries(contentVariables).forEach(([key, data]) => {
-      if (data.isRedefined || !data.globalValue) vars[key] = data.value;
-    });
+    const vars = getRedefinedVariables(contentVariables, contentVariableRedefinedStates);
     if (Object.keys(vars).length > 0) saveData.contentVariables = vars;
 
     if (Object.keys(contentVariablesOverrides).length > 0) {
@@ -159,26 +163,7 @@ export const CustomerEvents: React.FC = () => {
     ));
   };
 
-  const addContentVariable = () => {
-    const newKey = `new_var_${Date.now()}`;
-    setContentVariables(prev => ({ ...prev, [newKey]: { name: newKey, value: '', isRedefined: true } }));
-  };
 
-  const updateContentVariable = (oldKey: string, newKey: string, value: string) => {
-    setContentVariables(prev => {
-      const newVars = { ...prev };
-      if (oldKey !== newKey) delete newVars[oldKey];
-      newVars[newKey] = { ...prev[oldKey], name: newKey, value };
-      return newVars;
-    });
-  };
-
-  const removeContentVariable = (key: string) => {
-    setContentVariables(prev => {
-      const { [key]: _, ...rest } = prev;
-      return rest;
-    });
-  };
 
   const addContentVariableOverride = () => {
     const eventKey = `event_${Date.now()}`;
@@ -335,26 +320,12 @@ export const CustomerEvents: React.FC = () => {
 
                 {activeTab === 'content-variables' && (
                   <ComponentErrorBoundary componentName="Content Variables Table">
-                    <CustomerContentVariablesTable
+                    <ContentVariablesTable
                       contentVariables={contentVariables}
-                      selectedEvent={selectedEvent}
-                      selectedOrderType={selectedOrderType}
-                      onAdd={addContentVariable}
-                      onUpdate={updateContentVariable}
-                      onRemove={removeContentVariable}
-                      onToggleRedefined={(key, isRedefined) => {
-                        if (isRedefined) {
-                          const existingVar = contentVariables[key];
-                          if (!existingVar) {
-                            setContentVariables(prev => ({
-                              ...prev,
-                              [key]: { name: key, value: '', isRedefined: true }
-                            }));
-                          }
-                        } else {
-                          removeContentVariable(key);
-                        }
-                      }}
+                      globalContentVariables={globalContentVariables}
+                      eventContentVariables={eventData?.contentVariables}
+                      onUpdate={setContentVariables}
+                      onRedefinedStatesChange={setContentVariableRedefinedStates}
                     />
                   </ComponentErrorBoundary>
                 )}

@@ -1,65 +1,33 @@
-import React from 'react';
-import { useFormState } from '../hooks/useFormState';
+import React, { useState } from 'react';
 import { useErrorHandler } from '../hooks/useErrorHandler';
-import { JsonEditor } from '../components/JsonEditor';
 import {
   useContentVariablesQuery,
   useContentVariablesMutation,
 } from '../hooks/useContentVariableQuery';
-import { FileType, ValidationError, TableData } from '../types';
 
-type ContentVariables = Record<string, string>;
-
-import { PageHeader, TableSkeleton } from '../components/common';
+import { PageHeader, SaveButton, LoadingSpinner, ContentVariablesTable, getRedefinedVariables } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const ContentVariables: React.FC = () => {
-  const { data = {} as ContentVariables, isLoading } = useContentVariablesQuery();
+  const { data = {}, isLoading } = useContentVariablesQuery();
   const saveMutation = useContentVariablesMutation();
   const { handleError } = useErrorHandler({ context: 'ContentVariables' });
+  
+  const [contentVariables, setContentVariables] = useState<Record<string, string>>({});
+  const [redefinedStates, setRedefinedStates] = useState<Record<string, boolean>>({});
 
-  const { state, updateField } = useFormState({
-    validationErrors: [] as ValidationError[],
-  });
+  React.useEffect(() => {
+    setContentVariables(data);
+  }, [data]);
 
-  const { validationErrors } = state;
-
-  const handleSave = async (tableData: TableData[]) => {
-    updateField('validationErrors', []);
-
+  const handleSave = async () => {
     try {
-      // Convert TableData[] to ContentVariables format
-      const contentVars: Record<string, string> = {};
-      tableData.forEach(row => {
-        const name = row['Variable Name'] as string;
-        const value = row['Variable Value'] as string;
-        if (name && name.trim()) contentVars[name] = value || '';
-      });
-      
-      await saveMutation.mutateAsync(contentVars);
-      return { success: true };
+      // For global content variables, save all variables (not just redefined ones)
+      await saveMutation.mutateAsync(contentVariables);
     } catch (error) {
-      handleError(error);
-      return { success: false, error: 'Error saving content variables' };
+      handleError(error, 'Failed to save content variables');
     }
   };
-
-  // Convert ContentVariables to TableData format - memoized to prevent re-creation
-  const dictionaryData = React.useMemo(() => {
-    const tableData = Object.entries(data).map(([name, value]) => ({
-      'Variable Name': name,
-      'Variable Value': value
-    }));
-
-    return {
-      columnNames: ['Variable Name', 'Variable Value'],
-      columnTypes: { 'Variable Name': 'text', 'Variable Value': 'text' },
-      tableData,
-      filePath: 'content-variables',
-      fileName: 'content-variables.json',
-      isValidJson: true,
-    };
-  }, [data]);
 
   return (
     <PageErrorBoundary pageName="Content Variables">
@@ -69,28 +37,35 @@ export const ContentVariables: React.FC = () => {
         description="Manage global content variables that can be used across all notification templates and events."
       />
 
-      <div className="card">
-        <div className="card-header">
-          <h3>
-            <i className="fas fa-edit me-2"></i>Content Variables Editor
-          </h3>
-        </div>
-        <div className="card-body">
-          {isLoading && !data.length ? (
-            <TableSkeleton rows={5} columns={3} />
-          ) : (
+      {isLoading ? (
+        <LoadingSpinner text="Loading content variables..." />
+      ) : (
+        <div className="card">
+          <div className="card-header">
+            <div className="d-flex justify-content-between align-items-center">
+              <h3>
+                <i className="fas fa-edit me-2"></i>Global Content Variables
+              </h3>
+              <SaveButton
+                onClick={handleSave}
+                loading={saveMutation.isPending}
+                text="Save Variables"
+              />
+            </div>
+          </div>
+          <div className="card-body">
             <ComponentErrorBoundary componentName="Content Variables Editor">
-              <JsonEditor
-                dictionaryData={dictionaryData}
-                selectedFileType={FileType.Templates}
-                validationErrors={validationErrors}
-                onSave={handleSave}
-                onClearValidationErrors={() => updateField('validationErrors', [])}
+              <ContentVariablesTable
+                contentVariables={contentVariables}
+                onUpdate={setContentVariables}
+                onRedefinedStatesChange={setRedefinedStates}
+                title="Global Content Variables"
+                showAddButton={true}
               />
             </ComponentErrorBoundary>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </PageErrorBoundary>
   );
 };

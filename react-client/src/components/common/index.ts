@@ -11,3 +11,4 @@ export { CardSkeleton } from './CardSkeleton';
 export { ConfirmModal } from './ConfirmModal';
 export { ToggleButtonGroup } from './ToggleButtonGroup';
 export { ToggleButton } from './ToggleButton';
+export { ContentVariablesTable, getRedefinedVariables } from './ContentVariablesTable';
