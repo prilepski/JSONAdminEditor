@@ -12,13 +12,15 @@ import {
   SaveButton,
   LoadingSpinner,
   TableSkeleton,
+  ContentVariablesTable,
+  getRedefinedVariables,
 } from '../components/common';
 import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 
 export const CustomerSettings: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [contentVariables, setContentVariables] = useState<Record<string, string>>({});
-  const [editingKeys, setEditingKeys] = useState<Record<string, string>>({});
+  const [redefinedStates, setRedefinedStates] = useState<Record<string, boolean>>({});
   const { handleError } = useErrorHandler({ context: 'CustomerSettings' });
 
   const { data: customers = [], isLoading: customersLoading } = useCustomersQuery();
@@ -27,19 +29,7 @@ export const CustomerSettings: React.FC = () => {
   const { data: globalContentVariables = {} } = useContentVariablesQuery();
   const saveMutation = useCustomerContentVariablesMutation();
 
-  const mergedVariables = React.useMemo(() => {
-    const merged: Record<string, { value: string; isRedefined: boolean; globalValue?: string }> = {};
-    
-    Object.entries(globalContentVariables).forEach(([key, value]) => {
-      merged[key] = { value, isRedefined: false, globalValue: value };
-    });
-    
-    Object.entries(contentVariables).forEach(([key, value]) => {
-      merged[key] = { value, isRedefined: true, globalValue: merged[key]?.globalValue };
-    });
-    
-    return merged;
-  }, [JSON.stringify(globalContentVariables), JSON.stringify(contentVariables)]);
+
 
   useEffect(() => {
     setContentVariables(selectedCustomer ? customerContentVars || {} : {});
@@ -48,48 +38,19 @@ export const CustomerSettings: React.FC = () => {
   const handleSave = async () => {
     if (!selectedCustomer) return;
 
+    const dataToSave = getRedefinedVariables(contentVariables, redefinedStates);
+
     try {
       await saveMutation.mutateAsync({
         customerId: selectedCustomer,
-        data: contentVariables,
+        data: dataToSave,
       });
     } catch (error) {
       handleError(error, 'Failed to save customer content variables');
     }
   };
 
-  const addVariable = () => {
-    const newKey = `new_var_${Date.now()}`;
-    setContentVariables((prev) => ({ ...prev, [newKey]: '' }));
-  };
 
-  const updateVariable = (oldKey: string, newKey: string, value: string) => {
-    setContentVariables(prev => {
-      const newVars = { ...prev };
-      if (oldKey !== newKey) delete newVars[oldKey];
-      newVars[newKey] = value;
-      return newVars;
-    });
-  };
-
-  const removeVariable = (key: string) => {
-    setContentVariables(prev => {
-      const { [key]: _, ...rest } = prev;
-      return rest;
-    });
-  };
-
-  const toggleRedefined = (key: string, isRedefined: boolean) => {
-    setContentVariables(prev => {
-      const newVars = { ...prev };
-      if (isRedefined) {
-        newVars[key] = mergedVariables[key]?.value || globalContentVariables[key] || '';
-      } else {
-        delete newVars[key];
-      }
-      return newVars;
-    });
-  };
 
   const isInitialLoading = customersLoading;
   const isSettingsLoading = selectedCustomer && settingsLoading;
@@ -131,97 +92,20 @@ export const CustomerSettings: React.FC = () => {
                 <TableSkeleton rows={5} columns={4} />
               ) : (
                 <>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h4>Content Variables Editor</h4>
-                    <div>
-                      <button type="button" className="btn btn-success me-2" onClick={addVariable}>
-                        <i className="fas fa-plus me-1"></i>Add Variable
-                      </button>
+                  <ContentVariablesTable
+                    contentVariables={contentVariables}
+                    globalContentVariables={globalContentVariables}
+                    onUpdate={setContentVariables}
+                    onRedefinedStatesChange={setRedefinedStates}
+                    title="Content Variables Editor"
+                    saveButton={
                       <SaveButton
                         onClick={handleSave}
                         loading={saveMutation.isPending}
                         text="Save Variables"
                       />
-                    </div>
-                  </div>
-
-                  {Object.keys(mergedVariables).length > 0 ? (
-                    <div className="table-responsive">
-                      <table className="table table-striped table-hover">
-                        <thead className="table-dark">
-                          <tr>
-                            <th style={{ width: '30%' }}>Variable Name</th>
-                            <th style={{ width: '40%' }}>Value</th>
-                            <th style={{ width: '15%' }}>Is Redefined</th>
-                            <th style={{ width: '15%' }}>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(mergedVariables).map(([key, data]) => (
-                            <tr key={key}>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className={`form-control form-control-sm ${data.globalValue ? 'bg-light' : ''}`}
-                                    value={editingKeys[key] !== undefined ? editingKeys[key] : key}
-                                    readOnly={!!data.globalValue}
-                                    onChange={data.globalValue ? undefined : (e) => 
-                                      setEditingKeys(prev => ({ ...prev, [key]: e.target.value }))
-                                    }
-                                    onBlur={() => {
-                                      if (editingKeys[key] !== undefined && editingKeys[key] !== key) {
-                                        updateVariable(key, editingKeys[key], data.value);
-                                      }
-                                      setEditingKeys(prev => {
-                                        const { [key]: _, ...rest } = prev;
-                                        return rest;
-                                      });
-                                    }}
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className="form-control form-control-sm"
-                                    value={data.value}
-                                    onChange={(e) => updateVariable(key, key, e.target.value)}
-                                    disabled={!data.isRedefined}
-                                  />
-                                </td>
-                                <td className="text-center">
-                                  <div className="form-check">
-                                    <input
-                                      className="form-check-input"
-                                      type="checkbox"
-                                      checked={data.isRedefined}
-                                      onChange={(e) => toggleRedefined(key, e.target.checked)}
-                                    />
-                                  </div>
-                                </td>
-                                <td className="text-center">
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => removeVariable(key)}
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <i className="fas fa-code fa-3x text-muted mb-3"></i>
-                      <h5 className="text-muted">No Content Variables</h5>
-                      <p className="text-muted">
-                        No content variables found for this customer. Click "Add Variable" to start
-                        adding variables.
-                      </p>
-                    </div>
-                  )}
+                    }
+                  />
                 </>
               )}
             </div>
