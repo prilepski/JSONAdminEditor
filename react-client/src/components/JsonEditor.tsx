@@ -33,6 +33,9 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
 
   useEffect(() => {
     if (dictionaryData?.tableData) {
+      console.log('Dictionary data:', dictionaryData);
+      console.log('Column names:', dictionaryData.columnNames);
+      console.log('Table data:', dictionaryData.tableData);
       setTableData([...dictionaryData.tableData]);
     }
   }, [dictionaryData]);
@@ -45,6 +48,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
       [FileType.EventChannels]: 'Event Channels',
       [FileType.OrderTypes]: 'Order Types',
       [FileType.Customers]: 'Customers',
+      [FileType.LogoUrls]: 'Logo URLs',
     };
     return names[fileType] || 'Dictionary';
   };
@@ -54,16 +58,23 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     if (selectedFileType === FileType.EventChannels || selectedFileType === FileType.Templates) return; // Disable for Event Channels and Templates
 
     const newRow: TableData = {};
-    dictionaryData.columnNames.forEach((column) => {
-      const columnType = dictionaryData.columnTypes?.[column] || 'text';
-      if (columnType === 'boolean') {
-        newRow[column] = false;
-      } else if (columnType === 'number' && column === 'Priority') {
-        newRow[column] = 1;
-      } else {
-        newRow[column] = '';
-      }
-    });
+    
+    // Special handling for LogoUrls
+    if (selectedFileType === FileType.LogoUrls) {
+      newRow['fileName'] = '';
+      newRow['url'] = '';
+    } else {
+      dictionaryData.columnNames.forEach((column) => {
+        const columnType = dictionaryData.columnTypes?.[column] || 'text';
+        if (columnType === 'boolean') {
+          newRow[column] = false;
+        } else if (columnType === 'number') {
+          newRow[column] = column === 'Priority' ? 1 : 0;
+        } else {
+          newRow[column] = '';
+        }
+      });
+    }
 
     setTableData([...tableData, newRow]);
   };

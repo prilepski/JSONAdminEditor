@@ -40,6 +40,25 @@ export const dictionaryService = {
       const endpoint = getEndpoint(fileType);
       const response = await api.get<Template[] | EventTrigger[] | EventChannel[] | OrderType[] | Customer[] | LogoUrl[]>(`/dictionaries/${endpoint}`);
       const tableData = response.data || [];
+      
+      // Special handling for LogoUrls
+      if (fileType === FileType.LogoUrls) {
+        const columnNames = ['fileName', 'url'];
+        const columnTypes = { 'fileName': 'string', 'url': 'string' };
+        
+        return { 
+          success: true, 
+          data: {
+            filePath: `${endpoint}.json`,
+            fileName: `${endpoint}.json`,
+            columnNames,
+            columnTypes,
+            tableData: tableData as LogoUrl[],
+            isValidJson: true
+          }
+        };
+      }
+      
       const rawColumnNames = tableData.length > 0 ? Object.keys(tableData[0]) : [];
       const columnNames = rawColumnNames.map(col => {
         // Convert camelCase to "Title Case"
@@ -96,7 +115,14 @@ export const dictionaryService = {
   ): Promise<ApiResponse> => {
     try {
       const endpoint = getEndpoint(fileType);
-      // Convert display names back to API field names
+      
+      // Special handling for LogoUrls - no conversion needed
+      if (fileType === FileType.LogoUrls) {
+        await api.put<void>(`/dictionaries/${endpoint}`, jsonData);
+        return { success: true };
+      }
+      
+      // Convert display names back to API field names for other types
       const apiData = jsonData.map(row => {
         const apiRow: any = {};
         Object.entries(row).forEach(([displayName, value]) => {
