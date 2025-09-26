@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { EventMapping, CustomerNotificationMapping, CustomerEventMapping, AfterHours2 } from '../types';
+import { EventMapping, CustomerNotificationMapping, CustomerEventMapping, AfterHours2, PreferredCommunication } from '../types';
 import type { paths } from '../generated/api';
 
 // Generated API types
@@ -211,6 +211,48 @@ export const customerService = {
         'Failed to save customer after hours settings',
         'customerService',
         'saveCustomerAfterHours'
+      );
+    }
+  },
+
+  getCustomerPreferredCommunication: async (customerId: string): Promise<PreferredCommunication[]> => {
+    try {
+      const response = await api.get<PreferredCommunication[]>(`/config/customers/${customerId}/preferred-communication`);
+      return response.data || [];
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/preferred-communication`,
+          'GET'
+        );
+      }
+      throw createServiceError(
+        'Failed to load customer preferred communication',
+        'customerService',
+        'getCustomerPreferredCommunication'
+      );
+    }
+  },
+
+  saveCustomerPreferredCommunication: async (customerId: string, data: PreferredCommunication[]): Promise<{ success: boolean }> => {
+    try {
+      await api.put<void>(`/config/customers/${customerId}/preferred-communication`, data);
+      return { success: true };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw createApiError(
+          error.response?.data?.message || error.message,
+          error.response?.status || 500,
+          `/config/customers/${customerId}/preferred-communication`,
+          'PUT'
+        );
+      }
+      throw createServiceError(
+        'Failed to save customer preferred communication',
+        'customerService',
+        'saveCustomerPreferredCommunication'
       );
     }
   },

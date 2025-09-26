@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { customerService } from '../services';
-import { CustomerNotificationMapping, CustomerEventMapping, AfterHours2 } from '../types';
+import { CustomerNotificationMapping, CustomerEventMapping, AfterHours2, PreferredCommunication } from '../types';
 import { useErrorHandler } from './useErrorHandler';
 
 export const useCustomersQuery = () => {
@@ -134,6 +134,31 @@ export const useCustomerAfterHoursMutation = () => {
     },
     onError: (error) => {
       handleError(error, 'Failed to save customer after hours settings');
+    },
+  });
+};
+
+export const useCustomerPreferredCommunicationQuery = (customerId: string) => {
+  return useQuery({
+    queryKey: ['customerPreferredCommunication', customerId],
+    queryFn: () => customerService.getCustomerPreferredCommunication(customerId),
+    enabled: !!customerId,
+  });
+};
+
+export const useCustomerPreferredCommunicationMutation = () => {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler({ context: 'CustomerPreferredCommunication' });
+
+  return useMutation({
+    mutationFn: ({ customerId, data }: { customerId: string; data: PreferredCommunication[] }) =>
+      customerService.saveCustomerPreferredCommunication(customerId, data),
+    onSuccess: (_, { customerId }) => {
+      queryClient.invalidateQueries({ queryKey: ['customerPreferredCommunication', customerId] });
+      toast.success(`Customer preferred communication settings saved successfully`);
+    },
+    onError: (error) => {
+      handleError(error, 'Failed to save customer preferred communication settings');
     },
   });
 };
