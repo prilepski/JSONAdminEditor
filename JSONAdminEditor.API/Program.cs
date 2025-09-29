@@ -1,4 +1,5 @@
 
+using Amazon.S3;
 using JSONAdminEditor.API;
 using JSONAdminEditor.API.Constants;
 using JSONAdminEditor.API.Extensions;
@@ -70,8 +71,7 @@ builder.Services.AddScoped<OpenApiDocumentTransformer>();
 builder.Services.AddStorageServices();
 
 // Configure AWS S3 client
-var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-builder.Services.AddAwsS3Client(builder.Configuration, logger);
+builder.Services.AddAWSService<IAmazonS3>();
 
 var app = builder.Build();
 
@@ -108,4 +108,4 @@ app.MapControllers();
 // Serve React app for SPA routes
 app.MapFallbackToFile("index.html");
 
-    app.Run();
+app.Run();

@@ -62,11 +62,11 @@ public class FileManagementService : IStorageService
     {
         var fileName = uploadModel.FileType switch
         {
-            FileType.Templates => "templates.json",
-            FileType.Customers => "customers.json",
-            FileType.EventTriggers => "event-triggers.json",
-            FileType.EventChannels => "event-channels.json",
-            FileType.OrderTypes => "order-types.json",
+            FileType.DictionaryTemplates => "templates.json",
+            FileType.DictionaryCustomers => "customers.json",
+            FileType.DictionaryEventTriggers => "event-triggers.json",
+            FileType.DictionaryEventChannels => "event-channels.json",
+            FileType.DictionaryOrderTypes => "order-types.json",
             FileType.CustomerSettings when !string.IsNullOrWhiteSpace(uploadModel.CustomerName) => 
                 $"{SanitizeFileName(!string.IsNullOrWhiteSpace(uploadModel.CustomerIdForFilename) ? uploadModel.CustomerIdForFilename : uploadModel.CustomerName)}.json",
             FileType.CustomerSettings => null,
@@ -104,11 +104,11 @@ public class FileManagementService : IStorageService
         var files = new List<ManagedFile>();
         var coreFileTypes = new[] 
         {
-            ("templates.json", FileType.Templates),
-            ("customers.json", FileType.Customers),
-            ("event-triggers.json", FileType.EventTriggers),
-            ("event-channels.json", FileType.EventChannels),
-            ("order-types.json", FileType.OrderTypes)
+            ("templates.json", FileType.DictionaryTemplates),
+            ("customers.json", FileType.DictionaryCustomers),
+            ("event-triggers.json", FileType.DictionaryEventTriggers),
+            ("event-channels.json", FileType.DictionaryEventChannels),
+            ("order-types.json", FileType.DictionaryOrderTypes)
         };
 
         foreach (var (fileName, fileType) in coreFileTypes)
@@ -221,11 +221,11 @@ public class FileManagementService : IStorageService
         return fileType switch
         {
             FileType.None => "None",
-            FileType.Templates => "Notification Templates",
-            FileType.Customers => "Customers",
-            FileType.EventTriggers => "Event Triggers",
-            FileType.EventChannels => "Event Channels",
-            FileType.OrderTypes => "Order Types",
+            FileType.DictionaryTemplates => "Notification Templates",
+            FileType.DictionaryCustomers => "Customers",
+            FileType.DictionaryEventTriggers => "Event Triggers",
+            FileType.DictionaryEventChannels => "Event Channels",
+            FileType.DictionaryOrderTypes => "Order Types",
             FileType.CustomerSettings => "Customer Override",
             _ => fileType.ToString()
         };
@@ -245,5 +245,20 @@ public class FileManagementService : IStorageService
         var invalidChars = Path.GetInvalidFileNameChars();
         var sanitized = new string(fileName.Where(c => !invalidChars.Contains(c)).ToArray());
         return Regex.Replace(sanitized, @"\s+", "_").ToUpperInvariant();
+    }
+
+    public Task<string?> ReadFileAsync(string filePath)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteFileAsync(string filePath, string content)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> FileExistsAsync(string filePath)
+    {
+        throw new NotImplementedException();
     }
 }

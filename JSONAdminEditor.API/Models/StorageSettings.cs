@@ -1,3 +1,5 @@
+using JSONAdminEditor.Application.Models;
+
 namespace JSONAdminEditor.Models;
 
 public class StorageSettings
@@ -10,7 +12,5 @@ public class S3Settings
 {
     public string Region { get; set; } = "";
     public string BucketName { get; set; } = "";
-    public string AccessKey { get; set; } = "";
-    public string SecretKey { get; set; } = "";
-    public bool UseCredentialsFromEnvironment { get; set; } = true;
+    public Dictionary<FileType, string> Properties { get; set; }
 }

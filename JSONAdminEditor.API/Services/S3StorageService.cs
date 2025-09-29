@@ -13,23 +13,22 @@ public class S3StorageService : IStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly S3Settings _s3Settings;
-    private readonly string _bucketName;
+    private readonly ILogger<S3StorageService> _logger;
 
-    public S3StorageService(IAmazonS3 s3Client, IOptions<StorageSettings> storageSettings)
+    public S3StorageService(IAmazonS3 s3Client, 
+        IOptions<StorageSettings> storageSettings,
+        ILogger<S3StorageService> logger)
     {
+        _logger = logger;
+        _s3Client = s3Client;
+
         try
         {
-            Console.WriteLine("S3StorageService constructor - Starting initialization");
-            _s3Client = s3Client;
             _s3Settings = storageSettings.Value.S3Settings;
-            _bucketName = _s3Settings.BucketName;
-            Console.WriteLine($"S3StorageService constructor - BucketName: '{_bucketName}', AccessKey: '{_s3Settings.AccessKey?.Substring(0, Math.Min(4, _s3Settings.AccessKey.Length))}...'");
-            Console.WriteLine("S3StorageService constructor - Completed successfully");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR in S3StorageService constructor: {ex.GetType().Name}: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            _logger.LogError(ex, "ERROR in S3StorageService constructor: {Message}", ex.Message);
             throw;
         }
     }
@@ -94,60 +93,60 @@ public class S3StorageService : IStorageService
         }
     }
 
-    public async Task<List<ManagedFile>> GetManagedFilesAsync()
-    {
-        var files = new List<ManagedFile>();
+    //public async Task<List<ManagedFile>> GetManagedFilesAsync()
+    //{
+    //    var files = new List<ManagedFile>();
 
-        try
-        {
-            // Add main dictionary files
-            await AddFileIfExistsAsync(files, "dictionaries/templates.json", FileType.Templates);
-            await AddFileIfExistsAsync(files, "dictionaries/customers.json", FileType.Customers);
-            await AddFileIfExistsAsync(files, "dictionaries/event-triggers.json", FileType.EventTriggers);
-            await AddFileIfExistsAsync(files, "dictionaries/event-channels.json", FileType.EventChannels);
-            await AddFileIfExistsAsync(files, "dictionaries/order-types.json", FileType.OrderTypes);
+    //    try
+    //    {
+    //        // Add main dictionary files
+    //        await AddFileIfExistsAsync(files, "dictionaries/templates.json", FileType.Templates);
+    //        await AddFileIfExistsAsync(files, "dictionaries/customers.json", FileType.Customers);
+    //        await AddFileIfExistsAsync(files, "dictionaries/event-triggers.json", FileType.EventTriggers);
+    //        await AddFileIfExistsAsync(files, "dictionaries/event-channels.json", FileType.EventChannels);
+    //        await AddFileIfExistsAsync(files, "dictionaries/order-types.json", FileType.OrderTypes);
 
-            // Add customer files
-            //var customerFiles = await ListCustomerFilesAsync();
-            //foreach (var key in customerFiles)
-            //{
-            //    var customerId = GetCustomerIdFromKey(key);
+    //        // Add customer files
+    //        //var customerFiles = await ListCustomerFilesAsync();
+    //        //foreach (var key in customerFiles)
+    //        //{
+    //        //    var customerId = GetCustomerIdFromKey(key);
                 
-            //    // Look up customer information
-            //    var customer = await GetCustomerByIdAsync(customerId);
-            //    var displayName = customer != null 
-            //        ? $"{customer.CompanyName} ({customer.CustomerId})" 
-            //        : customerId;
+    //        //    // Look up customer information
+    //        //    var customer = await GetCustomerByIdAsync(customerId);
+    //        //    var displayName = customer != null 
+    //        //        ? $"{customer.CompanyName} ({customer.CustomerId})" 
+    //        //        : customerId;
 
-            //    var lastModified = await GetFileLastModifiedAsync(key);
+    //        //    var lastModified = await GetFileLastModifiedAsync(key);
                 
-            //    files.Add(new ManagedFile
-            //    {
-            //        FileName = GetFileNameFromKey(key),
-            //        FilePath = key,
-            //        DisplayPath = GetDisplayPath(key),
-            //        FileType = FileType.CustomerSettings,
-            //        FileTypeDisplay = "Customer Override",
-            //        CustomerName = displayName,
-            //        CanDelete = true,
-            //        LastModified = lastModified
-            //    });
-            //}
-        }
-        catch (Exception)
-        {
-            // Return empty list on error
-        }
+    //        //    files.Add(new ManagedFile
+    //        //    {
+    //        //        FileName = GetFileNameFromKey(key),
+    //        //        FilePath = key,
+    //        //        DisplayPath = GetDisplayPath(key),
+    //        //        FileType = FileType.CustomerSettings,
+    //        //        FileTypeDisplay = "Customer Override",
+    //        //        CustomerName = displayName,
+    //        //        CanDelete = true,
+    //        //        LastModified = lastModified
+    //        //    });
+    //        //}
+    //    }
+    //    catch (Exception)
+    //    {
+    //        // Return empty list on error
+    //    }
 
-        return files.OrderBy(f => f.FileType).ThenBy(f => f.CustomerName).ToList();
-    }
+    //    return files.OrderBy(f => f.FileType).ThenBy(f => f.CustomerName).ToList();
+    //}
 
-    public List<ManagedFile> GetManagedFiles()
-    {
-        // For S3, we need to use async methods, so this will be a simplified synchronous version
-        // In practice, you should use GetManagedFilesAsync for S3
-        return new List<ManagedFile>();
-    }
+    //public List<ManagedFile> GetManagedFiles()
+    //{
+    //    // For S3, we need to use async methods, so this will be a simplified synchronous version
+    //    // In practice, you should use GetManagedFilesAsync for S3
+    //    return new List<ManagedFile>();
+    //}
 
     public bool DeleteFile(string key)
     {
@@ -158,7 +157,7 @@ public class S3StorageService : IStorageService
             {
                 var deleteRequest = new DeleteObjectRequest
                 {
-                    BucketName = _bucketName,
+                    BucketName = _s3Settings.BucketName,
                     Key = key
                 };
 
@@ -173,7 +172,16 @@ public class S3StorageService : IStorageService
         }
     }
 
-    public string GetDataFolderPath() => $"s3://{_bucketName}/";
+
+    public async Task<string?> ReadFileAsync(string filePath)
+    {
+        return await GetFileContentAsync(filePath);
+    }
+
+    public async Task WriteFileAsync(string filePath, string content)
+    {
+        await UploadTextToS3Async(content, filePath);
+    }
 
     //public async Task<Customer?> GetCustomerByIdAsync(string customerId)
     //{
@@ -391,11 +399,11 @@ public class S3StorageService : IStorageService
     {
         return uploadModel.FileType switch
         {
-            FileType.Templates => "dictionaries/templates.json",
-            FileType.Customers => "dictionaries/customers.json",
-            FileType.EventTriggers => "dictionaries/event-triggers.json",
-            FileType.EventChannels => "dictionaries/event-channels.json",
-            FileType.OrderTypes => "dictionaries/order-types.json",
+            FileType.DictionaryTemplates => "dictionaries/templates.json",
+            FileType.DictionaryCustomers => "dictionaries/customers.json",
+            FileType.DictionaryEventTriggers => "dictionaries/event-triggers.json",
+            FileType.DictionaryEventChannels => "dictionaries/event-channels.json",
+            FileType.DictionaryOrderTypes => "dictionaries/order-types.json",
             FileType.CustomerSettings => GetCustomerFileKey(uploadModel),
             _ => ""
         };
@@ -421,7 +429,7 @@ public class S3StorageService : IStorageService
         {
             var request = new GetObjectMetadataRequest
             {
-                BucketName = _bucketName,
+                BucketName = _s3Settings.BucketName,
                 Key = key
             };
 
@@ -440,7 +448,7 @@ public class S3StorageService : IStorageService
         
         var request = new PutObjectRequest
         {
-            BucketName = _bucketName,
+            BucketName = _s3Settings.BucketName,
             Key = key,
             InputStream = stream,
             ContentType = "application/json"
@@ -457,7 +465,7 @@ public class S3StorageService : IStorageService
         
         var request = new PutObjectRequest
         {
-            BucketName = _bucketName,
+            BucketName = _s3Settings.BucketName,
             Key = key,
             InputStream = stream,
             ContentType = "application/json"
@@ -473,10 +481,9 @@ public class S3StorageService : IStorageService
         {
             var request = new GetObjectRequest
             {
-                BucketName = _bucketName,
+                BucketName = _s3Settings.BucketName,
                 Key = key
             };
-
             using var response = await _s3Client.GetObjectAsync(request);
             using var reader = new StreamReader(response.ResponseStream);
             return await reader.ReadToEndAsync();
@@ -487,79 +494,79 @@ public class S3StorageService : IStorageService
         }
     }
 
-    private async Task AddFileIfExistsAsync(List<ManagedFile> files, string key, FileType fileType)
-    {
-        if (await FileExistsAsync(key))
-        {
-            var lastModified = await GetFileLastModifiedAsync(key);
+    //private async Task AddFileIfExistsAsync(List<ManagedFile> files, string key, FileType fileType)
+    //{
+    //    if (await FileExistsAsync(key))
+    //    {
+    //        var lastModified = await GetFileLastModifiedAsync(key);
             
-            files.Add(new ManagedFile
-            {
-                FileName = GetFileNameFromKey(key),
-                FilePath = key,
-                DisplayPath = GetFileNameFromKey(key),
-                FileType = fileType,
-                FileTypeDisplay = GetFileTypeDisplay(fileType),
-                CanDelete = false,
-                LastModified = lastModified
-            });
-        }
-    }
+    //        files.Add(new ManagedFile
+    //        {
+    //            FileName = GetFileNameFromKey(key),
+    //            FilePath = key,
+    //            DisplayPath = GetFileNameFromKey(key),
+    //            FileType = fileType,
+    //            FileTypeDisplay = GetFileTypeDisplay(fileType),
+    //            CanDelete = false,
+    //            LastModified = lastModified
+    //        });
+    //    }
+    //}
 
-    private async Task<DateTime> GetFileLastModifiedAsync(string key)
-    {
-        try
-        {
-            var request = new GetObjectMetadataRequest
-            {
-                BucketName = _bucketName,
-                Key = key
-            };
+    //private async Task<DateTime> GetFileLastModifiedAsync(string key)
+    //{
+    //    try
+    //    {
+    //        var request = new GetObjectMetadataRequest
+    //        {
+    //            BucketName = _s3Settings.BucketName,
+    //            Key = key
+    //        };
 
-            var response = await _s3Client.GetObjectMetadataAsync(request);
-            return response.LastModified ?? DateTime.MinValue;
-        }
-        catch
-        {
-            return DateTime.MinValue;
-        }
-    }
+    //        var response = await _s3Client.GetObjectMetadataAsync(request);
+    //        return response.LastModified ?? DateTime.MinValue;
+    //    }
+    //    catch
+    //    {
+    //        return DateTime.MinValue;
+    //    }
+    //}
 
-    private async Task<List<string>> ListCustomerFilesAsync()
-    {
-        var keys = new List<string>();
+    //private async Task<List<string>> ListCustomerFilesAsync()
+    //{
+    //    var keys = new List<string>();
 
-        try
-        {
-            var request = new ListObjectsV2Request
-            {
-                BucketName = _bucketName,
-                Prefix = "customers/",
-                Delimiter = "/"
-            };
+    //    try
+    //    {
+    //        var request = new ListObjectsV2Request
+    //        {
+    //            BucketName = _s3Settings.BucketName,
+    //            Prefix = "customers/",
+    //            Delimiter = "/"
+    //        };
 
-            ListObjectsV2Response response;
-            do
-            {
-                response = await _s3Client.ListObjectsV2Async(request);
-                keys.AddRange(response.S3Objects.Where(obj => obj.Key.EndsWith(".json")).Select(obj => obj.Key));
-                request.ContinuationToken = response.NextContinuationToken;
-            } while (response.IsTruncated == true);
-        }
-        catch
-        {
-            // Return empty list on error
-        }
+    //        ListObjectsV2Response response;
+    //        do
+    //        {
+    //            response = await _s3Client.ListObjectsV2Async(request);
+    //            keys.AddRange(response.S3Objects.Where(obj => obj.Key.EndsWith(".json")).Select(obj => obj.Key));
+    //            request.ContinuationToken = response.NextContinuationToken;
+    //        } while (response.IsTruncated == true);
+    //    }
+    //    catch
+    //    {
+    //        // Return empty list on error
+    //    }
 
-        return keys;
-    }
+    //    return keys;
+    //}
 
-    private string GetCustomerIdFromKey(string key)
-    {
-        // Extract customer ID from "customers/CUSTOMERID.json"
-        var fileName = GetFileNameFromKey(key);
-        return Path.GetFileNameWithoutExtension(fileName);
-    }
+    //private string GetCustomerIdFromKey(string key)
+    //{
+    //    // Extract customer ID from "customers/CUSTOMERID.json"
+    //    var fileName = GetFileNameFromKey(key);
+    //    return Path.GetFileNameWithoutExtension(fileName);
+    //}
 
     private string GetFileNameFromKey(string key)
     {
@@ -575,20 +582,20 @@ public class S3StorageService : IStorageService
         return GetFileNameFromKey(key);
     }
 
-    private string GetFileTypeDisplay(FileType fileType)
-    {
-        return fileType switch
-        {
-            FileType.None => "None",
-            FileType.Templates => "Notification Templates",
-            FileType.Customers => "Customers",
-            FileType.EventTriggers => "Event Triggers",
-            FileType.EventChannels => "Event Channels",
-            FileType.OrderTypes => "Order Types",
-            FileType.CustomerSettings => "Customer Override",
-            _ => fileType.ToString()
-        };
-    }
+    //private string GetFileTypeDisplay(FileType fileType)
+    //{
+    //    return fileType switch
+    //    {
+    //        FileType.None => "None",
+    //        FileType.Templates => "Notification Templates",
+    //        FileType.Customers => "Customers",
+    //        FileType.EventTriggers => "Event Triggers",
+    //        FileType.EventChannels => "Event Channels",
+    //        FileType.OrderTypes => "Order Types",
+    //        FileType.CustomerSettings => "Customer Override",
+    //        _ => fileType.ToString()
+    //    };
+    //}
 
     private string SanitizeFileName(string fileName)
     {

@@ -94,13 +94,13 @@ public class ConfigRepository : IConfigRepository
 
     private static string GetFilePathForType(FileType fileType) => fileType switch
     {
-        FileType.Templates => FilePaths.Templates,
-        FileType.EventTriggers => FilePaths.EventTriggers,
-        FileType.EventChannels => FilePaths.EventChannels,
-        FileType.OrderTypes => FilePaths.OrderTypes,
-        FileType.Customers => FilePaths.Customers,
-        FileType.LogoUrlMappings => FilePaths.LogoUrlMappings,
-        _ => throw new ArgumentException($"Unknown file type: {fileType}")
+        FileType.DictionaryTemplates => "data/dictionaries/templates.json",
+        FileType.DictionaryEventTriggers => "data/dictionaries/event-triggers.json",
+        FileType.DictionaryEventChannels => "data/dictionaries/event-channels.json",
+        FileType.DictionaryOrderTypes => "data/dictionaries/order-types.json",
+        FileType.DictionaryCustomers => "data/dictionaries/customers.json",
+        FileType.DictionaryLogoUrls => "data/dictionaries/logo-url-mappings.json",
+    _ => throw new ArgumentException($"Unknown file type: {fileType}")
     };
 
 }

@@ -1,6 +1,5 @@
 namespace JSONAdminEditor.Controllers;
 
-using JSONAdminEditor.API.Constants;
 using JSONAdminEditor.API.Exceptions;
 using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Application.Models.Dictionaries;
@@ -20,7 +19,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Template>>> GetTemplates()
     {
-        return await _repository.GetDictionaryDataAsync<Template>(FileType.Templates);
+        return await _repository.GetDictionaryDataAsync<Template>(FileType.DictionaryTemplates);
     }
 
     [HttpPut("templates")]
@@ -35,7 +34,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
             return BadRequest("Templates contains duplication");
         }
 
-        return await SaveDictionaryData(templates, FileType.Templates);
+        return await SaveDictionaryData(templates, FileType.DictionaryTemplates);
     }
 
     // Event Triggers endpoints
@@ -44,7 +43,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventTrigger>>> GetEventTriggers()
     {
-        return await _repository.GetDictionaryDataAsync<EventTrigger>(FileType.EventTriggers);
+        return await _repository.GetDictionaryDataAsync<EventTrigger>(FileType.DictionaryEventTriggers);
     }
 
     [HttpPut("event-triggers")]
@@ -59,7 +58,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
             return BadRequest("Event triggers contains duplication");
         }
 
-        return await SaveDictionaryData(eventTriggers, FileType.EventTriggers);
+        return await SaveDictionaryData(eventTriggers, FileType.DictionaryEventTriggers);
     }
 
     [HttpGet("event-channels")]
@@ -67,7 +66,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
     {
-        return await _repository.GetDictionaryDataAsync<EventChannel>(FileType.EventChannels);
+        return await _repository.GetDictionaryDataAsync<EventChannel>(FileType.DictionaryEventChannels);
     }
 
     [HttpPut("event-channels")]
@@ -82,7 +81,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
             return BadRequest("Event channels contains duplication");
         }
 
-        return await SaveDictionaryData(eventChannels, FileType.EventChannels);
+        return await SaveDictionaryData(eventChannels, FileType.DictionaryEventChannels);
     }
 
     [HttpGet("order-types")]
@@ -90,7 +89,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
     {
-        return await _repository.GetDictionaryDataAsync<OrderType>(FileType.OrderTypes);
+        return await _repository.GetDictionaryDataAsync<OrderType>(FileType.DictionaryOrderTypes);
     }
 
     [HttpPut("order-types")]
@@ -105,7 +104,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
             return BadRequest("Order types contains duplication");
         }
 
-        return await SaveDictionaryData(orderTypes, FileType.OrderTypes);
+        return await SaveDictionaryData(orderTypes, FileType.DictionaryOrderTypes);
     }
 
     [HttpGet("customers")]
@@ -113,7 +112,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Customer>>> GetCustomers()
     {
-        return await _repository.GetDictionaryDataAsync<Customer>(FileType.Customers);
+        return await _repository.GetDictionaryDataAsync<Customer>(FileType.DictionaryCustomers);
     }
 
     [HttpPut("customers")]
@@ -128,7 +127,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
             return BadRequest("Customers contains duplication");
         }
 
-        return await SaveDictionaryData(customers, FileType.Customers);
+        return await SaveDictionaryData(customers, FileType.DictionaryCustomers);
     }
 
     [HttpGet("logo-url")]
@@ -136,7 +135,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<LogoUrl>>> GetLogoUrlMappings()
     {
-        return await _repository.GetDictionaryDataAsync<LogoUrl>(FileType.LogoUrlMappings);
+        return await _repository.GetDictionaryDataAsync<LogoUrl>(FileType.DictionaryLogoUrls);
     }
 
     [HttpPut("logo-url")]
@@ -151,7 +150,7 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
             return BadRequest("Logo urls contains duplication");
         }
 
-        return await SaveDictionaryData(logoUrls, FileType.LogoUrlMappings);
+        return await SaveDictionaryData(logoUrls, FileType.DictionaryLogoUrls);
     }
 
 
@@ -207,13 +206,12 @@ public class DictionariesController(IConfigRepository repository) : ControllerBa
     private static string GetFileTypeDisplay(FileType fileType) => fileType switch
     {
         FileType.None => "None",
-        FileType.Templates => "Notification Templates",
-        FileType.EventTriggers => "Event Triggers",
-        FileType.EventChannels => "Event Channels",
-        FileType.OrderTypes => "Order Types",
-        FileType.Customers => "Customers",
-        FileType.LogoUrlMappings => "Logo URLs",
-        FileType.CustomerSettings => "Customer Override",
+        FileType.DictionaryTemplates => "Notification Templates",
+        FileType.DictionaryEventTriggers => "Event Triggers",
+        FileType.DictionaryEventChannels => "Event Channels",
+        FileType.DictionaryOrderTypes => "Order Types",
+        FileType.DictionaryCustomers => "Customers",
+        FileType.DictionaryLogoUrls => "Logo URLs",
         _ => fileType.ToString()
     };
 }
