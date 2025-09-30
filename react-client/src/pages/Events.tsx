@@ -83,9 +83,16 @@ export const Events: React.FC = () => {
   const handleSaveEventData = async () => {
     if (!eventData || !selectedEvent) return;
 
+    const validTriggerConditions = Object.fromEntries(
+      Object.entries(eventData.triggerConditions || {}).filter(([key]) => 
+        ['IsSchedulable', 'IsOpen', 'IsScheduled', 'IsCompleted', 'IsReadyForScheduling'].includes(key)
+      )
+    );
+
     const dataToSave = {
       ...eventData,
-      contentVariables: getRedefinedVariables(eventData.contentVariables || {}, contentVariableRedefinedStates)
+      contentVariables: getRedefinedVariables(eventData.contentVariables || {}, contentVariableRedefinedStates),
+      triggerConditions: Object.keys(validTriggerConditions).length > 0 ? validTriggerConditions : undefined
     };
 
     try {

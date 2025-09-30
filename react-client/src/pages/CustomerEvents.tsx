@@ -26,6 +26,7 @@ import { CustomerEventDataTable } from '../components/events/CustomerEventDataTa
 import { CustomerTemplateTable } from '../components/events/CustomerTemplateTable';
 
 import { CustomerContentVariablesOverridesTable } from '../components/events/CustomerContentVariablesOverridesTable';
+import { TriggerConditionsForm } from '../components/events/TriggerConditionsForm';
 
 export const CustomerEvents: React.FC = () => {
   const { state, updateField } = useFormState({
@@ -41,6 +42,7 @@ export const CustomerEvents: React.FC = () => {
   const [contentVariables, setContentVariables] = useState<Record<string, string>>({});
   const [contentVariablesOverrides, setContentVariablesOverrides] = useState<Record<string, Record<string, Record<string, string>>>>({});
   const [contentVariableRedefinedStates, setContentVariableRedefinedStates] = useState<Record<string, boolean>>({});
+  const [triggerConditions, setTriggerConditions] = useState<Record<string, boolean>>({});
 
   const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
@@ -99,6 +101,7 @@ export const CustomerEvents: React.FC = () => {
     setContentVariables(vars);
 
     setContentVariablesOverrides(specificEventData?.contentVariablesOverrides || {});
+    setTriggerConditions(specificEventData?.triggerConditions || {});
   }, [selectedEvent, selectedOrderType, specificEventData]);
 
   const handleSave = async () => {
@@ -125,6 +128,15 @@ export const CustomerEvents: React.FC = () => {
 
     if (Object.keys(contentVariablesOverrides).length > 0) {
       saveData.contentVariablesOverrides = contentVariablesOverrides;
+    }
+
+    const validTriggerConditions = Object.fromEntries(
+      Object.entries(triggerConditions).filter(([key]) => 
+        ['IsSchedulable', 'IsOpen', 'IsScheduled', 'IsCompleted', 'IsReadyForScheduling'].includes(key)
+      )
+    );
+    if (Object.keys(validTriggerConditions).length > 0) {
+      saveData.triggerConditions = validTriggerConditions;
     }
 
     try {
@@ -240,6 +252,7 @@ export const CustomerEvents: React.FC = () => {
     { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
     { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
     { id: 'content-variables-overrides', label: 'Content Variables Overrides', icon: 'fa-layer-group' },
+    { id: 'trigger-conditions', label: 'Trigger Conditions', icon: 'fa-filter' },
   ];
 
   const isInitialLoading = customersLoading;
@@ -338,6 +351,15 @@ export const CustomerEvents: React.FC = () => {
                       onUpdate={updateContentVariableOverride}
                       onUpdateKey={updateContentVariableOverrideKey}
                       onRemove={removeContentVariableOverride}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+
+                {activeTab === 'trigger-conditions' && (
+                  <ComponentErrorBoundary componentName="Trigger Conditions">
+                    <TriggerConditionsForm
+                      triggerConditions={triggerConditions}
+                      onUpdate={setTriggerConditions}
                     />
                   </ComponentErrorBoundary>
                 )}

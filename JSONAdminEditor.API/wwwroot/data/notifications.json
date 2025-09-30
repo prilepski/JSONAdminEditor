@@ -44,11 +44,12 @@
           "Priority": 2
         }
       ],
-      "ContentVariables": {
-        "global 3": "global 3333",
-        "global event": "global event"
-      },
-      "TriggerConditions": {}
+      "ContentVariables": {},
+      "TriggerConditions": {
+        "IsOpen": false,
+        "IsScheduled": true,
+        "IsSchedulable": false
+      }
     },
     {
       "Event": "Ready For Scheduling",

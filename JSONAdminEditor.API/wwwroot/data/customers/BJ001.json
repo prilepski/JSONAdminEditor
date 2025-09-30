@@ -70,10 +70,10 @@
       "Templates": {},
       "IsSuppressed": false,
       "PreferredCommunication": [],
-      "ContentVariables": {
-        "cust event level": "123123213"
-      },
-      "TriggerConditions": {}
+      "ContentVariables": {},
+      "TriggerConditions": {
+        "IsSchedulable": false
+      }
     }
   ],
   "AfterHours": {

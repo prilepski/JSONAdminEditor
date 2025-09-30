@@ -5,22 +5,34 @@ interface TriggerConditionsFormProps {
   onUpdate: (conditions: Record<string, boolean>) => void;
 }
 
+const TRIGGER_CONDITIONS = [
+  'IsSchedulable',
+  'IsOpen', 
+  'IsScheduled',
+  'IsCompleted',
+  'IsReadyForScheduling'
+];
+
 export const TriggerConditionsForm: React.FC<TriggerConditionsFormProps> = ({
   triggerConditions,
   onUpdate,
 }) => {
   const addCondition = () => {
-    const newKey = `condition_${Date.now()}`;
+    const newKey = `new_condition_${Date.now()}`;
     onUpdate({ ...triggerConditions, [newKey]: false });
   };
 
-  const updateCondition = (oldKey: string, newKey: string, value: boolean) => {
+  const updateConditionName = (oldKey: string, newKey: string) => {
+    if (oldKey === newKey) return;
     const updated = { ...triggerConditions };
-    if (oldKey !== newKey) {
-      delete updated[oldKey];
-    }
+    const value = updated[oldKey];
+    delete updated[oldKey];
     updated[newKey] = value;
     onUpdate(updated);
+  };
+
+  const updateConditionValue = (key: string, value: boolean) => {
+    onUpdate({ ...triggerConditions, [key]: value });
   };
 
   const removeCondition = (key: string) => {
@@ -42,7 +54,7 @@ export const TriggerConditionsForm: React.FC<TriggerConditionsFormProps> = ({
           <thead className="table-light">
             <tr>
               <th>Condition Name</th>
-              <th>Enabled</th>
+              <th>Value</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -50,12 +62,18 @@ export const TriggerConditionsForm: React.FC<TriggerConditionsFormProps> = ({
             {Object.entries(triggerConditions).map(([key, value]) => (
               <tr key={key}>
                 <td>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={key}
-                    onChange={(e) => updateCondition(key, e.target.value, value)}
-                  />
+                  <select
+                    className="form-select"
+                    value={TRIGGER_CONDITIONS.includes(key) ? key : ''}
+                    onChange={(e) => updateConditionName(key, e.target.value)}
+                  >
+                    <option value="">Select condition...</option>
+                    {TRIGGER_CONDITIONS.filter(condition => 
+                      condition === key || !Object.keys(triggerConditions).includes(condition)
+                    ).map(condition => (
+                      <option key={condition} value={condition}>{condition}</option>
+                    ))}
+                  </select>
                 </td>
                 <td>
                   <div className="form-check form-switch">
@@ -63,7 +81,7 @@ export const TriggerConditionsForm: React.FC<TriggerConditionsFormProps> = ({
                       className="form-check-input"
                       type="checkbox"
                       checked={value}
-                      onChange={(e) => updateCondition(key, key, e.target.checked)}
+                      onChange={(e) => updateConditionValue(key, e.target.checked)}
                     />
                     <label className="form-check-label">
                       {value ? 'Yes' : 'No'}
