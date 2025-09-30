@@ -6,8 +6,7 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 
 export const Agents: React.FC = () => {
   const [agents, setAgents] = useState<Record<string, boolean>>({});
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newAgentName, setNewAgentName] = useState('');
+  const [editingKeys, setEditingKeys] = useState<Record<string, string>>({});
 
   const { data = {}, isLoading } = useAgentsQuery();
   const mutation = useAgentsMutation();
@@ -24,13 +23,21 @@ export const Agents: React.FC = () => {
     }));
   };
 
-  const handleAddAgent = () => {
-    if (newAgentName.trim() && !agents[newAgentName.trim()]) {
-      setAgents(prev => ({
-        ...prev,
-        [newAgentName.trim()]: false
-      }));
-      setNewAgentName('');
+  const addAgent = () => {
+    const newKey = `new_agent_${Date.now()}`;
+    setAgents(prev => ({
+      ...prev,
+      [newKey]: false
+    }));
+  };
+
+  const updateAgentName = (oldKey: string, newKey: string) => {
+    if (oldKey !== newKey && newKey.trim() && !agents[newKey.trim()]) {
+      const newAgents = { ...agents };
+      const value = newAgents[oldKey];
+      delete newAgents[oldKey];
+      newAgents[newKey.trim()] = value;
+      setAgents(newAgents);
     }
   };
 
@@ -70,14 +77,13 @@ export const Agents: React.FC = () => {
             <ComponentErrorBoundary componentName="Agents Editor">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5>
-                  <i className="fas fa-robot me-2"></i>System Agents
+                  Agents
                 </h5>
                 <div className="d-flex gap-2">
                   <button
                     type="button"
                     className="btn btn-success"
-                    onClick={() => setIsAddingNew(true)}
-                    disabled={isAddingNew}
+                    onClick={addAgent}
                   >
                     <i className="fas fa-plus me-1"></i>Add Agent
                   </button>
@@ -89,7 +95,7 @@ export const Agents: React.FC = () => {
                 </div>
               </div>
 
-              {Object.keys(agents).length === 0 && !isAddingNew ? (
+              {Object.keys(agents).length === 0 ? (
                 <div className="text-center py-4">
                   <i className="fas fa-robot fa-3x text-muted mb-3"></i>
                   <h5 className="text-muted">No Agents</h5>
@@ -108,14 +114,30 @@ export const Agents: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(agents).map(([agentName, isEnabled]) => (
+                    {Object.entries(agents).map(([agentName, isEnabled]) => {
+                      const isNewAgent = agentName.startsWith('new_agent_');
+                      return (
                         <tr key={agentName}>
                           <td>
                             <input
                               type="text"
-                              className="form-control form-control-sm"
-                              value={agentName}
-                              readOnly
+                              className={`form-control form-control-sm ${isNewAgent ? '' : 'bg-light'}`}
+                              value={editingKeys[agentName] !== undefined ? editingKeys[agentName] : agentName}
+                              readOnly={!isNewAgent}
+                              onChange={isNewAgent ? (e) => 
+                                setEditingKeys(prev => ({ ...prev, [agentName]: e.target.value }))
+                              : undefined}
+                              onBlur={() => {
+                                if (editingKeys[agentName] !== undefined && editingKeys[agentName] !== agentName) {
+                                  updateAgentName(agentName, editingKeys[agentName]);
+                                }
+                                setEditingKeys(prev => {
+                                  const { [agentName]: _, ...rest } = prev;
+                                  return rest;
+                                });
+                              }}
+                              placeholder={isNewAgent ? "Enter agent name" : undefined}
+                              autoFocus={isNewAgent}
                             />
                           </td>
                           <td className="text-center">
@@ -138,59 +160,8 @@ export const Agents: React.FC = () => {
                             </button>
                           </td>
                         </tr>
-                      ))}
-                      {isAddingNew && (
-                        <tr>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              value={newAgentName}
-                              onChange={(e) => setNewAgentName(e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  if (newAgentName.trim() && !agents[newAgentName.trim()]) {
-                                    setAgents(prev => ({ ...prev, [newAgentName.trim()]: false }));
-                                    setNewAgentName('');
-                                    setIsAddingNew(false);
-                                  }
-                                }
-                              }}
-                              onBlur={() => {
-                                if (newAgentName.trim() && !agents[newAgentName.trim()]) {
-                                  setAgents(prev => ({ ...prev, [newAgentName.trim()]: false }));
-                                }
-                                setNewAgentName('');
-                                setIsAddingNew(false);
-                              }}
-                              placeholder="Enter agent name"
-                              autoFocus
-                            />
-                          </td>
-                          <td className="text-center">
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={false}
-                                disabled
-                              />
-                            </div>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => {
-                                setNewAgentName('');
-                                setIsAddingNew(false);
-                              }}
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      )}
+                      );
+                    })}
                     </tbody>
                   </table>
                 </div>

@@ -10,7 +10,9 @@
     }
   ],
   "ContentVariables": {
-    "sdfsdf": "test"
+    "sdfsdf": "test",
+    "new_var_1758900932973": "new val",
+    "global 2": "global "
   },
   "ContentVariablesOverrides": {
     "sdfsdf": {
@@ -24,7 +26,10 @@
     },
     "logo": {
       "ref#": {
-        "url": "test url"
+        "FRGDAIR": "BALLARD.GIF"
+      },
+      "sub ": {
+        "sub sub ": "sdasd"
       }
     }
   },

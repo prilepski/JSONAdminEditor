@@ -19,7 +19,8 @@
     "test1": "$test",
     "test global level": "!saasds",
     "test global level1": "test global level",
-    "global 2": "global 2"
+    "global 2": "global 2",
+    "global 3": "global 3"
   },
   "Events": [
     {
@@ -30,22 +31,22 @@
       "Templates": {
         "Email": "d-e162b3e6181545fead5e643982628504",
         "Sms": "HX61a3cb19e35c428d9b1395d8139e94cc",
-        "Voice": ""
+        "Voice": "EH24bb0d84e795df332aa9a4a600f0e3b8"
       },
       "IsSuppressed": false,
       "PreferredCommunication": [
         {
-          "Channel": "Sms",
+          "Channel": "Email",
           "Priority": 1
+        },
+        {
+          "Channel": "Voice",
+          "Priority": 2
         }
       ],
       "ContentVariables": {
-        "sender": "$customerContact.name$",
-        "bringg_sched_url": "$appointmentInformation.scheduleURL$",
-        "agent_phone_num": "$agentContact.phone$",
-        "ait_tracking_num": "$shipmentInfo[0].shipmentId$",
-        "test global level1": "test global eventhhh",
-        "test var": "test var"
+        "global 3": "global 3333",
+        "global event": "global event"
       },
       "TriggerConditions": {}
     },
@@ -186,13 +187,30 @@
       "TriggerConditions": {}
     }
   ],
-  "OptOut": {},
+  "OptOut": {
+    "en": {
+      "US": {
+        "optOutKeywords": "cancel,end,optout,quit,revoke,stopall,unsubscribe",
+        "optInKeywords": "start,unstop,optin,subscribe",
+        "helpKeywords": "help",
+        "optOutFooter": "Reply OPTOUT to stop receiving further order update text notifications.",
+        "optOutPhrase": "You have successfully been unsubscribed. You will not receive any more order status messages. Reply OPTIN toresubscribe.",
+        "optInPhrase": "You have successfully been re-subscribed to order status update messages. Reply HELP for help. Reply OPTOUT to unsubscribe. Msg\u0026DataRatesMayApply.",
+        "optInMessage": "",
+        "helpPhrase": "Reply OPTOUT to unsubscribe from order status updates. Reply OPTIN to start receiving order status update messages. Send HELP for this message. Msg\u0026Data Rates May Apply."
+      }
+    }
+  },
   "AfterHours": {
     "ExceptionOfValidation": {
       "Events": [
         {
           "Name": "Scheduling Reminder 24",
           "Type": "Delivery"
+        },
+        {
+          "Name": "Scheduling Reminder 48",
+          "Type": "Pickup"
         }
       ]
     },
@@ -203,6 +221,13 @@
   },
   "FromEmail": "global@aitworldwide.com",
   "Agents": {
-    "test": true
+    "test": true,
+    "new_agent_1759238640262": false,
+    "new_agent_1759238640686": false,
+    "new_agent_1759238641111": false,
+    "new_agent_1759238641353": false,
+    "new_agent_1759238641556": false,
+    "new_agent_1759238641755": false,
+    "new_agent_1759238641961": false
   }
 }
