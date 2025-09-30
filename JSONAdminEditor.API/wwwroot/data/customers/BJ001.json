@@ -69,7 +69,12 @@
       "Email": "$consigneeContact.email$",
       "Templates": {},
       "IsSuppressed": false,
-      "PreferredCommunication": [],
+      "PreferredCommunication": [
+        {
+          "Channel": "Email",
+          "Priority": 1
+        }
+      ],
       "ContentVariables": {},
       "TriggerConditions": {
         "IsSchedulable": false

@@ -27,6 +27,7 @@ import { CustomerTemplateTable } from '../components/events/CustomerTemplateTabl
 
 import { CustomerContentVariablesOverridesTable } from '../components/events/CustomerContentVariablesOverridesTable';
 import { TriggerConditionsForm } from '../components/events/TriggerConditionsForm';
+import { PreferredCommunicationForm } from '../components/events/PreferredCommunicationForm';
 
 export const CustomerEvents: React.FC = () => {
   const { state, updateField } = useFormState({
@@ -43,6 +44,7 @@ export const CustomerEvents: React.FC = () => {
   const [contentVariablesOverrides, setContentVariablesOverrides] = useState<Record<string, Record<string, Record<string, string>>>>({});
   const [contentVariableRedefinedStates, setContentVariableRedefinedStates] = useState<Record<string, boolean>>({});
   const [triggerConditions, setTriggerConditions] = useState<Record<string, boolean>>({});
+  const [preferredCommunication, setPreferredCommunication] = useState<Array<{ channel: string; priority: number }>>([]);
 
   const { selectedCustomer, selectedEvent, selectedOrderType, activeTab } = state;
 
@@ -102,6 +104,7 @@ export const CustomerEvents: React.FC = () => {
 
     setContentVariablesOverrides(specificEventData?.contentVariablesOverrides || {});
     setTriggerConditions(specificEventData?.triggerConditions || {});
+    setPreferredCommunication(specificEventData?.preferredCommunication || []);
   }, [selectedEvent, selectedOrderType, specificEventData]);
 
   const handleSave = async () => {
@@ -137,6 +140,10 @@ export const CustomerEvents: React.FC = () => {
     );
     if (Object.keys(validTriggerConditions).length > 0) {
       saveData.triggerConditions = validTriggerConditions;
+    }
+
+    if (preferredCommunication.length > 0) {
+      saveData.preferredCommunication = preferredCommunication;
     }
 
     try {
@@ -252,6 +259,7 @@ export const CustomerEvents: React.FC = () => {
     { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
     { id: 'content-variables', label: 'Content Variables', icon: 'fa-code' },
     { id: 'content-variables-overrides', label: 'Content Variables Overrides', icon: 'fa-layer-group' },
+    { id: 'preferred-communication', label: 'Preferred Communication', icon: 'fa-comments' },
     { id: 'trigger-conditions', label: 'Trigger Conditions', icon: 'fa-filter' },
   ];
 
@@ -351,6 +359,15 @@ export const CustomerEvents: React.FC = () => {
                       onUpdate={updateContentVariableOverride}
                       onUpdateKey={updateContentVariableOverrideKey}
                       onRemove={removeContentVariableOverride}
+                    />
+                  </ComponentErrorBoundary>
+                )}
+
+                {activeTab === 'preferred-communication' && (
+                  <ComponentErrorBoundary componentName="Preferred Communication">
+                    <PreferredCommunicationForm
+                      preferredCommunication={preferredCommunication}
+                      onUpdate={setPreferredCommunication}
                     />
                   </ComponentErrorBoundary>
                 )}
