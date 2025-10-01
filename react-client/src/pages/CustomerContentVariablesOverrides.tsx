@@ -59,6 +59,27 @@ export const CustomerContentVariablesOverrides: React.FC = () => {
     }
   };
 
+  const handleDeleteSubcategory = async (category: string, subcategory: string) => {
+    if (!selectedCustomer) return;
+
+    const updatedData = { ...overridesData };
+    if (updatedData[category]) {
+      delete updatedData[category][subcategory];
+      if (Object.keys(updatedData[category]).length === 0) {
+        delete updatedData[category];
+      }
+    }
+
+    try {
+      await saveMutation.mutateAsync({
+        customerId: selectedCustomer,
+        data: updatedData,
+      });
+    } catch (error) {
+      handleError(error, 'Failed to delete subcategory');
+    }
+  };
+
   const isInitialLoading = customersLoading;
   const isDataLoading = Boolean(selectedCustomer && overridesLoading);
 
@@ -100,6 +121,7 @@ export const CustomerContentVariablesOverrides: React.FC = () => {
                 onSave={handleSave}
                 onAddCategory={handleAddCategory}
                 onAddSubcategory={handleAddSubcategory}
+                onDeleteSubcategory={handleDeleteSubcategory}
                 isLoading={isDataLoading}
                 isSaving={saveMutation.isPending}
               />

@@ -8,6 +8,7 @@ interface NestedVariablesNavigatorProps {
   onToggleCategory: (category: string) => void;
   onAddCategory: () => void;
   onAddSubcategory: (category: string) => void;
+  onDeleteSubcategory: (category: string, subcategory: string) => void;
 }
 
 export const NestedVariablesNavigator: React.FC<NestedVariablesNavigatorProps> = ({
@@ -18,6 +19,7 @@ export const NestedVariablesNavigator: React.FC<NestedVariablesNavigatorProps> =
   onToggleCategory,
   onAddCategory,
   onAddSubcategory,
+  onDeleteSubcategory,
 }) => {
   return (
     <div className="card">
@@ -57,12 +59,18 @@ export const NestedVariablesNavigator: React.FC<NestedVariablesNavigatorProps> =
                   className={`list-group-item d-flex justify-content-between align-items-center py-2 ps-5 pe-3 ${selectedPath === `${category}/${subcategory}` ? 'active' : ''}`}
                 >
                   <button
-                    className="btn btn-link text-start p-0 text-decoration-none flex-grow-1"
+                    className={`btn btn-link text-start p-0 text-decoration-none flex-grow-1 ${selectedPath === `${category}/${subcategory}` ? 'text-white' : ''}`}
                     onClick={() => onPathSelect(`${category}/${subcategory}`)}
                   >
                     <i className="fas fa-file me-2"></i>{subcategory}
                   </button>
-                  <div style={{ width: '32px' }}></div>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => onDeleteSubcategory(category, subcategory)}
+                    style={{ width: '32px', height: '32px' }}
+                  >
+                    <i className="fas fa-trash"></i>
+                  </button>
                 </div>
               ))}
             </div>

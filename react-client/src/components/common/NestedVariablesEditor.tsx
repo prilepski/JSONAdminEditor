@@ -9,6 +9,7 @@ interface NestedVariablesEditorProps {
   onSave: (category: string, subcategory: string, variables: Record<string, string>) => Promise<void>;
   onAddCategory: (name: string) => Promise<void>;
   onAddSubcategory: (category: string, name: string) => Promise<void>;
+  onDeleteSubcategory?: (category: string, subcategory: string) => Promise<void>;
   isLoading?: boolean;
   isSaving?: boolean;
 }
@@ -18,6 +19,7 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
   onSave,
   onAddCategory,
   onAddSubcategory,
+  onDeleteSubcategory,
   isLoading = false,
   isSaving = false,
 }) => {
@@ -51,6 +53,15 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
     await onAddSubcategory(showAddSubcategory, newSubcategoryName);
     setNewSubcategoryName('');
     setShowAddSubcategory('');
+  };
+
+  const handleDeleteSubcategory = async (category: string, subcategory: string) => {
+    if (onDeleteSubcategory) {
+      await onDeleteSubcategory(category, subcategory);
+      if (selectedPath === `${category}/${subcategory}`) {
+        setSelectedPath('');
+      }
+    }
   };
 
   const [currentVariablesState, setCurrentVariablesState] = useState<Record<string, string>>({});
@@ -107,6 +118,7 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
             onToggleCategory={toggleCategory}
             onAddCategory={() => setShowAddCategory(true)}
             onAddSubcategory={setShowAddSubcategory}
+            onDeleteSubcategory={handleDeleteSubcategory}
           />
         </div>
 
@@ -116,6 +128,8 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
               contentVariables={currentVariablesState}
               onUpdate={handleUpdate}
               title={`${category} > ${subcategory}`}
+              variableColumnHeader={subcategory}
+              showIsRedefined={false}
               saveButton={
                 <SaveButton
                   onClick={handleSave}

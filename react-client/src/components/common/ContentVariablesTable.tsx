@@ -9,6 +9,8 @@ interface ContentVariablesTableProps {
   title?: string;
   showAddButton?: boolean;
   saveButton?: React.ReactNode;
+  variableColumnHeader?: string;
+  showIsRedefined?: boolean;
 }
 
 export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
@@ -20,6 +22,8 @@ export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
   title = "Content Variables",
   showAddButton = true,
   saveButton,
+  variableColumnHeader = "Variable Name",
+  showIsRedefined = true,
 }) => {
   const [redefinedStates, setRedefinedStates] = React.useState<Record<string, boolean>>({});
   const [editingKeys, setEditingKeys] = React.useState<Record<string, string>>({});
@@ -136,9 +140,9 @@ export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
           <table className="table table-striped table-hover">
             <thead className="table-dark">
               <tr>
-                <th style={{ width: '30%' }}>Variable Name</th>
-                <th style={{ width: '40%' }}>Value</th>
-                <th style={{ width: '15%' }}>Is Redefined</th>
+                <th style={{ width: showIsRedefined ? '30%' : '40%' }}>{variableColumnHeader}</th>
+                <th style={{ width: showIsRedefined ? '40%' : '45%' }}>Value</th>
+                {showIsRedefined && <th style={{ width: '15%' }}>Is Redefined</th>}
                 <th style={{ width: '15%' }}>Actions</th>
               </tr>
             </thead>
@@ -171,19 +175,21 @@ export const ContentVariablesTable: React.FC<ContentVariablesTableProps> = ({
                       className="form-control form-control-sm"
                       value={data.value}
                       onChange={(e) => updateVariable(key, key, e.target.value)}
-                      disabled={!data.isRedefined}
+                      disabled={showIsRedefined ? !data.isRedefined : false}
                     />
                   </td>
-                  <td className="text-center">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={data.isRedefined}
-                        onChange={(e) => toggleRedefined(key, e.target.checked)}
-                      />
-                    </div>
-                  </td>
+                  {showIsRedefined && (
+                    <td className="text-center">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={data.isRedefined}
+                          onChange={(e) => toggleRedefined(key, e.target.checked)}
+                        />
+                      </div>
+                    </td>
+                  )}
                   <td className="text-center">
                     {!data.globalValue && !data.eventValue && (
                       <button

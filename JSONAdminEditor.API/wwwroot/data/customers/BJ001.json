@@ -27,9 +27,6 @@
     "logo": {
       "ref#": {
         "FRGDAIR": "BALLARD.GIF"
-      },
-      "sub ": {
-        "sub sub ": "sdasd"
       }
     }
   },
@@ -45,10 +42,10 @@
       },
       "IsSuppressed": false,
       "PreferredCommunication": [],
-      "ContentVariables": {
-        "event cust var": "event cust var"
-      },
-      "TriggerConditions": {}
+      "ContentVariables": {},
+      "TriggerConditions": {
+        "IsSchedulable": true
+      }
     },
     {
       "ContentVariablesOverrides": {
