@@ -1,4 +1,4 @@
-using JSONAdminEditor.Application.Models.Configuration;
+using JSONAdminEditor.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace JSONAdminEditor.Validation;

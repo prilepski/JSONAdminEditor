@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace JSONAdminEditor.API.Middleware;
+namespace JSONAdminEditor.Middleware;
 
 public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {

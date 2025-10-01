@@ -1,3 +1,5 @@
+using JSONAdminEditor.Domain.Enums;
+
 namespace JSONAdminEditor.Application.Models;
 
 public class ManagedFile

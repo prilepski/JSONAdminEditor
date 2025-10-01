@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONAdminEditor", "JSONAdmi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONAdminEditor.Application", "JSONAdminEditor.Application\JSONAdminEditor.Application.csproj", "{16602387-F1D8-40EF-A0EC-D7D25284DB6A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONAdminEditor.Domain", "JSONAdminEditor.Domain\JSONAdminEditor.Domain.csproj", "{C8378960-D525-4E4C-A53B-C0DC121DCBB3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONAdminEditor.Infrastructure", "JSONAdminEditor.Infrastructure\JSONAdminEditor.Infrastructure.csproj", "{4F511726-DC6F-4EFF-B21C-83722E6C7883}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +24,14 @@ Global
 		{16602387-F1D8-40EF-A0EC-D7D25284DB6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16602387-F1D8-40EF-A0EC-D7D25284DB6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16602387-F1D8-40EF-A0EC-D7D25284DB6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8378960-D525-4E4C-A53B-C0DC121DCBB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8378960-D525-4E4C-A53B-C0DC121DCBB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8378960-D525-4E4C-A53B-C0DC121DCBB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8378960-D525-4E4C-A53B-C0DC121DCBB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F511726-DC6F-4EFF-B21C-83722E6C7883}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F511726-DC6F-4EFF-B21C-83722E6C7883}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F511726-DC6F-4EFF-B21C-83722E6C7883}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F511726-DC6F-4EFF-B21C-83722E6C7883}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

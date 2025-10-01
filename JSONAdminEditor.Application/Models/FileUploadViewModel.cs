@@ -1,3 +1,4 @@
+using JSONAdminEditor.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 

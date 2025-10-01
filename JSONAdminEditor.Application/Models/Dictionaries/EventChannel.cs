@@ -1,3 +1,4 @@
+using JSONAdminEditor.Domain.Enums;
 using System.Text.Json.Serialization;
 
 namespace JSONAdminEditor.Application.Models.Dictionaries;

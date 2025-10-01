@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using JSONAdminEditor.Application.Models.Configuration;
-using JSONAdminEditor.Services;
+using JSONAdminEditor.Domain.Entities;
+using JSONAdminEditor.Domain.Interfaces;
 
 namespace JSONAdminEditor.Controllers;
 
@@ -10,9 +10,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config")]
 [Produces("application/json")]
-public class ConfigController(IConfigRepository repository) : ControllerBase
+public class ConfigController(IConfigService repository) : ControllerBase
 {
-    private readonly IConfigRepository _repository = repository;
+    private readonly IConfigService _repository = repository;
 
     /// <summary>
     /// Gets the complete default notification configuration

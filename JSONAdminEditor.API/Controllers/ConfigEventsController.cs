@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using JSONAdminEditor.Application.Models.Configuration;
-using JSONAdminEditor.Services;
+using JSONAdminEditor.Domain.Entities;
+using JSONAdminEditor.Domain.Interfaces;
 
 namespace JSONAdminEditor.Controllers;
 
 [ApiController]
 [Route("api/config/events")]
 [Produces("application/json")]
-public class ConfigEventsController(IConfigRepository repository) : ControllerBase
+public class ConfigEventsController(IConfigService repository) : ControllerBase
 {
-    private readonly IConfigRepository _repository = repository;
+    private readonly IConfigService _repository = repository;
 
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(List<EventMapping>))]

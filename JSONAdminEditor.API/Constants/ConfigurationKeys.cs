@@ -1,4 +1,4 @@
-namespace JSONAdminEditor.API.Constants
+namespace JSONAdminEditor.Constants
 {
     public static class ConfigurationKeys
     {

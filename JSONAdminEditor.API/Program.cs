@@ -1,10 +1,10 @@
-
 using Amazon.S3;
-using JSONAdminEditor.API;
-using JSONAdminEditor.API.Constants;
-using JSONAdminEditor.API.Extensions;
-using JSONAdminEditor.API.Middleware;
-using JSONAdminEditor.Models;
+using JSONAdminEditor;
+using JSONAdminEditor.Constants;
+using JSONAdminEditor.Application;
+using JSONAdminEditor.Infrastructure;
+using JSONAdminEditor.Infrastructure.Models;
+using JSONAdminEditor.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +15,10 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 // Configure storage settings
 builder.Services.Configure<StorageSettings>(
     builder.Configuration.GetSection(ConfigurationKeys.StorageSettings));
+
+builder.Services.AddInfrastructure();
+
+builder.Services.AddApplication()
 
 // Configure Okta settings
 //builder.Services.Configure<OktaSettings>(builder.Configuration.GetSection("Okta"));
@@ -66,12 +70,6 @@ builder.Services.AddEndpointsApiExplorer();
 // Add familiar Swagger UI
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<OpenApiDocumentTransformer>();
-
-// Register storage services
-builder.Services.AddStorageServices();
-
-// Configure AWS S3 client
-builder.Services.AddAWSService<IAmazonS3>();
 
 var app = builder.Build();
 

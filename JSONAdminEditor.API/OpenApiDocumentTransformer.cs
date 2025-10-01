@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Models;
 
-namespace JSONAdminEditor.API;
+namespace JSONAdminEditor;
 
 public class OpenApiDocumentTransformer : IOpenApiDocumentTransformer
 {

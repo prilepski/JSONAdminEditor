@@ -1,17 +1,19 @@
 namespace JSONAdminEditor.Controllers;
 
-using JSONAdminEditor.API.Exceptions;
+using JSONAdminEditor.Application.Exceptions;
 using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Application.Models.Dictionaries;
-using JSONAdminEditor.Services;
+using JSONAdminEditor.Domain.Enums;
+using JSONAdminEditor.Domain.Interfaces;
+using JSONAdminEditor.Validators;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/dictionaries")]
 [Produces("application/json")]
-public class DictionariesController(IConfigRepository repository) : ControllerBase
+public class DictionariesController(IConfigService repository) : ControllerBase
 {
-    private readonly IConfigRepository _repository = repository;
+    private readonly IConfigService _repository = repository;
 
     // Templates endpoints
     [HttpGet("templates")]
