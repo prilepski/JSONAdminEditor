@@ -8,9 +8,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/customers/{customerId}/events")]
 [Produces("application/json")]
-public class CustomerEventsController(IConfigService repository) : ControllerBase
+public class CustomerEventsController(IConfigService configService) : ControllerBase
 {
-    private readonly IConfigService _repository = repository;
+    private readonly IConfigService _configService = configService;
 
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(List<CustomerEventMapping>))]
@@ -21,7 +21,7 @@ public class CustomerEventsController(IConfigService repository) : ControllerBas
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.EventMappings ?? []);
     }
 
@@ -34,7 +34,7 @@ public class CustomerEventsController(IConfigService repository) : ControllerBas
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         var eventMapping = customerData != null ? FindEventMapping(customerData, eventName, orderType) : null;
 
         return Ok(eventMapping ?? new CustomerEventMapping { Event = eventName, OrderType = orderType });
@@ -58,7 +58,7 @@ public class CustomerEventsController(IConfigService repository) : ControllerBas
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid event mapping data");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
 
@@ -71,7 +71,7 @@ public class CustomerEventsController(IConfigService repository) : ControllerBas
         else
             customerData.EventMappings.Add(eventMapping);
 
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -85,7 +85,7 @@ public class CustomerEventsController(IConfigService repository) : ControllerBas
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
 
@@ -95,7 +95,7 @@ public class CustomerEventsController(IConfigService repository) : ControllerBas
             return NotFound("Event mapping not found");
 
         customerData.EventMappings.RemoveAt(existingIndex);
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 

@@ -1,9 +1,6 @@
-using Amazon.S3;
 using JSONAdminEditor;
-using JSONAdminEditor.Constants;
 using JSONAdminEditor.Application;
 using JSONAdminEditor.Infrastructure;
-using JSONAdminEditor.Infrastructure.Models;
 using JSONAdminEditor.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,51 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Explicitly add Local configuration files to ensure they're loaded
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.Local.json", optional: true, reloadOnChange: true);
+builder.Configuration.AddEnvironmentVariables();
 
-// Configure storage settings
-builder.Services.Configure<StorageSettings>(
-    builder.Configuration.GetSection(ConfigurationKeys.StorageSettings));
+builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddInfrastructure();
-
-builder.Services.AddApplication()
-
-// Configure Okta settings
-//builder.Services.Configure<OktaSettings>(builder.Configuration.GetSection("Okta"));
-
-//// Add authentication
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultScheme = "Cookies";
-//    options.DefaultChallengeScheme = "oidc";
-//})
-//.AddCookie("Cookies")
-//.AddOpenIdConnect("oidc", options =>
-//{
-//    var oktaSettings = builder.Configuration.GetSection("Okta").Get<OktaSettings>();
-//    options.Authority = oktaSettings?.Domain;
-//    options.ClientId = oktaSettings?.ClientId;
-//    options.ClientSecret = oktaSettings?.ClientSecret;
-//    options.ResponseType = "code";
-//    options.SaveTokens = true;
-//    options.Scope.Add("openid");
-//    options.Scope.Add("profile");
-//    options.Scope.Add("email");
-//})
-;
-
-//builder.Services.AddAuthorization();
+builder.Services.AddApplication();
 
 // Add services to the container.
-builder.Services.AddControllers(
-//    config =>
-//{
-//    var policy = new AuthorizationPolicyBuilder()
-//        .RequireAuthenticatedUser()
-//        .Build();
-//    config.Filters.Add(new AuthorizeFilter(policy));
-//}
-);
+builder.Services.AddControllers();
 
 // Add modern Microsoft OpenAPI support
 builder.Services.AddOpenApi("v1", options =>

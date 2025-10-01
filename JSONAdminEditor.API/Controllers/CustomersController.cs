@@ -8,9 +8,9 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/customers")]
 [Produces("application/json")]
-public class CustomersController(IConfigService repository) : ControllerBase
+public class CustomersController(IConfigService configService) : ControllerBase
 {
-    private readonly IConfigService _repository = repository;
+    private readonly IConfigService _configService = configService;
 
     [HttpGet("{customerId:minlength(1):maxlength(50)}")]
     [ProducesResponseType(200, Type = typeof(CustomerNotificationMapping))]
@@ -21,7 +21,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData ?? new CustomerNotificationMapping());
     }
 
@@ -39,7 +39,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (customerData == null)
             return BadRequest("Customer data is required");
 
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -52,7 +52,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.PreferredCommunication ?? new List<PreferredCommunication>());
     }
 
@@ -74,12 +74,12 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid preferred communication data");
         
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.PreferredCommunication = data;
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -92,7 +92,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.ContentVariables ?? []);
     }
 
@@ -110,12 +110,12 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (contentVariables == null)
             return BadRequest("Content variables data is required");
         
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.ContentVariables = contentVariables;
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -128,7 +128,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.AfterHours);
     }
 
@@ -150,12 +150,12 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid after hours data");
         
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.AfterHours = afterHours;
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -168,7 +168,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.FromEmail ?? "");
     }
 
@@ -183,12 +183,12 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
         
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.FromEmail = fromEmail;
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 
@@ -201,7 +201,7 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (!Validator.IsValidCustomerId(customerId))
             return BadRequest("Invalid customer ID");
 
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         return Ok(customerData?.ContentVariablesOverrides ?? []);
     }
 
@@ -219,12 +219,12 @@ public class CustomersController(IConfigService repository) : ControllerBase
         if (contentVariablesOverrides == null)
             return BadRequest("Content variables overrides data is required");
         
-        var customerData = await _repository.GetCustomerConfigAsync(customerId);
+        var customerData = await _configService.GetCustomerConfigAsync(customerId);
         if (customerData == null)
             return NotFound("Customer not found");
         
         customerData.ContentVariablesOverrides = contentVariablesOverrides;
-        await _repository.SaveCustomerConfigAsync(customerId, customerData);
+        await _configService.SaveCustomerConfigAsync(customerId, customerData);
         return NoContent();
     }
 }

@@ -7,16 +7,16 @@ namespace JSONAdminEditor.Controllers;
 [ApiController]
 [Route("api/config/events")]
 [Produces("application/json")]
-public class ConfigEventsController(IConfigService repository) : ControllerBase
+public class ConfigEventsController(IConfigService configService) : ControllerBase
 {
-    private readonly IConfigService _repository = repository;
+    private readonly IConfigService _configService = configService;
 
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(List<EventMapping>))]
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventMapping>>> GetEvents()
     {
-        var config = await _repository.GetGlobalConfigAsync();
+        var config = await _configService.GetGlobalConfigAsync();
         return Ok(config.EventMappings);
     }
 
@@ -25,7 +25,7 @@ public class ConfigEventsController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<EventMapping>> GetEvent(string eventName, string orderType)
     {
-        var config = await _repository.GetGlobalConfigAsync();
+        var config = await _configService.GetGlobalConfigAsync();
         var eventMapping = FindEventMapping(config, eventName, orderType);
         
         return Ok(eventMapping ?? new EventMapping { Event = eventName, OrderType = orderType });
@@ -45,7 +45,7 @@ public class ConfigEventsController(IConfigService repository) : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity("Invalid event mapping data");
 
-        var config = await _repository.GetGlobalConfigAsync();
+        var config = await _configService.GetGlobalConfigAsync();
         var existingIndex = FindIndex(config, eventName, orderType);
 
         eventMapping.Event = eventName;
@@ -56,7 +56,7 @@ public class ConfigEventsController(IConfigService repository) : ControllerBase
         else
             config.EventMappings.Add(eventMapping);
 
-        await _repository.SaveGlobalConfigAsync(config);
+        await _configService.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 
@@ -66,7 +66,7 @@ public class ConfigEventsController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<IActionResult> DeleteEvent(string eventName, string orderType)
     {
-        var config = await _repository.GetGlobalConfigAsync();
+        var config = await _configService.GetGlobalConfigAsync();
         var existingIndex = FindIndex(config, eventName, orderType);
 
         if (existingIndex < 0)
@@ -74,7 +74,7 @@ public class ConfigEventsController(IConfigService repository) : ControllerBase
 
         config.EventMappings.RemoveAt(existingIndex);
 
-        await _repository.SaveGlobalConfigAsync(config);
+        await _configService.SaveGlobalConfigAsync(config);
         return NoContent();
     }
 

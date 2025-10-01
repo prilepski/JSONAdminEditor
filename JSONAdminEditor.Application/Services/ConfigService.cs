@@ -7,6 +7,9 @@ using System.Text.Json;
 
 namespace JSONAdminEditor.Application.Services;
 
+/// <summary>
+/// actual service
+/// </summary>
 public class ConfigService : IConfigService
 {
     private readonly IFileContentService _fileContentService;
@@ -24,22 +27,26 @@ public class ConfigService : IConfigService
 
     public async Task SaveGlobalConfigAsync(NotificationMapping config)
     {
-        await SaveJsonFileAsync("data/notifications.json", config);
+        string filePath = GetFilePathForType(FileType.ConfigurationDefault);
+        await SaveJsonFileAsync(filePath, config);
     }
 
     public async Task<NotificationMapping> GetGlobalConfigAsync()
     {
-        return await LoadJsonFileAsync<NotificationMapping>("data/notifications.json");
+        string filePath = GetFilePathForType(FileType.ConfigurationDefault);
+        return await LoadJsonFileAsync<NotificationMapping>(filePath);
     }
 
     public async Task SaveCustomerConfigAsync(string customerId, CustomerNotificationMapping customerData)
     {
-        await SaveJsonFileAsync($"data/customers/{customerId}.json", customerData);
+        string filePath = GetFilePathForType(FileType.ConfigurationCustomer, customerId);
+        await SaveJsonFileAsync(filePath, customerData);
     }
 
     public async Task<CustomerNotificationMapping?> GetCustomerConfigAsync(string customerId)
     {
-        return await LoadJsonFileAsync<CustomerNotificationMapping>($"data/customers/{customerId}.json");
+        string filePath = GetFilePathForType(FileType.ConfigurationCustomer, customerId);
+        return await LoadJsonFileAsync<CustomerNotificationMapping>(filePath);
     }
 
     public async Task<List<T>?> GetDictionaryDataAsync<T>(FileType fileType) where T : class, new()
@@ -92,15 +99,31 @@ public class ConfigService : IConfigService
         }
     }
 
-    private static string GetFilePathForType(FileType fileType) => fileType switch
+    private static string GetFilePathForType(FileType fileType, string customerId = null)
     {
-        FileType.DictionaryTemplates => "data/dictionaries/templates.json",
-        FileType.DictionaryEventTriggers => "data/dictionaries/event-triggers.json",
-        FileType.DictionaryEventChannels => "data/dictionaries/event-channels.json",
-        FileType.DictionaryOrderTypes => "data/dictionaries/order-types.json",
-        FileType.DictionaryCustomers => "data/dictionaries/customers.json",
-        FileType.DictionaryLogoUrls => "data/dictionaries/logo-url-mappings.json",
-    _ => throw new ArgumentException($"Unknown file type: {fileType}")
-    };
+        var filePath = fileType switch
+        {
+            FileType.DictionaryTemplates => "data/dictionaries/templates.json",
+            FileType.DictionaryEventTriggers => "data/dictionaries/event-triggers.json",
+            FileType.DictionaryEventChannels => "data/dictionaries/event-channels.json",
+            FileType.DictionaryOrderTypes => "data/dictionaries/order-types.json",
+            FileType.DictionaryCustomers => "data/dictionaries/customers.json",
+            FileType.DictionaryLogoUrls => "data/dictionaries/logo-url-mappings.json",
+            FileType.ConfigurationDefault => "data/notifications.json",
+            FileType.ConfigurationCustomer => null,
+            _ => throw new ArgumentException($"Unknown file type: {fileType}")
+        };
 
+        if (fileType == FileType.ConfigurationCustomer)
+        {
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                throw new ArgumentException("Customer ID is required for customer configuration file.");
+            }
+
+            filePath = $"data/customers/{customerId}.json";
+        }
+
+        return filePath;
+    }
 }

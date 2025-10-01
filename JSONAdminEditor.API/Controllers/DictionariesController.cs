@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/dictionaries")]
 [Produces("application/json")]
-public class DictionariesController(IConfigService repository) : ControllerBase
+public class DictionariesController(IConfigService configService) : ControllerBase
 {
-    private readonly IConfigService _repository = repository;
+    private readonly IConfigService _configService = configService;
 
     // Templates endpoints
     [HttpGet("templates")]
@@ -21,7 +21,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Template>>> GetTemplates()
     {
-        return await _repository.GetDictionaryDataAsync<Template>(FileType.DictionaryTemplates);
+        return await _configService.GetDictionaryDataAsync<Template>(FileType.DictionaryTemplates);
     }
 
     [HttpPut("templates")]
@@ -45,7 +45,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventTrigger>>> GetEventTriggers()
     {
-        return await _repository.GetDictionaryDataAsync<EventTrigger>(FileType.DictionaryEventTriggers);
+        return await _configService.GetDictionaryDataAsync<EventTrigger>(FileType.DictionaryEventTriggers);
     }
 
     [HttpPut("event-triggers")]
@@ -68,7 +68,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<EventChannel>>> GetEventChannels()
     {
-        return await _repository.GetDictionaryDataAsync<EventChannel>(FileType.DictionaryEventChannels);
+        return await _configService.GetDictionaryDataAsync<EventChannel>(FileType.DictionaryEventChannels);
     }
 
     [HttpPut("event-channels")]
@@ -91,7 +91,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<OrderType>>> GetOrderTypes()
     {
-        return await _repository.GetDictionaryDataAsync<OrderType>(FileType.DictionaryOrderTypes);
+        return await _configService.GetDictionaryDataAsync<OrderType>(FileType.DictionaryOrderTypes);
     }
 
     [HttpPut("order-types")]
@@ -114,7 +114,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<Customer>>> GetCustomers()
     {
-        return await _repository.GetDictionaryDataAsync<Customer>(FileType.DictionaryCustomers);
+        return await _configService.GetDictionaryDataAsync<Customer>(FileType.DictionaryCustomers);
     }
 
     [HttpPut("customers")]
@@ -137,7 +137,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
     [ProducesResponseType(500)]
     public async Task<ActionResult<List<LogoUrl>>> GetLogoUrlMappings()
     {
-        return await _repository.GetDictionaryDataAsync<LogoUrl>(FileType.DictionaryLogoUrls);
+        return await _configService.GetDictionaryDataAsync<LogoUrl>(FileType.DictionaryLogoUrls);
     }
 
     [HttpPut("logo-url")]
@@ -180,7 +180,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
         using var reader = new StreamReader(stream);
         var jsonContent = await reader.ReadToEndAsync();
 
-        await _repository.SaveDictionaryRawDataAsync(upload.FileType, jsonContent);
+        await _configService.SaveDictionaryRawDataAsync(upload.FileType, jsonContent);
         return NoContent();
     }
 
@@ -196,7 +196,7 @@ public class DictionariesController(IConfigService repository) : ControllerBase
 
         try
         {
-            await _repository.SaveDictionaryDataAsync(fileType, data);
+            await _configService.SaveDictionaryDataAsync(fileType, data);
             return NoContent();
         }
         catch (JsonFileException ex)

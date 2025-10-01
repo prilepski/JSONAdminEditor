@@ -1,24 +1,19 @@
 ﻿using JSONAdminEditor.Application.Interfaces;
-using JSONAdminEditor.Infrastructure.Models;
+using JSONAdminEditor.Application.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace JSONAdminEditor.Infrastructure.Services;
 
-public class StorageServiceFactory(
-    IServiceProvider serviceProvider,
-    IOptions<StorageSettings> storageSettings) : IStorageServiceFactory
+public class StorageServiceFactory(IServiceProvider serviceProvider) : IStorageServiceFactory
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
-    private readonly StorageSettings _storageSettings = storageSettings.Value;
 
-    public IStorageService CreateStorageService()
+    public IStorageService CreateStorageService(StorageType type)
     {
-        return _storageSettings.StorageType.ToLower() switch
+        return type switch
         {
-            "s3" => _serviceProvider.GetRequiredService<S3StorageService>(),
-            "filesystem" => _serviceProvider.GetRequiredService<FileManagementService>(),
-            _ => _serviceProvider.GetRequiredService<FileManagementService>() // Default to FileSystem
+            StorageType.S3 => serviceProvider.GetRequiredService<S3StorageService>(),
+            StorageType.FileSystem => serviceProvider.GetRequiredService<FileManagementService>(),
+            _ => serviceProvider.GetRequiredService<FileManagementService>() // Default to FileSystem
         };
     }
 }
