@@ -4,9 +4,6 @@ using Microsoft.Extensions.Options;
 
 namespace JSONAdminEditor.Infrastructure.Services;
 
-/// <summary>
-/// actual service
-/// </summary>
 public class FileContentService(
     IStorageServiceFactory factory,
     IOptions<StorageSettings> storageSettings) : IFileContentService
