@@ -1,3 +1,5 @@
+using JSONAdminEditor.Domain.Enums;
+
 namespace JSONAdminEditor.Application.Models.Dictionaries;
 
 public class Template
@@ -6,5 +8,5 @@ public class Template
 
     public string TemplateName { get; set; } = string.Empty;
 
-    public string ChannelType { get; set; } = string.Empty;
+    public Channel ChannelType { get; set; };
 }
