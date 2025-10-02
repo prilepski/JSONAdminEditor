@@ -147,7 +147,7 @@ public class S3StorageService : IStorageService
     public async Task WriteFileAsync(string filePath, string content)
     {
         //initialy if was UploadTextToS3Async
-        await UploadTextToS3Async(content, filePath);
+        await UploadTextToS3Async(content, MapFilePathToS3Key(filePath));
     }
 
     #region Private Helper Methods
