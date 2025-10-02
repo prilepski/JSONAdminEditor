@@ -60,7 +60,7 @@ export const CustomerEvents: React.FC = () => {
     setTriggerConditions,
     preferredCommunication,
     setPreferredCommunication,
-  } = useCustomerEventData(selectedEvent, selectedOrderType, specificEventData);
+  } = useCustomerEventData(selectedEvent, selectedOrderType, specificEventData, eventData);
 
   const {
     updateEventField,
