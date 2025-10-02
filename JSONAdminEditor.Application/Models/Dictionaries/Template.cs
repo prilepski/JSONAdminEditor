@@ -8,5 +8,5 @@ public class Template
 
     public string TemplateName { get; set; } = string.Empty;
 
-    public Channel ChannelType { get; set; };
+    public Channel ChannelType { get; set; }
 }
