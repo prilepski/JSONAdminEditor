@@ -14,22 +14,7 @@
     "new_var_1758900932973": "new val",
     "global 2": "global "
   },
-  "ContentVariablesOverrides": {
-    "sdfsdf": {
-      "ReferenceNumber": {
-        "123": "string",
-        "234": "string",
-        "345": "string",
-        "new_var_1758891316918": ""
-      },
-      "test": {}
-    },
-    "logo": {
-      "ref#": {
-        "FRGDAIR": "BALLARD.GIF"
-      }
-    }
-  },
+  "ContentVariablesOverrides": {},
   "Events": [
     {
       "ContentVariablesOverrides": {},
@@ -49,14 +34,9 @@
     },
     {
       "ContentVariablesOverrides": {
-        "testtrwst": {
-          "var key": {
-            "override key": "value"
-          }
-        },
-        "event_1758815462718": {
-          "variable_1758815462718": {
-            "override_1758815462718": ""
+        "logo": {
+          "Reference#": {
+            "FRGDAIR": "BALLARD.GIF"
           }
         }
       },

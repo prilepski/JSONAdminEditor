@@ -16,9 +16,11 @@ import {
   SaveButton,
   TabNavigation,
   LoadingSpinner,
-  TableSkeleton,
+  TableSkeleton, 
+    PageErrorBoundary,
+    ComponentErrorBoundary,
+    NestedVariablesEditor
 } from '../components/common';
-import { PageErrorBoundary, ComponentErrorBoundary } from '../components/common';
 import { CustomerEventSelector } from '../components/events/CustomerEventSelector';
 import { CustomerEventTabs } from '../components/events/CustomerEventTabs';
 import { buildCustomerEventSaveData } from '../utils/customerEventSaveData';
@@ -70,6 +72,44 @@ export const CustomerEvents: React.FC = () => {
     updateContentVariableOverrideKey,
     removeContentVariableOverride,
   } = useCustomerEventActions(setEventFields, setTemplateFields, setContentVariablesOverrides);
+
+  const handleSaveNestedOverrides = async (category: string, subcategory: string, variables: Record<string, string>) => {
+    const updatedOverrides = {
+      ...contentVariablesOverrides,
+      [category]: {
+        ...contentVariablesOverrides[category],
+        [subcategory]: variables
+      }
+    };
+    setContentVariablesOverrides(updatedOverrides);
+    // No individual save - changes will be saved with main Save Event button
+  };
+
+  const handleAddCategory = async (name: string) => {
+    if (!name.trim() || Object.keys(contentVariablesOverrides).includes(name)) return;
+    const updatedOverrides = { ...contentVariablesOverrides, [name]: {} };
+    setContentVariablesOverrides(updatedOverrides);
+  };
+
+  const handleAddSubcategory = async (category: string, name: string) => {
+    if (!name.trim() || Object.keys(contentVariablesOverrides[category] || {}).includes(name)) return;
+    const updatedOverrides = {
+      ...contentVariablesOverrides,
+      [category]: { ...contentVariablesOverrides[category], [name]: {} }
+    };
+    setContentVariablesOverrides(updatedOverrides);
+  };
+
+  const handleDeleteSubcategory = async (category: string, subcategory: string) => {
+    const updatedOverrides = { ...contentVariablesOverrides };
+    if (updatedOverrides[category]) {
+      delete updatedOverrides[category][subcategory];
+      if (Object.keys(updatedOverrides[category]).length === 0) {
+        delete updatedOverrides[category];
+      }
+    }
+    setContentVariablesOverrides(updatedOverrides);
+  };
 
   const handleSave = async () => {
     if (!selectedCustomer || !selectedEvent) return;
@@ -163,29 +203,42 @@ export const CustomerEvents: React.FC = () => {
                   onTabChange={(tab) => updateField('activeTab', tab)}
                 />
 
-                <CustomerEventTabs
-                  activeTab={activeTab}
-                  eventFields={eventFields}
-                  templateFields={templateFields}
-                  contentVariables={contentVariables}
-                  globalContentVariables={globalContentVariables}
-                  eventData={eventData}
-                  contentVariablesOverrides={contentVariablesOverrides}
-                  preferredCommunication={preferredCommunication}
-                  triggerConditions={triggerConditions}
-                  onUpdateEventField={updateEventField}
-                  onToggleEventFieldRedefined={toggleEventFieldRedefined}
-                  onUpdateTemplateField={updateTemplateField}
-                  onToggleTemplateRedefined={toggleTemplateRedefined}
-                  onUpdateContentVariables={setContentVariables}
-                  onContentVariableRedefinedStatesChange={setContentVariableRedefinedStates}
-                  onAddContentVariableOverride={addContentVariableOverride}
-                  onUpdateContentVariableOverride={updateContentVariableOverride}
-                  onUpdateContentVariableOverrideKey={updateContentVariableOverrideKey}
-                  onRemoveContentVariableOverride={removeContentVariableOverride}
-                  onUpdatePreferredCommunication={setPreferredCommunication}
-                  onUpdateTriggerConditions={setTriggerConditions}
-                />
+                {activeTab === 'content-variables-overrides' ? (
+                  <NestedVariablesEditor
+                    data={contentVariablesOverrides}
+                    onSave={handleSaveNestedOverrides}
+                    onAddCategory={handleAddCategory}
+                    onAddSubcategory={handleAddSubcategory}
+                    onDeleteSubcategory={handleDeleteSubcategory}
+                    isLoading={false}
+                    isSaving={false}
+                    showSaveButton={false}
+                  />
+                ) : (
+                  <CustomerEventTabs
+                    activeTab={activeTab}
+                    eventFields={eventFields}
+                    templateFields={templateFields}
+                    contentVariables={contentVariables}
+                    globalContentVariables={globalContentVariables}
+                    eventData={eventData}
+                    contentVariablesOverrides={contentVariablesOverrides}
+                    preferredCommunication={preferredCommunication}
+                    triggerConditions={triggerConditions}
+                    onUpdateEventField={updateEventField}
+                    onToggleEventFieldRedefined={toggleEventFieldRedefined}
+                    onUpdateTemplateField={updateTemplateField}
+                    onToggleTemplateRedefined={toggleTemplateRedefined}
+                    onUpdateContentVariables={setContentVariables}
+                    onContentVariableRedefinedStatesChange={setContentVariableRedefinedStates}
+                    onAddContentVariableOverride={addContentVariableOverride}
+                    onUpdateContentVariableOverride={updateContentVariableOverride}
+                    onUpdateContentVariableOverrideKey={updateContentVariableOverrideKey}
+                    onRemoveContentVariableOverride={removeContentVariableOverride}
+                    onUpdatePreferredCommunication={setPreferredCommunication}
+                    onUpdateTriggerConditions={setTriggerConditions}
+                  />
+                )}
               </>
             )}
           </div>

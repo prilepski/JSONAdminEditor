@@ -12,6 +12,7 @@ interface NestedVariablesEditorProps {
   onDeleteSubcategory?: (category: string, subcategory: string) => Promise<void>;
   isLoading?: boolean;
   isSaving?: boolean;
+  showSaveButton?: boolean;
 }
 
 export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
@@ -22,6 +23,7 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
   onDeleteSubcategory,
   isLoading = false,
   isSaving = false,
+  showSaveButton = true,
 }) => {
   const [selectedPath, setSelectedPath] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -130,13 +132,13 @@ export const NestedVariablesEditor: React.FC<NestedVariablesEditorProps> = ({
               title={`${category} > ${subcategory}`}
               variableColumnHeader={subcategory}
               showIsRedefined={false}
-              saveButton={
+              saveButton={showSaveButton ? (
                 <SaveButton
                   onClick={handleSave}
                   loading={isSaving}
                   text="Save Changes"
                 />
-              }
+              ) : undefined}
             />
           ) : (
             <div className="card">
