@@ -1,6 +1,4 @@
-﻿using JSONAdminEditor.Domain.Enums;
-
-namespace JSONAdminEditor.Infrastructure.Models;
+﻿namespace JSONAdminEditor.Infrastructure.Models;
 
 public class S3Settings
 {
