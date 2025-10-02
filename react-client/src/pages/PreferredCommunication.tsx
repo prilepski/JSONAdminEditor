@@ -84,7 +84,7 @@ const PreferredCommunicationPage: React.FC = () => {
             <ComponentErrorBoundary componentName="Preferred Communication Editor">
               <JsonEditor
                 dictionaryData={dictionaryData}
-                selectedFileType={FileType.Templates}
+                selectedFileType={FileType.OrderTypes}
                 validationErrors={[]}
                 onSave={handleSave}
                 onClearValidationErrors={() => {}}

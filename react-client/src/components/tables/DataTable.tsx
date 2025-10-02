@@ -6,8 +6,8 @@ interface DataTableProps {
   columns: string[];
   columnTypes: Record<string, string>;
   validationErrors: ValidationError[];
-  onUpdateCell: (rowIndex: number, column: string, value: any) => void;
-  onDeleteRow: (index: number) => void;
+  onUpdateCell?: (rowIndex: number, column: string, value: any) => void;
+  onDeleteRow?: (index: number) => void;
   channelOptions?: string[];
   selectedFileType?: FileType;
 }
@@ -42,8 +42,8 @@ export const DataTable: React.FC<DataTableProps> = ({
             type="checkbox"
             className="form-check-input"
             checked={cellValue === true || cellValue === 'true'}
-            onChange={(e) => onUpdateCell(rowIndex, column, e.target.checked)}
-            disabled={isReadOnly}
+            onChange={onUpdateCell ? (e) => onUpdateCell(rowIndex, column, e.target.checked) : undefined}
+            disabled={isReadOnly || !onUpdateCell}
           />
         </div>
       );
@@ -113,8 +113,8 @@ export const DataTable: React.FC<DataTableProps> = ({
         type="text"
         className={disabledClass}
         value={cellValue.toString()}
-        onChange={(e) => onUpdateCell(rowIndex, column, e.target.value)}
-        readOnly={isReadOnly}
+        onChange={onUpdateCell ? (e) => onUpdateCell(rowIndex, column, e.target.value) : undefined}
+        readOnly={isReadOnly || !onUpdateCell}
       />
     );
   };
@@ -127,7 +127,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             {columns.map((column) => (
               <th key={column}>{column}</th>
             ))}
-            <th>Actions</th>
+            {onDeleteRow && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -146,17 +146,19 @@ export const DataTable: React.FC<DataTableProps> = ({
                   </td>
                 );
               })}
-              <td>
-                {selectedFileType !== FileType.EventChannels && selectedFileType !== FileType.Templates && (
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    onClick={() => onDeleteRow(rowIndex)}
-                  >
-                    <i className="fas fa-trash"></i>
-                  </button>
-                )}
-              </td>
+              {onDeleteRow && (
+                <td>
+                  {selectedFileType !== FileType.EventChannels && selectedFileType !== FileType.Templates && (
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm"
+                      onClick={() => onDeleteRow(rowIndex)}
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

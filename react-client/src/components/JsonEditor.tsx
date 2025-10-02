@@ -15,6 +15,7 @@ interface JsonEditorProps {
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
   onClearValidationErrors: () => void;
   channelOptions?: string[];
+  readonly?: boolean;
 }
 
 export const JsonEditor: React.FC<JsonEditorProps> = ({
@@ -24,6 +25,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   onSave,
   onClearValidationErrors,
   channelOptions: propChannelOptions,
+  readonly = false,
 }) => {
   const [tableData, setTableData] = useState<TableData[]>([]);
   const { data: defaultChannelOptions = ['Email', 'Sms', 'Voice'] } = useChannelOptionsQuery();
@@ -131,20 +133,22 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Edit {getDictionaryName(selectedFileType)} Dictionary</h4>
-        <div>
-          {selectedFileType !== FileType.EventChannels && selectedFileType !== FileType.Templates && (
-            <button
-              type="button"
-              className="btn btn-success me-2"
-              onClick={addNewRow}
-              disabled={saving}
-            >
-              <i className="fas fa-plus me-1"></i>Add Row
-            </button>
-          )}
-          <SaveButton onClick={handleSave} loading={saving} text="Save Changes" />
-        </div>
+        <h4>{readonly ? 'View' : 'Edit'} {getDictionaryName(selectedFileType)} Dictionary</h4>
+        {!readonly && (
+          <div>
+            {selectedFileType !== FileType.EventChannels && selectedFileType !== FileType.Templates && (
+              <button
+                type="button"
+                className="btn btn-success me-2"
+                onClick={addNewRow}
+                disabled={saving}
+              >
+                <i className="fas fa-plus me-1"></i>Add Row
+              </button>
+            )}
+            <SaveButton onClick={handleSave} loading={saving} text="Save Changes" />
+          </div>
+        )}
       </div>
 
       {tableData.length === 0 ? (
@@ -160,8 +164,8 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           columns={dictionaryData.columnNames || []}
           columnTypes={dictionaryData.columnTypes || {}}
           validationErrors={validationErrors}
-          onUpdateCell={updateCell}
-          onDeleteRow={deleteRow}
+          onUpdateCell={readonly ? undefined : updateCell}
+          onDeleteRow={readonly ? undefined : deleteRow}
           channelOptions={channelOptions}
           selectedFileType={selectedFileType}
         />
