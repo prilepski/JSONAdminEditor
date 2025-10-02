@@ -1,6 +1,7 @@
 using JSONAdminEditor.Application.Interfaces;
 using JSONAdminEditor.Application.Models;
 using JSONAdminEditor.Domain.Enums;
+using Microsoft.Extensions.Hosting;
 
 namespace JSONAdminEditor.Infrastructure.Services;
 
@@ -10,9 +11,9 @@ public class FileManagementService : IStorageService
     private readonly string _dataFolder;
     private readonly string _customerFolder;
 
-    public FileManagementService(/*IWebHostEnvironment environment*/)
+    public FileManagementService(IHostEnvironment environment)
     {
-        _storagePath = Directory.GetCurrentDirectory();
+        _storagePath = Path.Combine(environment.ContentRootPath, "wwwroot");
         _dataFolder = Path.Combine(_storagePath, "data");
         _customerFolder = Path.Combine(_dataFolder, "customers");
 

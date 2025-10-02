@@ -59,7 +59,6 @@ public class ConfigService : IConfigService
     public async Task SaveDictionaryDataAsync<T>(FileType fileType, List<T> data)
     {
         string filePath = GetFilePathForType(fileType);
-
         await SaveJsonFileAsync(filePath, data);
     }
 

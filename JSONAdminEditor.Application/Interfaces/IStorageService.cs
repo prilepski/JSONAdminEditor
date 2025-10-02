@@ -2,9 +2,6 @@ using JSONAdminEditor.Application.Models;
 
 namespace JSONAdminEditor.Application.Interfaces;
 
-/// <summary>
-/// actual service
-/// </summary>
 public interface IStorageService
 {
     Task<(bool Success, string Message)> UploadFileAsync(FileUploadViewModel uploadModel);
